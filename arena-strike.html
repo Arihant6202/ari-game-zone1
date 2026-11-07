@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="firebase-config.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0a0614">
 <title>Arena Strike · Ari Game Zone</title>
@@ -145,13 +146,13 @@ function db() {
   D.theme = D.theme || 'neon'; D.diff = D.diff || 'medium'; D.sound = D.sound !== false; D.daily = D.daily || '';
   return D;
 }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} if (window.__azPush) window.__azPush(); }
 
 /* ------------------------------ games registry ------------------------------ */
 // modes: single (vs computer) | local (2 players, one device) | online (room code)
 const GAMES = [
   { id: 'br', file: 'battle-royale.html', name: 'Zone Survivor', emoji: '🪂', cat: 'Shooter', max: 100, modes: ['single'], shop: ['gun', 'outfit'], desc: 'Battle royale! Drop in, loot, shoot and be the last one alive as the zone shrinks.' },
-  { id: 'arena', file: 'arena-strike.html', name: 'Arena Strike', emoji: '🔫', cat: 'Shooter', max: 100, modes: ['single'], shop: ['gun', 'outfit'], desc: 'Fast team deathmatch. Respawn, fight bots and reach the kill target first.' },
+  { id: 'arena', file: 'arena-strike.html', name: 'Arena Strike', emoji: '🔫', cat: 'Shooter', max: 100, modes: ['single', 'online'], shop: ['gun', 'outfit'], desc: 'Fast team deathmatch. Respawn, fight bots and reach the kill target first.' },
   { id: 'race', file: 'turbo-racing.html', name: 'Turbo Racing', emoji: '🏎️', cat: 'Racing', max: 100, modes: ['single', 'local'], shop: ['car'], desc: 'Dodge traffic on the highway at crazy speed. New place every few levels!' },
   { id: 'chess', file: 'chess.html', name: 'Royal Chess', emoji: '♟️', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: ['piece'], desc: 'Full chess with a smart computer (50 levels), 2 players, or play online.' },
   { id: 'ttt', file: 'tic-tac-toe.html', name: 'Tic Tac Toe', emoji: '⭕', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: [], desc: 'Classic X and O. Beat the AI, play a friend or go online.' },
@@ -361,6 +362,54 @@ function mkNet(conn, isHost) {
 }
 const code4 = () => { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 4; i++) s += c[Math.floor(Math.random() * c.length)]; return s; };
 
+/* ------------------------------ phone login (Firebase OTP + cloud save) ------------------------------ */
+let fbUser = null, fbDb = null, pushT = null, fbP = null;
+const FBV = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-';
+function loadFb() {
+  if (fbP) return fbP;
+  fbP = new Promise((res, rej) => {
+    const c = window.AZ_FIREBASE;
+    if (!c || !c.apiKey || /PASTE/.test(c.apiKey)) return rej(new Error('Firebase keys missing. firebase-config.js me apni keys daalo.'));
+    const L = ['app', 'auth', 'database'];
+    const next = i => { if (i === L.length) { try { firebase.initializeApp(c); fbDb = firebase.database(); res(); } catch (e) { rej(e); } return; }
+      const s = document.createElement('script'); s.src = FBV + L[i] + '-compat.js'; s.onload = () => next(i + 1); s.onerror = () => rej(new Error('Login service load nahi hua. Internet check karo.')); document.head.appendChild(s); };
+    next(0);
+  });
+  fbP.catch(() => { fbP = null; });
+  return fbP;
+}
+window.__azPush = () => { if (!fbUser || !fbDb) return; clearTimeout(pushT); pushT = setTimeout(() => { try { fbDb.ref('users/' + fbUser.uid).set(JSON.parse(JSON.stringify(db()))); } catch (e) {} }, 1500); };
+function afterLogin(u) {
+  fbUser = u; try { localStorage.setItem('az_login', '1'); } catch (e) {}
+  const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 ' + String(u.phoneNumber || '').slice(-4);
+  fbDb.ref('users/' + u.uid).once('value').then(s => {
+    const c = s.val();
+    if (c && typeof c === 'object') { try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} D = null; db(); Az.refresh && Az.refresh(); Az.toast && Az.toast('☁️ Progress loaded'); }
+    else window.__azPush();
+  }).catch(() => {});
+}
+function authInit() { loadFb().then(() => firebase.auth().onAuthStateChanged(u => { if (u) afterLogin(u); })).catch(() => {}); }
+Az.login = function () {
+  const m = Az.modal('<div id="lgin"></div>', {});
+  const box = () => m.querySelector('#lgin');
+  if (fbUser) { box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + fbUser.phoneNumber + '<br>Coins & levels cloud me save ho rahe hain ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div>';
+    m.addEventListener('click', e => { if (e.target.id === 'lo') { firebase.auth().signOut(); fbUser = null; try { localStorage.removeItem('az_login'); } catch (x) {} const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 Login'; m.close(); } }); return m; }
+  box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login</h2><p class="sub" style="text-align:center">Phone number se account banao, progress save rahega.</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>';
+  const err = t => { box().querySelector('#lerr').textContent = t; }; let conf = null, ver = null;
+  m.addEventListener('click', e => {
+    if (e.target.id === 'sn' && !conf) {
+      let n = box().querySelector('#ph').value.replace(/[\s-]/g, ''); if (!n.startsWith('+')) n = '+91' + n.replace(/^0+/, '');
+      if (n.length < 12) return err('Sahi phone number daalo.'); err('OTP bhej raha hoon…');
+      loadFb().then(() => { ver = ver || new firebase.auth.RecaptchaVerifier(box().querySelector('#rc'), { size: 'invisible' }); return firebase.auth().signInWithPhoneNumber(n, ver); })
+        .then(c => { conf = c; err(''); box().querySelector('#otpr').style.display = ''; e.target.textContent = 'Verify OTP'; })
+        .catch(x => err(x.message || 'OTP nahi gaya. Dobara try karo.'));
+    } else if (e.target.id === 'sn' && conf) {
+      conf.confirm(box().querySelector('#otp').value.trim()).then(r => { m.close(); Az.toast && Az.toast('✅ Login ho gaya!'); }).catch(() => err('Galat OTP. Dobara try karo.'));
+    }
+  });
+  return m;
+};
+
 /* ------------------------------ start screen ------------------------------ */
 /* Az.start({game:'chess', extra:[{key:'side',label:'Play as',options:[['w','White'],['b','Black']]}], onStart(o){...}})
    o = { mode:'single'|'local'|'online', diff:'easy'|'medium'|'hard', level:n, extra:{...}, net:Net|null, seed:n, host:bool } */
@@ -477,6 +526,8 @@ function init() {
       else if (t.id === 'azthm') Az.cycleTheme();
     });
   }
+  { const dly = document.getElementById('daily'); if (dly && !document.getElementById('azlogin')) { const b = el('button', 'azbtn sm ghost', '👤 Login'); b.id = 'azlogin'; dly.parentNode.insertBefore(b, dly); b.onclick = () => Az.login(); } }
+  try { if (localStorage.getItem('az_login')) authInit(); } catch (e) {}
   Az.refresh();
   document.dispatchEvent(new Event('az-ready'));
 }
@@ -494,6 +545,7 @@ function shade(hex,f){const n=parseInt(hex.slice(1),16);let r=n>>16,g=(n>>8)&255
 function lum(hex){const n=parseInt(hex.slice(1),16);return(((n>>16)*.3+((n>>8)&255)*.59+(n&255)*.11))/255;}
 
 function run(o){
+  const net=o.net||null;
   const cv=o.cv,ctx=cv.getContext('2d'),L=o.level,D=o.diff,mode=o.mode,place=Az.place(L);
   const dm=Az.pick(D,.75,1,1.3),br=mode==='br',WORLD=br?2600:1400;
   const rng=Az.rng(L*977+(br?1:2)+(D==='hard'?5:D==='easy'?3:0));
@@ -517,7 +569,7 @@ function run(o){
   function mk(o2){const e=Object.assign({x:0,y:0,r:16,vx:0,vy:0,ang:0,cool:0,reload:0,armor:0,kills:0,alive:true,dead:0,boost:0,inv:0,tgt:null,think:0,goal:null,react:0,stuck:0,lastp:{x:0,y:0},sf:1+rng()*2,id:S.ents.length},o2);e.maxhp=e.hp;e.ammo=e.gun.mag;return e;}
   function spawnPlayer(){const p=br?freeSpot(300,300,WORLD-300,WORLD-300):freeSpot(60,WORLD/2-250,220,WORLD/2+250);return p;}
   const P=mk({player:true,team:br?0:0,hp:outfit.hp,color:outfit.color,hat:outfit.hat,gun:mkGun(pg),name:'You',...spawnPlayer()});P.inv=2.5;S.ents.push(P);S.P=P;
-  const nBots=br?Math.min(39,9+Math.floor(L*.3)):Math.min(7,3+Math.floor(L/22));
+  const nBots=net?0:br?Math.min(39,9+Math.floor(L*.3)):Math.min(7,3+Math.floor(L/22));
   const botHp=Math.round((55+L*.9)*Az.pick(D,.8,1,1.2)),botErr=Math.max(.025,(.34-L*.0029))*Az.pick(D,1.5,1,.7),botDmg=(.55+L*.0075)*dm;
   function botGun(){const tier=Math.min(5,Math.floor(rng()*(1.2+L/18)));return mkGun(guns[tier]);}
   function mkBot(team,x,y,i){const hue=br?Math.floor(rng()*360):(team===0?200:0);const b=mk({team:br?i+1:team,hp:botHp,color:br?'hsl('+hue+' 70% 55%)':(team===0?'hsl('+(190+i*10)+' 80% 55%)':'hsl('+(i*12)+' 85% 52%)'),hat:['','🪖','🎩','🧢',''][i%5],gun:botGun(),name:'Bot'+(i+1),bot:true,x,y,speed:(108+L*.55)*Az.pick(D,.85,1,1.1),turn:3+L*.05,reactT:Math.max(.12,.7-L*.006)*Az.pick(D,1.4,1,.75),dmgMul:botDmg,err:botErr});S.ents.push(b);return b;}
@@ -531,13 +583,14 @@ function run(o){
   function fire(e){if(!e.alive||e.cool>0||e.reload>0)return;if(e.ammo<=0){e.reload=e.gun.pellets>1?1.5:1.1;return;}
     const g=e.gun;e.cool=1/g.rate;e.ammo--;
     for(let i=0;i<g.pellets;i++){const a=e.ang+(Math.random()-.5)*2*(g.spread+(e.err||0));S.bul.push({x:e.x+Math.cos(e.ang)*18,y:e.y+Math.sin(e.ang)*18,vx:Math.cos(a)*g.speed*60,vy:Math.sin(a)*g.speed*60,dmg:g.dmg*(e.dmgMul||1)*(e.boost>0?1.5:1),team:e.team,o:e,life:g.range/(g.speed*60),col:g.color});}
+    if(net&&e.player)net.send({t:'f',b:S.bul.slice(-g.pellets).map(q=>({x:q.x,y:q.y,vx:q.vx,vy:q.vy,dmg:q.dmg,life:q.life,col:q.col}))});
     if(e.player){Az.sfx('shoot');S.shake=Math.min(6,S.shake+(g.dmg>50?5:1.5));}
     S.parts.push({x:e.x+Math.cos(e.ang)*22,y:e.y+Math.sin(e.ang)*22,vx:0,vy:0,l:.07,s:9,c:'#fff'});}
-  function hurt(e,d,by){if(!e.alive||e.inv>0)return;S.txt.push({x:e.x,y:e.y-18,t:Math.round(d),l:.7,c:e.player?'#ff6b6b':'#fff'});
+  function hurt(e,d,by){if(!e.alive||e.inv>0)return;if(e.remote){S.txt.push({x:e.x,y:e.y-18,t:Math.round(d),l:.7,c:'#fff'});if(by&&by.player)Az.sfx('hit');return;}S.txt.push({x:e.x,y:e.y-18,t:Math.round(d),l:.7,c:e.player?'#ff6b6b':'#fff'});
     if(e.armor>0){const a=Math.min(e.armor,d*.6);e.armor-=a;d-=a*.5;}e.hp-=d;if(e.player){S.shake=Math.min(8,S.shake+3);S.hurt=.25;Az.sfx('hit');}else if(by&&by.player)Az.sfx('hit');
     for(let i=0;i<3;i++)S.parts.push({x:e.x,y:e.y,vx:(Math.random()-.5)*160,vy:(Math.random()-.5)*160,l:.3,s:4,c:'#ff4d6d'});
     if(e.hp<=0)die(e,by);}
-  function die(e,by){e.alive=false;e.hp=0;if(by&&by!==e)by.kills++;S.feed.unshift({t:(by&&by.name?by.name:'Zone')+' ⚔ '+e.name,l:5});S.feed.length=Math.min(S.feed.length,4);
+  function die(e,by){if(net&&e.player&&by&&by.remote)net.send({t:'k'});e.alive=false;e.hp=0;if(by&&by!==e)by.kills++;S.feed.unshift({t:(by&&by.name?by.name:'Zone')+' ⚔ '+e.name,l:5});S.feed.length=Math.min(S.feed.length,4);
     for(let i=0;i<14;i++)S.parts.push({x:e.x,y:e.y,vx:(Math.random()-.5)*300,vy:(Math.random()-.5)*300,l:.6,s:5,c:e.color});Az.sfx(e.player?'boom':'pop');
     if(br){if(!e.player)S.loot.push({x:e.x,y:e.y,type:Math.random()<.5?'med':'armor',bob:0});}
     else{if(by&&by!==e&&by.team!==e.team)S.teamKills[by.team]++;e.dead=3;}}
@@ -592,7 +645,8 @@ function run(o){
   function endGame(won,sub){if(S.over)return;S.over=true;setTimeout(()=>o.end({won,kills:P.kills,sub}),900);}
   function update(dt){S.t+=dt;if(S.over){for(const e of S.ents)if(e.bot)botAI;return;}
     for(const e of S.ents){e.cool-=dt;e.inv-=dt;e.boost-=dt;if(e.reload>0){e.reload-=dt;if(e.reload<=0)e.ammo=e.gun.mag;}
-      if(!e.alive&&!br&&e.dead>0){e.dead-=dt;if(e.dead<=0){const p=e.team===0?freeSpot(60,WORLD/2-300,260,WORLD/2+300):freeSpot(WORLD-260,WORLD/2-300,WORLD-60,WORLD/2+300);e.x=p.x;e.y=p.y;e.hp=e.maxhp;e.alive=true;e.inv=2;e.ammo=e.gun.mag;e.armor=0;if(e.player)e.gun=mkGun(Az.eq('gun'));}}}
+      if(!e.alive&&!br&&e.dead>0&&!e.remote){e.dead-=dt;if(e.dead<=0){const p=(e.team===0)!==!!(net&&!net.host)?freeSpot(60,WORLD/2-300,260,WORLD/2+300):freeSpot(WORLD-260,WORLD/2-300,WORLD-60,WORLD/2+300);e.x=p.x;e.y=p.y;e.hp=e.maxhp;e.alive=true;e.inv=2;e.ammo=e.gun.mag;e.armor=0;if(e.player)e.gun=mkGun(Az.eq('gun'));}}}
+    if(net){netT-=dt;if(netT<=0){netT=.05;net.send({t:'s',x:P.x,y:P.y,a:P.ang,hp:P.hp,ar:P.armor,al:P.alive?1:0,gn:P.gun.name});}if(R){R.x+=(R.tx-R.x)*Math.min(1,dt*20);R.y+=(R.ty-R.y)*Math.min(1,dt*20);}}
     playerUpdate(dt);for(const e of S.ents)if(e.bot)botAI(e,dt);
     for(const b of S.bul){const steps=Math.ceil(rad(b.vx,b.vy)*dt/10);for(let s=0;s<steps&&b.life>0;s++){b.x+=b.vx*dt/steps;b.y+=b.vy*dt/steps;
       if(blocked(b.x,b.y)){b.life=0;S.parts.push({x:b.x,y:b.y,vx:0,vy:0,l:.15,s:6,c:'#ccc'});break;}
@@ -645,12 +699,23 @@ function run(o){
     /* touch sticks */
     for(const id in sticks){const s=sticks[id],dx=s.x-s.ox,dy=s.y-s.oy,d=Math.min(50,rad(dx,dy)),a=Math.atan2(dy,dx);ctx.strokeStyle=s.kind==='aim'?'rgba(255,90,120,.7)':'rgba(120,220,255,.7)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(s.ox,s.oy,50,0,TAU);ctx.stroke();ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.arc(s.ox+Math.cos(a)*d,s.oy+Math.sin(a)*d,20,0,TAU);ctx.fill();}
     if(!Object.keys(sticks).length&&S.t<6&&'ontouchstart' in window){ctx.fillStyle='rgba(255,255,255,.7)';ctx.font='13px Poppins,sans-serif';ctx.textAlign='center';ctx.fillText('◀ drag left to MOVE   ·   drag right to AIM+FIRE ▶',CW/2,CH-16);}}
+  /* ---------- online 1v1 (victim-authoritative) ---------- */
+  let R=null,netT=0;
+  if(net){S.killTarget=5;const mine=net.host?freeSpot(60,WORLD/2-250,220,WORLD/2+250):freeSpot(WORLD-260,WORLD/2-250,WORLD-60,WORLD/2+250);P.x=mine.x;P.y=mine.y;P.ang=net.host?0:Math.PI;
+    R=mk({team:1,hp:100,color:'#ff6b6b',hat:'',gun:mkGun(guns[0]),name:'Rival',remote:true,x:net.host?WORLD-200:140,y:WORLD/2});R.tx=R.x;R.ty=R.y;S.ents.push(R);
+    net.send({t:'hi',c:P.color,h:P.hat,mh:P.maxhp});
+    net.on(m=>{if(!m||S.over)return;
+      if(m.t==='s'){R.tx=m.x;R.ty=m.y;R.ang=m.a;R.hp=m.hp;R.armor=m.ar;R.alive=!!m.al;const g=guns.find(x=>x.name===m.gn);if(g&&R.gun.name!==g.name)R.gun=mkGun(g);}
+      else if(m.t==='hi'){R.color=m.c;R.hat=m.h;R.maxhp=m.mh;}
+      else if(m.t==='f'){for(const q of m.b)S.bul.push({x:q.x,y:q.y,vx:q.vx,vy:q.vy,dmg:q.dmg,life:q.life,col:q.col,team:1,o:R});}
+      else if(m.t==='k'){S.teamKills[0]++;P.kills++;S.feed.unshift({t:'You ⚔ Rival',l:5});}});
+    net.onclose(()=>{if(!S.over)endGame(true,'Rival left the game');});}
   /* ---------- loop ---------- */
   let raf,last=performance.now(),stopped=false,paused=false;
   function loop(t){if(stopped)return;raf=requestAnimationFrame(loop);let dt=(t-last)/1000;last=t;if(dt>.05)dt=.05;if(!paused){update(dt);render();}}
   const vis=()=>{paused=document.hidden;last=performance.now();};document.addEventListener('visibilitychange',vis);
   raf=requestAnimationFrame(loop);
-  return{S,stop(){stopped=true;cancelAnimationFrame(raf);removeEventListener('keydown',kd);removeEventListener('keyup',ku);document.removeEventListener('visibilitychange',vis);}};
+  return{S,stop(){stopped=true;if(net)net.on(()=>{});cancelAnimationFrame(raf);removeEventListener('keydown',kd);removeEventListener('keyup',ku);document.removeEventListener('visibilitychange',vis);}};
 }
 return{run};
 })();
@@ -666,10 +731,10 @@ function hud(h){
 }
 function begin(lv){
   if(G)G.stop();level=lv;const pl=Az.place(level);Az.setBadge('Lv '+level+' · '+pl.emoji+' '+pl.name);$('msg').textContent='Team deathmatch — first team to the kill target wins. You respawn after 3s.';
-  G=Shooter.run({cv:$('cv'),mode:'arena',level,diff:O.diff,hud,end:r=>{
-    Az.finish({game:'arena',level,diff:O.diff,won:r.won,base:55+r.kills*10,score:r.kills,title:r.won?'🏆 Team Victory!':'Team Defeated',sub:r.sub,next:lv=>begin(lv),retry:lv=>begin(lv)});}});
+  G=Shooter.run({cv:$('cv'),mode:'arena',level,diff:O.diff,net:O.mode==='online'?O.net:null,hud,end:r=>{
+    Az.finish({game:'arena',level,diff:O.diff,won:r.won,progress:O.mode!=='online',base:55+r.kills*10,score:r.kills,title:r.won?'🏆 Team Victory!':'Team Defeated',sub:r.sub,next:lv=>begin(lv),retry:lv=>O.mode==='online'?location.reload():begin(lv)});}});
 }
-$('rst').onclick=()=>O&&begin(O.level);
+$('rst').onclick=()=>O&&O.mode!=='online'&&begin(O.level);
 Az.start({game:'arena',onStart:o=>{O=o;begin(o.level);}});
 window.__sh={get G(){return G;},begin:l=>{O=O||{diff:'medium'};begin(l);}};
 })();

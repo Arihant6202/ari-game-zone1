@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="firebase-config.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0a0614">
 <title>Connect Four · Ari Game Zone</title>
@@ -154,13 +155,13 @@ function db() {
   D.theme = D.theme || 'neon'; D.diff = D.diff || 'medium'; D.sound = D.sound !== false; D.daily = D.daily || '';
   return D;
 }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} if (window.__azPush) window.__azPush(); }
 
 /* ------------------------------ games registry ------------------------------ */
 // modes: single (vs computer) | local (2 players, one device) | online (room code)
 const GAMES = [
   { id: 'br', file: 'battle-royale.html', name: 'Zone Survivor', emoji: '🪂', cat: 'Shooter', max: 100, modes: ['single'], shop: ['gun', 'outfit'], desc: 'Battle royale! Drop in, loot, shoot and be the last one alive as the zone shrinks.' },
-  { id: 'arena', file: 'arena-strike.html', name: 'Arena Strike', emoji: '🔫', cat: 'Shooter', max: 100, modes: ['single'], shop: ['gun', 'outfit'], desc: 'Fast team deathmatch. Respawn, fight bots and reach the kill target first.' },
+  { id: 'arena', file: 'arena-strike.html', name: 'Arena Strike', emoji: '🔫', cat: 'Shooter', max: 100, modes: ['single', 'online'], shop: ['gun', 'outfit'], desc: 'Fast team deathmatch. Respawn, fight bots and reach the kill target first.' },
   { id: 'race', file: 'turbo-racing.html', name: 'Turbo Racing', emoji: '🏎️', cat: 'Racing', max: 100, modes: ['single', 'local'], shop: ['car'], desc: 'Dodge traffic on the highway at crazy speed. New place every few levels!' },
   { id: 'chess', file: 'chess.html', name: 'Royal Chess', emoji: '♟️', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: ['piece'], desc: 'Full chess with a smart computer (50 levels), 2 players, or play online.' },
   { id: 'ttt', file: 'tic-tac-toe.html', name: 'Tic Tac Toe', emoji: '⭕', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: [], desc: 'Classic X and O. Beat the AI, play a friend or go online.' },
@@ -370,6 +371,54 @@ function mkNet(conn, isHost) {
 }
 const code4 = () => { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 4; i++) s += c[Math.floor(Math.random() * c.length)]; return s; };
 
+/* ------------------------------ phone login (Firebase OTP + cloud save) ------------------------------ */
+let fbUser = null, fbDb = null, pushT = null, fbP = null;
+const FBV = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-';
+function loadFb() {
+  if (fbP) return fbP;
+  fbP = new Promise((res, rej) => {
+    const c = window.AZ_FIREBASE;
+    if (!c || !c.apiKey || /PASTE/.test(c.apiKey)) return rej(new Error('Firebase keys missing. firebase-config.js me apni keys daalo.'));
+    const L = ['app', 'auth', 'database'];
+    const next = i => { if (i === L.length) { try { firebase.initializeApp(c); fbDb = firebase.database(); res(); } catch (e) { rej(e); } return; }
+      const s = document.createElement('script'); s.src = FBV + L[i] + '-compat.js'; s.onload = () => next(i + 1); s.onerror = () => rej(new Error('Login service load nahi hua. Internet check karo.')); document.head.appendChild(s); };
+    next(0);
+  });
+  fbP.catch(() => { fbP = null; });
+  return fbP;
+}
+window.__azPush = () => { if (!fbUser || !fbDb) return; clearTimeout(pushT); pushT = setTimeout(() => { try { fbDb.ref('users/' + fbUser.uid).set(JSON.parse(JSON.stringify(db()))); } catch (e) {} }, 1500); };
+function afterLogin(u) {
+  fbUser = u; try { localStorage.setItem('az_login', '1'); } catch (e) {}
+  const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 ' + String(u.phoneNumber || '').slice(-4);
+  fbDb.ref('users/' + u.uid).once('value').then(s => {
+    const c = s.val();
+    if (c && typeof c === 'object') { try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} D = null; db(); Az.refresh && Az.refresh(); Az.toast && Az.toast('☁️ Progress loaded'); }
+    else window.__azPush();
+  }).catch(() => {});
+}
+function authInit() { loadFb().then(() => firebase.auth().onAuthStateChanged(u => { if (u) afterLogin(u); })).catch(() => {}); }
+Az.login = function () {
+  const m = Az.modal('<div id="lgin"></div>', {});
+  const box = () => m.querySelector('#lgin');
+  if (fbUser) { box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + fbUser.phoneNumber + '<br>Coins & levels cloud me save ho rahe hain ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div>';
+    m.addEventListener('click', e => { if (e.target.id === 'lo') { firebase.auth().signOut(); fbUser = null; try { localStorage.removeItem('az_login'); } catch (x) {} const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 Login'; m.close(); } }); return m; }
+  box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login</h2><p class="sub" style="text-align:center">Phone number se account banao, progress save rahega.</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>';
+  const err = t => { box().querySelector('#lerr').textContent = t; }; let conf = null, ver = null;
+  m.addEventListener('click', e => {
+    if (e.target.id === 'sn' && !conf) {
+      let n = box().querySelector('#ph').value.replace(/[\s-]/g, ''); if (!n.startsWith('+')) n = '+91' + n.replace(/^0+/, '');
+      if (n.length < 12) return err('Sahi phone number daalo.'); err('OTP bhej raha hoon…');
+      loadFb().then(() => { ver = ver || new firebase.auth.RecaptchaVerifier(box().querySelector('#rc'), { size: 'invisible' }); return firebase.auth().signInWithPhoneNumber(n, ver); })
+        .then(c => { conf = c; err(''); box().querySelector('#otpr').style.display = ''; e.target.textContent = 'Verify OTP'; })
+        .catch(x => err(x.message || 'OTP nahi gaya. Dobara try karo.'));
+    } else if (e.target.id === 'sn' && conf) {
+      conf.confirm(box().querySelector('#otp').value.trim()).then(r => { m.close(); Az.toast && Az.toast('✅ Login ho gaya!'); }).catch(() => err('Galat OTP. Dobara try karo.'));
+    }
+  });
+  return m;
+};
+
 /* ------------------------------ start screen ------------------------------ */
 /* Az.start({game:'chess', extra:[{key:'side',label:'Play as',options:[['w','White'],['b','Black']]}], onStart(o){...}})
    o = { mode:'single'|'local'|'online', diff:'easy'|'medium'|'hard', level:n, extra:{...}, net:Net|null, seed:n, host:bool } */
@@ -486,6 +535,8 @@ function init() {
       else if (t.id === 'azthm') Az.cycleTheme();
     });
   }
+  { const dly = document.getElementById('daily'); if (dly && !document.getElementById('azlogin')) { const b = el('button', 'azbtn sm ghost', '👤 Login'); b.id = 'azlogin'; dly.parentNode.insertBefore(b, dly); b.onclick = () => Az.login(); } }
+  try { if (localStorage.getItem('az_login')) authInit(); } catch (e) {}
   Az.refresh();
   document.dispatchEvent(new Event('az-ready'));
 }
