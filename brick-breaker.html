@@ -153,7 +153,7 @@ function save() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e
 /* ------------------------------ games registry ------------------------------ */
 // modes: single (vs computer) | local (2 players, one device) | online (room code)
 const GAMES = [
-  { id: 'br', file: 'battle-royale.html', name: 'Zone Survivor', emoji: '🪂', cat: 'Shooter', max: 100, modes: ['single'], shop: ['gun', 'outfit'], desc: 'Battle royale! Drop in, loot, shoot and be the last one alive as the zone shrinks.' },
+  { id: 'br', file: 'battle-royale.html', name: 'Zone Survivor', emoji: '🪂', cat: 'Shooter', max: 100, modes: ['single', 'online'], shop: ['gun', 'outfit'], desc: 'Battle royale! Drop in, loot, shoot and be the last one alive as the zone shrinks.' },
   { id: 'arena', file: 'arena-strike.html', name: 'Arena Strike', emoji: '🔫', cat: 'Shooter', max: 100, modes: ['single', 'online'], shop: ['gun', 'outfit'], desc: 'Fast team deathmatch. Respawn, fight bots and reach the kill target first.' },
   { id: 'race', file: 'turbo-racing.html', name: 'Turbo Racing', emoji: '🏎️', cat: 'Racing', max: 100, modes: ['single', 'local'], shop: ['car'], desc: 'Dodge traffic on the highway at crazy speed. New place every few levels!' },
   { id: 'chess', file: 'chess.html', name: 'Royal Chess', emoji: '♟️', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: ['piece'], desc: 'Full chess with a smart computer (50 levels), 2 players, or play online.' },
@@ -343,6 +343,11 @@ Az.shop = function (slots, startSlot) {
 };
 
 /* ------------------------------ online (PeerJS room codes) ------------------------------ */
+const PCFG = { debug: 1, config: { iceServers: [
+  { urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, { urls: 'stun:global.stun.twilio.com:3478' },
+  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' } ], iceCandidatePoolSize: 4 } };
 function loadPeer() {
   return new Promise((res, rej) => {
     if (window.Peer) return res();
@@ -450,7 +455,7 @@ Az.start = function (cfg) {
       const settings = () => ({ __az: 'start', diff: st.diff, level: 1, extra: st.extra, seed: Math.floor(Math.random() * 1e9) });
       if (kind === 'host') {
         const tryOpen = n => {
-          const code = code4(); peer = new Peer('azgz-' + code);
+          const code = code4(); peer = new Peer('azgz-' + code, PCFG);
           peer.on('error', e => { if (e.type === 'unavailable-id' && n < 4) { cleanup(); tryOpen(n + 1); } else err('Online error: ' + (e.type || e)); });
           peer.on('open', () => info(`<div class="azcode">${code}</div><p class="sub" style="text-align:center">Share this code with your friend and wait… ⏳</p>`));
           peer.on('connection', conn => {
@@ -462,12 +467,12 @@ Az.start = function (cfg) {
         tryOpen(0);
       } else {
         const code = (jcode || '').toUpperCase().trim(); if (code.length !== 4) { err('Enter the 4-letter code.'); info(''); return; }
-        peer = new Peer(); let done = false;
+        peer = new Peer(undefined, PCFG); let done = false;
         peer.on('error', e => { if (!done) err(e.type === 'peer-unavailable' ? 'Room not found. Check the code.' : 'Online error: ' + (e.type || e)); info(''); });
         peer.on('open', () => {
           const conn = peer.connect('azgz-' + code, { reliable: true }); const net = mkNet(conn, false);
           net._start = s => { if (done) return; done = true; begin({ mode: 'online', diff: s.diff, level: 1, extra: s.extra || {}, seed: s.seed, net, host: false }); };
-          setTimeout(() => { if (!done) { err('Could not connect. Try again.'); info(''); } }, 14000);
+          setTimeout(() => { if (!done) { err('Connect nahi hua. Code dobara check karo, dono net chalu rakho, aur ek hi WiFi par try karo.'); info(''); } }, 25000);
         });
       }
     }).catch(e => { err(e.message); info(''); });
