@@ -22,3 +22,13 @@ Upload karte waqt purani files replace kar do (sab ek hi folder me, index.html r
   (Google login / OTP / cloud save ke liye). Bina keys ke site guest mode me chalti hai.
 * Note: coins/XP abhi bhi browser (client) me calculate hote hain. Rules sirf basic limit lagate hain;
   poori cheating-proof economy ke liye server (Cloud Functions) chahiye.
+
+--- Update (v4) ---
+* Player ID ab sirf number (8 digit) hai. Purani AZ-XXXX-XXXX wali ID apne aap number me badal jaati hai.
+* Profile me "Phone se photo chuno": gallery/camera se photo lo, wo chhoti karke save hoti hai (home par avatar me dikhti hai).
+  Cloud ke liye database.rules.json dobara Firebase Rules me paste karo (photo field add hui hai).
+* Online room me dono players ke naam + photo upar dikhte hain ("Ari vs Rohan").
+* Turbo Racing: online me dono car alag lane se start hoti hain. Steering: ungli jahan rakho car wahan jaati hai
+  (left/right half wala tap nahi), keyboard A/D ya arrows pehle jaise.
+* Naya game: ludo.html (12 files ab). Single (computer ke saath), Same phone (2-4 players), Online (2 insaan, baaki computer).
+  Online me dono phones par game same seed se chalta hai, isliye sirf dice/goti ka choice bheja jaata hai.

@@ -132,10 +132,10 @@ const el = (t, c, h) => { const e = document.createElement(t); if (c) e.classNam
 
 /* ------------------------------ storage ------------------------------ */
 function genUid() {
-  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = '';
-  try { const r = new Uint8Array(8); crypto.getRandomValues(r); r.forEach(b => s += A[b % 32]); }
-  catch (e) { for (let i = 0; i < 8; i++) s += A[Math.floor(Math.random() * 32)]; }
-  return 'AZ-' + s.slice(0, 4) + '-' + s.slice(4);
+  let s = '';
+  try { const r = new Uint8Array(8); crypto.getRandomValues(r); r.forEach((b, i) => s += i === 0 ? 1 + (b % 9) : b % 10); }
+  catch (e) { s = String(10000000 + Math.floor(Math.random() * 89999999)); }
+  return s;
 }
 let D = null;
 function db() {
@@ -145,7 +145,7 @@ function db() {
   if (D.coins == null) D.coins = 150;
   D.xp = D.xp || 0; D.lv = D.lv || {}; D.best = D.best || {}; D.own = D.own || {}; D.eq = D.eq || {};
   D.theme = D.theme || 'neon'; D.diff = D.diff || 'medium'; D.sound = D.sound !== false; D.daily = D.daily || '';
-  if (!/^AZ-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(D.uid || '')) { D.uid = genUid(); try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} }
+  if (!/^\d{8}$/.test(D.uid || '')) { D.uid = genUid(); try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} }
   D.name = typeof D.name === 'string' ? D.name : ''; D.nameSet = !!D.nameSet; D.nameAsked = !!D.nameAsked;
   return D;
 }
@@ -160,6 +160,7 @@ const GAMES = [
   { id: 'chess', file: 'chess.html', name: 'Royal Chess', emoji: '♟️', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: ['piece'], desc: 'Full chess with a smart computer (50 levels), 2 players, or play online.' },
   { id: 'ttt', file: 'tic-tac-toe.html', name: 'Tic Tac Toe', emoji: '⭕', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: [], desc: 'Classic X and O. Beat the AI, play a friend or go online.' },
   { id: 'c4', file: 'connect-four.html', name: 'Connect Four', emoji: '🔴', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: [], desc: 'Drop discs and connect four. AI levels, 2 players or online.' },
+  { id: 'ludo', file: 'ludo.html', name: 'Ludo', emoji: '🎲', cat: 'Board', max: 1, modes: ['single', 'local', 'online'], shop: [], desc: 'Classic Ludo for 2-4 players: vs computer, on one phone, or online with a friend.' },
   { id: 'flyer', file: 'sky-flyer.html', name: 'Sky Flyer', emoji: '🐤', cat: 'Arcade', max: 100, modes: ['single'], shop: ['bird'], desc: 'Tap to fly through the gaps. Pick a cool bird skin.' },
   { id: 'snake', file: 'snake-evolution.html', name: 'Snake Evolution', emoji: '🐍', cat: 'Arcade', max: 100, modes: ['single'], shop: ['snake'], desc: 'Eat, grow and avoid walls. Obstacles and speed grow each level.' },
   { id: 'brick', file: 'brick-breaker.html', name: 'Brick Breaker', emoji: '🧱', cat: 'Arcade', max: 100, modes: ['single'], shop: ['ball'], desc: 'Break all bricks, catch power-ups. 100 different layouts.' },
@@ -314,13 +315,36 @@ const Az = window.Az = {
     document.querySelectorAll('[data-az=coins]').forEach(e => e.textContent = Az.coins());
     document.querySelectorAll('[data-az=plvl]').forEach(e => e.textContent = Az.plvl());
     document.querySelectorAll('[data-az=name]').forEach(e => e.textContent = Az.name());
+    document.querySelectorAll('[data-az=avatar]').forEach(e => Az.avatarFill(e));
     document.querySelectorAll('[data-az=uid]').forEach(e => e.textContent = Az.uid());
   },
   setTheme(t) { db().theme = t; save(); document.documentElement.dataset.theme = t; const m = $('meta[name=theme-color]'); if (m) m.content = getComputedStyle(document.documentElement).getPropertyValue('--bg1').trim() || '#0a0614'; },
   cycleTheme() { const T = ['neon', 'sunset', 'ocean', 'forest']; Az.setTheme(T[(T.indexOf(db().theme) + 1) % T.length]); Az.toast('🎨 Theme: ' + db().theme); },
 };
 
-/* ------------------------------ player profile (random UID + name) ------------------------------ */
+/* ------------------------------ player profile (numeric UID + name + photo) ------------------------------ */
+{ const st = document.createElement('style'); st.textContent = '.azav{display:grid;place-items:center;overflow:hidden;background:linear-gradient(135deg,var(--a1),var(--a2));flex:none}.azav img,.avatar img{width:100%;height:100%;object-fit:cover;display:block}.avatar{overflow:hidden}.azvs{display:flex;justify-content:center;align-items:center;gap:10px;padding:6px 10px;font-size:13px;background:rgba(255,255,255,.05);border-bottom:1px solid var(--line)}.azvsp{display:flex;align-items:center;gap:6px;min-width:0}.azvsp .azav{width:26px;height:26px;border-radius:50%;font-size:14px}.azvsp b{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.azvs i{color:var(--muted);font-style:normal;font-weight:900;letter-spacing:1px}'; document.head.appendChild(st); }
+Az.photo = () => { const p = db().photo; return (typeof p === 'string' && p.indexOf('data:image/') === 0) ? p : ''; };
+Az.avatarFill = (el, photo, emoji) => { el.textContent = ''; const p = photo === undefined ? Az.photo() : photo; if (p && p.indexOf('data:image/') === 0 && p.length < 30000) { const i = new Image(); i.alt = ''; i.src = p; el.appendChild(i); } else el.textContent = emoji || '😎'; };
+Az.setPhoto = function (file) {
+  return new Promise((res, rej) => {
+    if (!file || !/^image\//.test(file.type)) return rej(new Error('image'));
+    const fr = new FileReader(); fr.onerror = () => rej(new Error('read'));
+    fr.onload = () => { const im = new Image(); im.onerror = () => rej(new Error('img'));
+      im.onload = () => { const S = 96, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d'), m = Math.min(im.width, im.height);
+        x.drawImage(im, (im.width - m) / 2, (im.height - m) / 2, m, m, 0, 0, S, S); db().photo = c.toDataURL('image/jpeg', .72); save(); Az.refresh(); res(); };
+      im.src = fr.result; };
+    fr.readAsDataURL(file);
+  });
+};
+Az.showVs = function (n) {
+  if (!n || !n.peer) return; const bar = document.querySelector('.azbar'); if (!bar) { setTimeout(() => Az.showVs(n), 400); return; }
+  let v = document.getElementById('azvs'); if (!v) { v = document.createElement('div'); v.id = 'azvs'; v.className = 'azvs'; bar.insertAdjacentElement('afterend', v); }
+  const me = { name: Az.name(), photo: Az.photo() }, op = n.peer, L = n.host ? me : op, R = n.host ? op : me; v.textContent = '';
+  const side = (p, right) => { const s = document.createElement('span'); s.className = 'azvsp'; const a = document.createElement('span'); a.className = 'azav'; Az.avatarFill(a, p.photo, '🙂'); const b = document.createElement('b'); b.textContent = p.name; if (right) s.append(b, a); else s.append(a, b); return s; };
+  const mid = document.createElement('i'); mid.textContent = 'vs'; v.append(side(L, false), mid, side(R, true));
+};
+
 Az.uid = () => db().uid;
 Az.name = () => db().name || ('Player-' + db().uid.slice(-4));
 Az.cleanName = n => String(n || '').replace(/[\u0000-\u001f<>&"'`\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, 14);
@@ -337,6 +361,14 @@ Az.profile = function (first) {
     '<div class="azrow c"><button class="azbtn" id="pfsave">✅ Save</button><button class="azbtn ghost" id="pfskip">' + (first ? 'Skip' : 'Close') + '</button></div>',
     { sticky: !!first });
   m.querySelector('#pfuid').textContent = Az.uid();
+  { const row = document.createElement('div'); row.className = 'azrow c'; row.style.cssText = 'flex-direction:column;align-items:center;gap:8px;margin-bottom:8px';
+    const av = document.createElement('div'); av.className = 'azav'; av.style.cssText = 'width:84px;height:84px;border-radius:50%;font-size:44px'; Az.avatarFill(av);
+    const fi = document.createElement('input'); fi.type = 'file'; fi.accept = 'image/*'; fi.hidden = true;
+    const bt = document.createElement('button'); bt.className = 'azbtn ghost sm'; bt.textContent = '📷 Phone se photo chuno';
+    const rm = document.createElement('button'); rm.className = 'azbtn ghost sm'; rm.textContent = '✖ Photo hatao';
+    bt.onclick = () => fi.click(); rm.onclick = () => { db().photo = ''; save(); Az.refresh(); Az.avatarFill(av); };
+    fi.onchange = () => { const f = fi.files && fi.files[0]; if (f) Az.setPhoto(f).then(() => { Az.avatarFill(av); Az.toast('✅ Photo save ho gayi'); }).catch(() => Az.toast('❌ Photo nahi chali, dusri try karo')); };
+    const r2 = document.createElement('div'); r2.className = 'azrow c'; r2.append(bt, rm); row.append(av, r2, fi); m.querySelector('#pfuid').parentNode.before(row); }
   const inp = m.querySelector('#pfname'); inp.value = db().nameSet ? db().name : '';
   setTimeout(() => { try { inp.focus(); } catch (e) {} }, 50);
   const doSave = () => { if (Az.setName(inp.value)) { m.close(); Az.toast('✅ Naam save: ' + Az.name()); } else m.querySelector('#pferr').textContent = 'Naam kam se kam 2 characters ka ho.'; };
@@ -397,7 +429,9 @@ function mkNet(conn, isHost) {
     onclose(f) { cl = f; if (!n.open) f(); },
     close() { try { conn.close(); } catch (e) {} },
   };
-  conn.on('data', d => { if (d && d.__az === 'start') { n._start && n._start(d); return; } if (fn) fn(d); else q.push(d); });
+  const hello = () => { try { conn.send({ __az: 'hello', name: Az.name(), uid: Az.uid(), photo: Az.photo() }); } catch (e) {} };
+  if (conn.open) hello(); else conn.on('open', hello);
+  conn.on('data', d => { if (d && d.__az === 'hello') { n.peer = { name: Az.cleanName(d.name) || 'Player', uid: String(d.uid || '').replace(/\D/g, '').slice(0, 10), photo: (typeof d.photo === 'string' && d.photo.indexOf('data:image/') === 0 && d.photo.length < 30000) ? d.photo : '' }; Az.showVs && Az.showVs(n); return; } if (d && d.__az === 'start') { n._start && n._start(d); return; } if (fn) fn(d); else q.push(d); });
   const gone = () => { if (n.open) { n.open = false; cl && cl(); } };
   conn.on('close', gone); conn.on('error', gone);
   return n;

@@ -9,7 +9,8 @@
         "coins": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000000" },
         "xp":    { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000000" },
         "uid":   { ".validate": "newData.isString() && newData.val().length <= 16" },
-        "name":  { ".validate": "newData.isString() && newData.val().length <= 14" }
+        "name":  { ".validate": "newData.isString() && newData.val().length <= 14" },
+        "photo": { ".validate": "newData.isString() && newData.val().length <= 30000" }
       }
     }
   }
