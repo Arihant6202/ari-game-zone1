@@ -153,7 +153,7 @@ function save() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e
 const GAMES = [
   { id: 'br', file: 'battle-royale.html', name: 'Zone Survivor', emoji: '🪂', cat: 'Shooter', max: 100, modes: ['single', 'online'], shop: ['gun', 'outfit'], desc: 'Battle royale! Drop in, loot, shoot and be the last one alive as the zone shrinks.' },
   { id: 'arena', file: 'arena-strike.html', name: 'Arena Strike', emoji: '🔫', cat: 'Shooter', max: 100, modes: ['single', 'online'], shop: ['gun', 'outfit'], desc: 'Fast team deathmatch. Respawn, fight bots and reach the kill target first.' },
-  { id: 'race', file: 'turbo-racing.html', name: 'Turbo Racing', emoji: '🏎️', cat: 'Racing', max: 100, modes: ['single', 'local'], shop: ['car'], desc: 'Dodge traffic on the highway at crazy speed. New place every few levels!' },
+  { id: 'race', file: 'turbo-racing.html', name: 'Turbo Racing', emoji: '🏎️', cat: 'Racing', max: 100, modes: ['single', 'local', 'online'], shop: ['car'], desc: 'Dodge traffic at crazy speed. Solo, 2 players on one device, or race a friend online!' },
   { id: 'chess', file: 'chess.html', name: 'Royal Chess', emoji: '♟️', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: ['piece'], desc: 'Full chess with a smart computer (50 levels), 2 players, or play online.' },
   { id: 'ttt', file: 'tic-tac-toe.html', name: 'Tic Tac Toe', emoji: '⭕', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: [], desc: 'Classic X and O. Beat the AI, play a friend or go online.' },
   { id: 'c4', file: 'connect-four.html', name: 'Connect Four', emoji: '🔴', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: [], desc: 'Drop discs and connect four. AI levels, 2 players or online.' },
@@ -676,11 +676,25 @@ function run(o){
       zone:z?(z.k>=5&&z.state==='wait'?'Final zone':(z.state==='wait'?'Shrinks in '+Math.ceil(z.timer)+'s':'Shrinking!')):'',inZone:z?rad(P.x-z.x,P.y-z.y)<=z.r:true,msg:S.msg});}
   /* ---------- render ---------- */
   function resize(){const r=cv.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1);CW=Math.max(100,r.width);CH=Math.max(100,r.height);if(cv.width!==Math.round(CW*dpr)||cv.height!==Math.round(CH*dpr)){cv.width=Math.round(CW*dpr);cv.height=Math.round(CH*dpr);}ctx.setTransform(dpr,0,0,dpr,0,0);zoom=clamp(CW/560,.74,1.1);}
-  function drawChar(e,me){ctx.save();ctx.translate(e.x,e.y);if(e.inv>0)ctx.globalAlpha=.55+.3*Math.sin(S.t*20);
-    ctx.fillStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.ellipse(2,5,e.r,e.r*.8,0,0,TAU);ctx.fill();
+  /* walk cycle: driven by the distance really travelled, so the feet only step while the character moves */
+  function walkState(e){
+    const w=e._w||(e._w={px:e.x,py:e.y,ph:0,k:0,md:0,t:S.t}),dt=Math.max(.001,S.t-w.t);w.t=S.t;
+    const dx=e.x-w.px,dy=e.y-w.py,sp=Math.hypot(dx,dy)/dt;w.px=e.x;w.py=e.y;
+    const mv=sp>8&&sp<900;if(mv)w.md=Math.atan2(dy,dx);
+    w.ph+=(mv?Math.min(sp,260):0)*dt*.085;w.k+=((mv?Math.min(1,sp/70):0)-w.k)*Math.min(1,dt*12);
+    return w;}
+  function drawChar(e,me){const w=walkState(e),sn=Math.sin(w.ph),bob=Math.abs(sn)*w.k,cs=Math.cos(w.md),sg=Math.sin(w.md),swx=-sg*sn*e.r*.12*w.k,swy=cs*sn*e.r*.12*w.k;
+    ctx.save();ctx.translate(e.x,e.y);if(e.inv>0)ctx.globalAlpha=.55+.3*Math.sin(S.t*20);
+    ctx.fillStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.ellipse(2,5,e.r*(1-bob*.08),e.r*.8*(1-bob*.08),0,0,TAU);ctx.fill();
+    /* two shoes stepping forward / back along the walking direction (the lifted foot is drawn bigger) */
+    if(w.k>.03)for(let s=-1;s<=1;s+=2){const f=sn*s*e.r*1.2*w.k,lat=s*e.r*.6,lift=1+.22*Math.max(0,Math.cos(w.ph)*s)*w.k;
+      ctx.save();ctx.translate(cs*f-sg*lat,sg*f+cs*lat);ctx.rotate(w.md);ctx.fillStyle='#f4f4fa';ctx.strokeStyle='#161624';ctx.lineWidth=2;
+      ctx.beginPath();ctx.ellipse(0,0,e.r*.46*lift,e.r*.3*lift,0,0,TAU);ctx.fill();ctx.stroke();ctx.restore();}
+    ctx.translate(swx,swy);
     ctx.rotate(e.ang);ctx.fillStyle=e.gun.color;ctx.fillRect(6,-3.5,e.gun.pellets>1?24:e.gun.speed>15?32:20,7);ctx.fillStyle='#222';ctx.fillRect(6,-3.5,6,7);
-    ctx.fillStyle=e.color;ctx.strokeStyle=me?'#fff':(e.team!==P.team?'#ff4d6d':'#3dd9ff');ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,e.r,0,TAU);ctx.fill();ctx.stroke();ctx.rotate(-e.ang);
+    ctx.fillStyle=e.color;ctx.strokeStyle=me?'#fff':(e.team!==P.team?'#ff4d6d':'#3dd9ff');ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,e.r*(1+bob*.07),0,TAU);ctx.fill();ctx.stroke();ctx.rotate(-e.ang);
     if(e.hat){ctx.font='18px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(e.hat,0,-4);}
+    ctx.translate(-swx,-swy);
     if(me){ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(0,-e.r-20);ctx.lineTo(-6,-e.r-30);ctx.lineTo(6,-e.r-30);ctx.fill();}
     {const w=34,h=4;ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(-w/2,-e.r-12,w,h);ctx.fillStyle=e.hp/e.maxhp>.5?'#5fe38b':e.hp/e.maxhp>.25?'#ffd166':'#ff4d6d';ctx.fillRect(-w/2,-e.r-12,w*Math.max(0,e.hp)/e.maxhp,h);if(e.armor>0){ctx.fillStyle='#6ab7ff';ctx.fillRect(-w/2,-e.r-8,w*e.armor/100,2);}}
     ctx.restore();}
