@@ -199,6 +199,8 @@ const SHOP = {
     { id: 'o_robot', name: 'Cyber Bot', price: 1500, color: '#adb5bd', hat: '🤖', hp: 150, desc: '+50 HP' },
     { id: 'o_king', name: 'Battle King', price: 3000, color: '#ffd166', hat: '👑', hp: 175, desc: '+75 HP' },
     { id: 'o_ghost', name: 'Ghost Lord', price: 4500, color: '#e0aaff', hat: '👻', hp: 200, desc: '+100 HP' },
+    { id: 'o_wizard', name: 'Dark Wizard', price: 2000, color: '#6a4c93', hat: '🧙', hp: 140, desc: '+40 HP' },
+    { id: 'o_pumpkin', name: 'Pumpkin Knight', price: 3500, color: '#ff7f11', hat: '🎃', hp: 160, desc: '+60 HP' },
   ] },
   car: { title: 'Cars', emoji: '🏎️', items: [
     { id: 'c_red', name: 'Red Spark', price: 0, color: '#ef233c', speed: 1, desc: 'Starter car.' },
@@ -374,7 +376,7 @@ function loadFb() {
     const c = window.AZ_FIREBASE;
     if (!c || !c.apiKey || /PASTE/.test(c.apiKey)) return rej(new Error('Firebase keys missing. firebase-config.js me apni keys daalo.'));
     const L = ['app', 'auth', 'database'];
-    const next = i => { if (i === L.length) { try { firebase.initializeApp(c); fbDb = firebase.database(); res(); } catch (e) { rej(e); } return; }
+    const next = i => { if (i === L.length) { try { firebase.initializeApp(c); fbDb = firebase.database(); firebase.auth().onAuthStateChanged(u => { if (u) afterLogin(u); }); res(); } catch (e) { rej(e); } return; }
       const s = document.createElement('script'); s.src = FBV + L[i] + '-compat.js'; s.onload = () => next(i + 1); s.onerror = () => rej(new Error('Login service load nahi hua. Internet check karo.')); document.head.appendChild(s); };
     next(0);
   });
@@ -384,23 +386,28 @@ function loadFb() {
 window.__azPush = () => { if (!fbUser || !fbDb) return; clearTimeout(pushT); pushT = setTimeout(() => { try { fbDb.ref('users/' + fbUser.uid).set(JSON.parse(JSON.stringify(db()))); } catch (e) {} }, 1500); };
 function afterLogin(u) {
   fbUser = u; try { localStorage.setItem('az_login', '1'); } catch (e) {}
-  const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 ' + String(u.phoneNumber || '').slice(-4);
+  const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 ' + String(u.displayName || u.phoneNumber || 'Me').split(' ')[0].slice(0, 8);
   fbDb.ref('users/' + u.uid).once('value').then(s => {
     const c = s.val();
     if (c && typeof c === 'object') { try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} D = null; db(); Az.refresh && Az.refresh(); Az.toast && Az.toast('☁️ Progress loaded'); }
     else window.__azPush();
   }).catch(() => {});
 }
-function authInit() { loadFb().then(() => firebase.auth().onAuthStateChanged(u => { if (u) afterLogin(u); })).catch(() => {}); }
+function authInit() { loadFb().catch(() => {}); }
 Az.login = function () {
   const m = Az.modal('<div id="lgin"></div>', {});
   const box = () => m.querySelector('#lgin');
-  if (fbUser) { box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + fbUser.phoneNumber + '<br>Coins & levels cloud me save ho rahe hain ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div>';
+  if (fbUser) { box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + (fbUser.email || fbUser.phoneNumber) + '<br>Coins & levels cloud me save ho rahe hain ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div>';
     m.addEventListener('click', e => { if (e.target.id === 'lo') { firebase.auth().signOut(); fbUser = null; try { localStorage.removeItem('az_login'); } catch (x) {} const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 Login'; m.close(); } }); return m; }
-  box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login</h2><p class="sub" style="text-align:center">Phone number se account banao, progress save rahega.</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>';
+  box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login</h2><p class="sub" style="text-align:center">Account banao, coins aur levels save rahenge.</p><div class="azrow c"><button class="azbtn" id="gg">🔵 Google (Gmail) se login</button></div><p class="sub" style="text-align:center;margin-top:12px">ya phone OTP se:</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>';
   const err = t => { box().querySelector('#lerr').textContent = t; }; let conf = null, ver = null;
   m.addEventListener('click', e => {
-    if (e.target.id === 'sn' && !conf) {
+    if (e.target.id === 'gg') {
+      err('Google khul raha hai…');
+      loadFb().then(() => firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()))
+        .then(() => { m.close(); Az.toast && Az.toast('✅ Login ho gaya!'); })
+        .catch(x => err(x.code === 'auth/popup-closed-by-user' ? 'Login cancel hua.' : (x.message || 'Google login fail hua.')));
+    } else if (e.target.id === 'sn' && !conf) {
       let n = box().querySelector('#ph').value.replace(/[\s-]/g, ''); if (!n.startsWith('+')) n = '+91' + n.replace(/^0+/, '');
       if (n.length < 12) return err('Sahi phone number daalo.'); err('OTP bhej raha hoon…');
       loadFb().then(() => { ver = ver || new firebase.auth.RecaptchaVerifier(box().querySelector('#rc'), { size: 'invisible' }); return firebase.auth().signInWithPhoneNumber(n, ver); })

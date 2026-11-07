@@ -151,7 +151,7 @@ function save() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e
 /* ------------------------------ games registry ------------------------------ */
 // modes: single (vs computer) | local (2 players, one device) | online (room code)
 const GAMES = [
-  { id: 'br', file: 'battle-royale.html', name: 'Zone Survivor', emoji: '🪂', cat: 'Shooter', max: 100, modes: ['single'], shop: ['gun', 'outfit'], desc: 'Battle royale! Drop in, loot, shoot and be the last one alive as the zone shrinks.' },
+  { id: 'br', file: 'battle-royale.html', name: 'Zone Survivor', emoji: '🪂', cat: 'Shooter', max: 100, modes: ['single'], shop: ['outfit'], desc: 'Battle royale! Drop in, loot, shoot and be the last one alive as the zone shrinks.' },
   { id: 'arena', file: 'arena-strike.html', name: 'Arena Strike', emoji: '🔫', cat: 'Shooter', max: 100, modes: ['single', 'online'], shop: ['gun', 'outfit'], desc: 'Fast team deathmatch. Respawn, fight bots and reach the kill target first.' },
   { id: 'race', file: 'turbo-racing.html', name: 'Turbo Racing', emoji: '🏎️', cat: 'Racing', max: 100, modes: ['single', 'local'], shop: ['car'], desc: 'Dodge traffic on the highway at crazy speed. New place every few levels!' },
   { id: 'chess', file: 'chess.html', name: 'Royal Chess', emoji: '♟️', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: ['piece'], desc: 'Full chess with a smart computer (50 levels), 2 players, or play online.' },
@@ -196,6 +196,8 @@ const SHOP = {
     { id: 'o_robot', name: 'Cyber Bot', price: 1500, color: '#adb5bd', hat: '🤖', hp: 150, desc: '+50 HP' },
     { id: 'o_king', name: 'Battle King', price: 3000, color: '#ffd166', hat: '👑', hp: 175, desc: '+75 HP' },
     { id: 'o_ghost', name: 'Ghost Lord', price: 4500, color: '#e0aaff', hat: '👻', hp: 200, desc: '+100 HP' },
+    { id: 'o_wizard', name: 'Dark Wizard', price: 2000, color: '#6a4c93', hat: '🧙', hp: 140, desc: '+40 HP' },
+    { id: 'o_pumpkin', name: 'Pumpkin Knight', price: 3500, color: '#ff7f11', hat: '🎃', hp: 160, desc: '+60 HP' },
   ] },
   car: { title: 'Cars', emoji: '🏎️', items: [
     { id: 'c_red', name: 'Red Spark', price: 0, color: '#ef233c', speed: 1, desc: 'Starter car.' },
@@ -725,17 +727,33 @@ function run(o){
     const bl=[];for(let i=0;i<90;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(3.5,6,6),new THREE.MeshBasicMaterial({color:0xffffff}));m.visible=false;sc.add(m);bl.push(m);}
     const zone=new THREE.Mesh(new THREE.CylinderGeometry(1,1,320,48,1,true),new THREE.MeshBasicMaterial({color:0x3d7bff,transparent:true,opacity:.28,side:THREE.DoubleSide,depthWrite:false}));sc.add(zone);
     return{rd,cam,sc,col,mat,bl,zone,ch:new Map(),lt:new Map(),v:new THREE.Vector3(),lw:0,lh:0};}
-  function mkChar(e){const g=new THREE.Group(),m=T.mat;const body=new THREE.Mesh(new THREE.CylinderGeometry(e.r*.8,e.r*.9,30,12),m(e.color));body.position.y=15;g.add(body);
-    const head=new THREE.Mesh(new THREE.SphereGeometry(e.r*.6,12,10),m('#f1c27d'));head.position.y=38;g.add(head);
-    const gun=new THREE.Mesh(new THREE.BoxGeometry(26,5,5),m(e.gun.color));gun.position.set(18,24,0);g.add(gun);g.userData.gun=gun;
+  function mkChar(e){const g=new THREE.Group(),C=T.col,Dk=(c,f)=>new THREE.MeshLambertMaterial({color:C(c).multiplyScalar(f)}),m=T.mat,B=(w,h,d,mt,x,y,z,par)=>{const q=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mt);q.position.set(x,y,z);(par||g).add(q);return q;};
+    const skin=m('#f1c27d'),hat=e.hat||'',robot=hat==='🤖',pump=hat==='🎃',body=m(e.color),pants=Dk(e.color,.55),shoe=m('#222222'),dark=m('#1b1b1b');
+    const limb=(x,y,z,w,h,d,mt,tip)=>{const p=new THREE.Group();p.position.set(x,y,z);B(w,h,d,mt,0,-h/2,0,p);B(w+1,5,d+1,tip,0,-h-1.5,0,p);g.add(p);return p;};
+    const lL=limb(0,18,-5,8,14,8,pants,shoe),lR=limb(0,18,5,8,14,8,pants,shoe),torso=B(11,20,20,body,0,28,0);
+    B(12,12,12,robot?m('#adb5bd'):pump?m('#ff7f11'):skin,0,45,0);B(1,3,2.5,robot?new THREE.MeshBasicMaterial({color:0x00e5ff}):dark,6.2,46,-3);B(1,3,2.5,robot?new THREE.MeshBasicMaterial({color:0x00e5ff}):dark,6.2,46,3);
+    const aL=limb(0,37,-12,5,15,5,body,skin),aR=limb(0,37,12,5,15,5,body,skin);aL.rotation.z=aR.rotation.z=1.35;aL.rotation.y=-.6;aR.rotation.y=.6;
+    const gun=B(26,5,5,m(e.gun.color),20,33,0);
+    if(hat==='🥷'){B(12.8,3,12.8,m('#e63946'),0,48,0);B(12.6,4.5,12.6,m('#111111'),0,42.5,0);}
+    else if(hat==='🪖'){const h=new THREE.Mesh(new THREE.SphereGeometry(8,12,8,0,Math.PI*2,0,Math.PI/2),m('#4f772d'));h.position.y=47;g.add(h);}
+    else if(hat==='🤖'){B(1.5,8,1.5,m('#adb5bd'),0,55,0);B(3.5,3.5,3.5,new THREE.MeshBasicMaterial({color:0xff3d3d}),0,60,0);}
+    else if(hat==='👑'){B(13,3,13,m('#ffd700'),0,52,0);for(let k=0;k<4;k++){const a=k*Math.PI/2+Math.PI/4;B(3,4,3,m('#ffd700'),Math.cos(a)*5,55,Math.sin(a)*5);}}
+    else if(hat==='🎩'){B(18,1.5,18,m('#222222'),0,51.5,0);B(11,10,11,m('#222222'),0,57,0);}
+    else if(hat==='🧢'){B(13,4,13,m('#3a86ff'),0,50,0);B(7,1.5,11,m('#3a86ff'),8,48.5,0);}
+    else if(hat==='🧙'){B(20,1.5,20,m('#4b2e83'),0,51.5,0);const cn=new THREE.Mesh(new THREE.ConeGeometry(7,18,10),m('#4b2e83'));cn.position.y=61;g.add(cn);}
+    else if(hat==='🎃'){B(2.5,5,2.5,m('#2d6a4f'),0,53,0);}
+    else if(hat!=='👻'){B(12.8,4,12.8,m('#4a2f1b'),0,50.5,0);}
+    if(hat==='👻')g.traverse(o=>{if(o.isMesh){o.material.transparent=true;o.material.opacity=.6;}});
+    const sh=new THREE.Mesh(new THREE.CircleGeometry(14,16),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.3}));sh.rotation.x=-Math.PI/2;sh.position.y=.6;g.add(sh);
     if(e.player){const ring=new THREE.Mesh(new THREE.RingGeometry(e.r+4,e.r+8,24),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=1;g.add(ring);}
-    T.sc.add(g);return g;}
+    g.userData={gun,torso,lL,lR};T.sc.add(g);return g;}
   function pr(x,y,z){T.v.set(x,y,z).project(T.cam);return{x:(T.v.x*.5+.5)*CW,y:(-T.v.y*.5+.5)*CH,ok:T.v.z<1};}
   function render3(){resize();const rd=T.rd,cam=T.cam,dom=rd.domElement;
     if(T.lw!==CW||T.lh!==CH){rd.setSize(CW,CH);cam.aspect=CW/CH;cam.updateProjectionMatrix();T.lw=CW;T.lh=CH;}
     dom.style.left=cv.offsetLeft+'px';dom.style.top=cv.offsetTop+'px';
     const sh=S.shake;cam.position.set(P.x+(Math.random()-.5)*sh,430,P.y+300+(Math.random()-.5)*sh);cam.lookAt(P.x,0,P.y);
     for(const e of S.ents){let g=T.ch.get(e);if(!g){g=mkChar(e);T.ch.set(e,g);}g.visible=e.alive;if(!e.alive)continue;g.position.set(e.x,0,e.y);g.rotation.y=-e.ang;
+      {const u=g.userData,dt=Math.max(.001,S.t-(u.t==null?S.t:u.t));u.t=S.t;const sp=Math.hypot(e.x-(u.px==null?e.x:u.px),e.y-(u.py==null?e.y:u.py))/dt;u.px=e.x;u.py=e.y;u.ph=(u.ph||0)+Math.min(sp,240)*dt*.07;const k=Math.min(1,sp/80),sw=Math.sin(u.ph)*k*.9;u.lL.rotation.z=sw;u.lR.rotation.z=-sw;u.torso.position.y=28+Math.abs(Math.sin(u.ph))*k*1.5;}
       const gn=g.userData.gun;if(g.userData.gn!==e.gun.name){gn.material.color.copy(T.col(e.gun.color));g.userData.gn=e.gun.name;}gn.scale.x=e.gun.pellets>1?.9:e.gun.speed>15?1.4:.8;}
     for(const l of S.loot){let m=T.lt.get(l);if(!m){m=new THREE.Mesh(new THREE.OctahedronGeometry(11),new THREE.MeshLambertMaterial({color:T.col({med:'#ff5c7a',armor:'#5aa0ff',boost:'#ffd54a',gun:l.g?l.g.color:'#ffffff'}[l.type])}));T.sc.add(m);T.lt.set(l,m);}m.visible=!l.gone;m.position.set(l.x,22+Math.sin(S.t*3+l.bob)*4,l.y);m.rotation.y=S.t*2;}
     let i=0;for(const b of S.bul){if(i>=90)break;const m=T.bl[i++];m.visible=true;m.position.set(b.x,22,b.y);m.material.color.set(b.col);}for(;i<90;i++)T.bl[i].visible=false;
