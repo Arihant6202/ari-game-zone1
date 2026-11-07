@@ -118,7 +118,7 @@ a{color:inherit}
   <div class="azhud" id="hud"></div>
   <canvas id="cv"></canvas>
   <div class="azmsg" id="msg" style="min-height:20px;font-size:13px">Loot crates 🩹🛡️⚡🔫 · stay inside the blue zone · last one alive wins</div>
-  <div class="azctl"><button class="azbtn ghost sm" id="rst">🔄 Restart</button></div>
+  <div class="azctl"><button class="azbtn ghost sm" id="rst">🔄 Restart</button><button class="azbtn ghost sm" id="gfx">🎨 Graphics</button></div>
 </main>
 <script>
 /* =====================================================================
@@ -371,7 +371,7 @@ function loadFb() {
     const c = window.AZ_FIREBASE;
     if (!c || !c.apiKey || /PASTE/.test(c.apiKey)) return rej(new Error('Firebase keys missing. firebase-config.js me apni keys daalo.'));
     const L = ['app', 'auth', 'database'];
-    const next = i => { if (i === L.length) { try { firebase.initializeApp(c); fbDb = firebase.database(); res(); } catch (e) { rej(e); } return; }
+    const next = i => { if (i === L.length) { try { firebase.initializeApp(c); fbDb = firebase.database(); firebase.auth().onAuthStateChanged(u => { if (u) afterLogin(u); }); res(); } catch (e) { rej(e); } return; }
       const s = document.createElement('script'); s.src = FBV + L[i] + '-compat.js'; s.onload = () => next(i + 1); s.onerror = () => rej(new Error('Login service load nahi hua. Internet check karo.')); document.head.appendChild(s); };
     next(0);
   });
@@ -381,23 +381,28 @@ function loadFb() {
 window.__azPush = () => { if (!fbUser || !fbDb) return; clearTimeout(pushT); pushT = setTimeout(() => { try { fbDb.ref('users/' + fbUser.uid).set(JSON.parse(JSON.stringify(db()))); } catch (e) {} }, 1500); };
 function afterLogin(u) {
   fbUser = u; try { localStorage.setItem('az_login', '1'); } catch (e) {}
-  const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 ' + String(u.phoneNumber || '').slice(-4);
+  const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 ' + String(u.displayName || u.phoneNumber || 'Me').split(' ')[0].slice(0, 8);
   fbDb.ref('users/' + u.uid).once('value').then(s => {
     const c = s.val();
     if (c && typeof c === 'object') { try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} D = null; db(); Az.refresh && Az.refresh(); Az.toast && Az.toast('☁️ Progress loaded'); }
     else window.__azPush();
   }).catch(() => {});
 }
-function authInit() { loadFb().then(() => firebase.auth().onAuthStateChanged(u => { if (u) afterLogin(u); })).catch(() => {}); }
+function authInit() { loadFb().catch(() => {}); }
 Az.login = function () {
   const m = Az.modal('<div id="lgin"></div>', {});
   const box = () => m.querySelector('#lgin');
-  if (fbUser) { box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + fbUser.phoneNumber + '<br>Coins & levels cloud me save ho rahe hain ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div>';
+  if (fbUser) { box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + (fbUser.email || fbUser.phoneNumber) + '<br>Coins & levels cloud me save ho rahe hain ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div>';
     m.addEventListener('click', e => { if (e.target.id === 'lo') { firebase.auth().signOut(); fbUser = null; try { localStorage.removeItem('az_login'); } catch (x) {} const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 Login'; m.close(); } }); return m; }
-  box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login</h2><p class="sub" style="text-align:center">Phone number se account banao, progress save rahega.</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>';
+  box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login</h2><p class="sub" style="text-align:center">Account banao, coins aur levels save rahenge.</p><div class="azrow c"><button class="azbtn" id="gg">🔵 Google (Gmail) se login</button></div><p class="sub" style="text-align:center;margin-top:12px">ya phone OTP se:</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>';
   const err = t => { box().querySelector('#lerr').textContent = t; }; let conf = null, ver = null;
   m.addEventListener('click', e => {
-    if (e.target.id === 'sn' && !conf) {
+    if (e.target.id === 'gg') {
+      err('Google khul raha hai…');
+      loadFb().then(() => firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()))
+        .then(() => { m.close(); Az.toast && Az.toast('✅ Login ho gaya!'); })
+        .catch(x => err(x.code === 'auth/popup-closed-by-user' ? 'Login cancel hua.' : (x.message || 'Google login fail hua.')));
+    } else if (e.target.id === 'sn' && !conf) {
       let n = box().querySelector('#ph').value.replace(/[\s-]/g, ''); if (!n.startsWith('+')) n = '+91' + n.replace(/^0+/, '');
       if (n.length < 12) return err('Sahi phone number daalo.'); err('OTP bhej raha hoon…');
       loadFb().then(() => { ver = ver || new firebase.auth.RecaptchaVerifier(box().querySelector('#rc'), { size: 'invisible' }); return firebase.auth().signInWithPhoneNumber(n, ver); })
@@ -632,9 +637,9 @@ function run(o){
     let usedAim=false;
     for(const id in sticks){const s=sticks[id];let dx=s.x-s.ox,dy=s.y-s.oy,d=rad(dx,dy),R=50,k=Math.min(1,d/R);
       if(s.kind==='move'&&d>6){mx+=dx/d*k;my+=dy/d*k;}
-      if(s.kind==='aim'&&d>10){p.ang=Math.atan2(dy,dx);usedAim=true;if(k>.3)fireNow=true;
+      if(s.kind==='aim'&&d>10){p.ang=Math.atan2(dy*AY,dx);usedAim=true;if(k>.3)fireNow=true;
         if(fireNow){let bestA=null,bd=.32;for(const e of S.ents){if(!e.alive||e.team===p.team)continue;const dd=rad(e.x-p.x,e.y-p.y);if(dd>520)continue;const df=angd(p.ang,Math.atan2(e.y-p.y,e.x-p.x));if(Math.abs(df)<bd){bd=Math.abs(df);bestA=df;}}if(bestA!=null)p.ang+=bestA*Az.pick(D,.55,.35,.15);}}}
-    if(mouse.has&&!usedAim){const sx=CW/2+(p.sx||0),sy=CH/2+(p.sy||0);p.ang=Math.atan2(mouse.y-CH/2,mouse.x-CW/2);if(mouse.down)fireNow=true;}
+    if(mouse.has&&!usedAim){const sx=CW/2+(p.sx||0),sy=CH/2+(p.sy||0);p.ang=Math.atan2((mouse.y-CH/2)*AY,mouse.x-CW/2);if(mouse.down)fireNow=true;}
     if(keys[' '])fireNow=true;
     const m=rad(mx,my);if(m>1){mx/=m;my/=m;}const sp=175*(P.boost>0?1.15:1);p.x+=mx*sp*dt;p.y+=my*sp*dt;pushOut(p);
     if(fireNow)fire(p);if(p.ammo<=0&&!p.reload)p.reload=1.1;
@@ -668,7 +673,7 @@ function run(o){
     if(me){ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(0,-e.r-20);ctx.lineTo(-6,-e.r-30);ctx.lineTo(6,-e.r-30);ctx.fill();}
     {const w=34,h=4;ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(-w/2,-e.r-12,w,h);ctx.fillStyle=e.hp/e.maxhp>.5?'#5fe38b':e.hp/e.maxhp>.25?'#ffd166':'#ff4d6d';ctx.fillRect(-w/2,-e.r-12,w*Math.max(0,e.hp)/e.maxhp,h);if(e.armor>0){ctx.fillStyle='#6ab7ff';ctx.fillRect(-w/2,-e.r-8,w*e.armor/100,2);}}
     ctx.restore();}
-  function render(){resize();const cx=P.x,cy=P.y,sh=S.shake;ctx.fillStyle=shade(place.sky[0],-.55);ctx.fillRect(0,0,CW,CH);
+  function render2d(){resize();const cx=P.x,cy=P.y,sh=S.shake;ctx.fillStyle=shade(place.sky[0],-.55);ctx.fillRect(0,0,CW,CH);
     ctx.save();ctx.translate(CW/2+(Math.random()-.5)*sh,CH/2+(Math.random()-.5)*sh);ctx.scale(zoom,zoom);ctx.translate(-cx,-cy);
     ctx.fillStyle=ground;ctx.fillRect(0,0,WORLD,WORLD);ctx.strokeStyle='rgba(255,255,255,.07)';ctx.lineWidth=1;const x0=Math.max(0,cx-CW/zoom/2),x1=Math.min(WORLD,cx+CW/zoom/2),y0=Math.max(0,cy-CH/zoom/2),y1=Math.min(WORLD,cy+CH/zoom/2);
     ctx.beginPath();for(let x=Math.floor(x0/100)*100;x<=x1;x+=100){ctx.moveTo(x,y0);ctx.lineTo(x,y1);}for(let y=Math.floor(y0/100)*100;y<=y1;y+=100){ctx.moveTo(x0,y);ctx.lineTo(x1,y);}ctx.stroke();
@@ -700,8 +705,57 @@ function run(o){
   let raf,last=performance.now(),stopped=false,paused=false;
   function loop(t){if(stopped)return;raf=requestAnimationFrame(loop);let dt=(t-last)/1000;last=t;if(dt>.05)dt=.05;if(!paused){update(dt);render();}}
   const vis=()=>{paused=document.hidden;last=performance.now();};document.addEventListener('visibilitychange',vis);
+  /* ---------- 3D renderer (Three.js). Game logic stays 2D; only drawing is 3D. ---------- */
+  let T=null,AY=1;
+  const lsv=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
+  function init3d(){
+    const low=lsv('az_low')==='1',rd=new THREE.WebGLRenderer({antialias:!low});rd.setPixelRatio(low?1:Math.min(1.6,devicePixelRatio||1));
+    const dom=rd.domElement;dom.style.cssText='position:absolute;z-index:0;pointer-events:none;border-radius:16px';
+    cv.parentNode.style.position='relative';cv.style.position='relative';cv.style.zIndex=1;cv.style.background='transparent';cv.parentNode.insertBefore(dom,cv);
+    const sc=new THREE.Scene(),sky=new THREE.Color(place.sky[0]).multiplyScalar(.6);sc.background=sky;sc.fog=new THREE.Fog(sky,700,1500);
+    const cam=new THREE.PerspectiveCamera(50,1,5,3000);
+    sc.add(new THREE.HemisphereLight(0xffffff,0x445566,.95));const sun=new THREE.DirectionalLight(0xffffff,.7);sun.position.set(300,600,200);sc.add(sun);
+    const col=c=>{const m=/hsl\((\d+)\s+(\d+)%\s+(\d+)%\)/.exec(c);return m?new THREE.Color().setHSL(+m[1]/360,+m[2]/100,+m[3]/100):new THREE.Color(c);};
+    const mat=c=>new THREE.MeshLambertMaterial({color:col(c)});
+    const gr=new THREE.Mesh(new THREE.PlaneGeometry(WORLD,WORLD),mat(ground));gr.rotation.x=-Math.PI/2;gr.position.set(WORLD/2,0,WORLD/2);sc.add(gr);
+    const grid=new THREE.GridHelper(WORLD,WORLD/100,0xffffff,0xffffff);grid.material.opacity=.08;grid.material.transparent=true;grid.position.set(WORLD/2,.5,WORLD/2);sc.add(grid);
+    for(const r of S.obs){const cx=r.x+r.w/2,cz=r.y+r.h/2;
+      if(r.k==='tree'){const t=new THREE.Mesh(new THREE.CylinderGeometry(7,9,40,6),mat('#6b4a2b'));t.position.set(cx,20,cz);sc.add(t);const f=new THREE.Mesh(new THREE.ConeGeometry(Math.max(r.w,r.h)/2,110,8),mat(shade(ground,gl>.45?-.35:.2)));f.position.set(cx,95,cz);sc.add(f);}
+      else{const h=r.k==='crate'?46:78,b=new THREE.Mesh(new THREE.BoxGeometry(r.w,h,r.h),mat(r.k==='crate'?place.accent:wallTop));b.position.set(cx,h/2,cz);sc.add(b);}}
+    const bl=[];for(let i=0;i<90;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(3.5,6,6),new THREE.MeshBasicMaterial({color:0xffffff}));m.visible=false;sc.add(m);bl.push(m);}
+    const zone=new THREE.Mesh(new THREE.CylinderGeometry(1,1,320,48,1,true),new THREE.MeshBasicMaterial({color:0x3d7bff,transparent:true,opacity:.28,side:THREE.DoubleSide,depthWrite:false}));sc.add(zone);
+    return{rd,cam,sc,col,mat,bl,zone,ch:new Map(),lt:new Map(),v:new THREE.Vector3(),lw:0,lh:0};}
+  function mkChar(e){const g=new THREE.Group(),m=T.mat;const body=new THREE.Mesh(new THREE.CylinderGeometry(e.r*.8,e.r*.9,30,12),m(e.color));body.position.y=15;g.add(body);
+    const head=new THREE.Mesh(new THREE.SphereGeometry(e.r*.6,12,10),m('#f1c27d'));head.position.y=38;g.add(head);
+    const gun=new THREE.Mesh(new THREE.BoxGeometry(26,5,5),m(e.gun.color));gun.position.set(18,24,0);g.add(gun);g.userData.gun=gun;
+    if(e.player){const ring=new THREE.Mesh(new THREE.RingGeometry(e.r+4,e.r+8,24),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=1;g.add(ring);}
+    T.sc.add(g);return g;}
+  function pr(x,y,z){T.v.set(x,y,z).project(T.cam);return{x:(T.v.x*.5+.5)*CW,y:(-T.v.y*.5+.5)*CH,ok:T.v.z<1};}
+  function render3(){resize();const rd=T.rd,cam=T.cam,dom=rd.domElement;
+    if(T.lw!==CW||T.lh!==CH){rd.setSize(CW,CH);cam.aspect=CW/CH;cam.updateProjectionMatrix();T.lw=CW;T.lh=CH;}
+    dom.style.left=cv.offsetLeft+'px';dom.style.top=cv.offsetTop+'px';
+    const sh=S.shake;cam.position.set(P.x+(Math.random()-.5)*sh,430,P.y+300+(Math.random()-.5)*sh);cam.lookAt(P.x,0,P.y);
+    for(const e of S.ents){let g=T.ch.get(e);if(!g){g=mkChar(e);T.ch.set(e,g);}g.visible=e.alive;if(!e.alive)continue;g.position.set(e.x,0,e.y);g.rotation.y=-e.ang;
+      const gn=g.userData.gun;if(g.userData.gn!==e.gun.name){gn.material.color.copy(T.col(e.gun.color));g.userData.gn=e.gun.name;}gn.scale.x=e.gun.pellets>1?.9:e.gun.speed>15?1.4:.8;}
+    for(const l of S.loot){let m=T.lt.get(l);if(!m){m=new THREE.Mesh(new THREE.OctahedronGeometry(11),new THREE.MeshLambertMaterial({color:T.col({med:'#ff5c7a',armor:'#5aa0ff',boost:'#ffd54a',gun:l.g?l.g.color:'#ffffff'}[l.type])}));T.sc.add(m);T.lt.set(l,m);}m.visible=!l.gone;m.position.set(l.x,22+Math.sin(S.t*3+l.bob)*4,l.y);m.rotation.y=S.t*2;}
+    let i=0;for(const b of S.bul){if(i>=90)break;const m=T.bl[i++];m.visible=true;m.position.set(b.x,22,b.y);m.material.color.set(b.col);}for(;i<90;i++)T.bl[i].visible=false;
+    const z=S.zone;T.zone.visible=!!z;if(z){T.zone.position.set(z.x,160,z.y);T.zone.scale.set(z.r,1,z.r);}
+    rd.render(T.sc,cam);
+    /* 2D overlay: health bars, damage numbers, minimap, feed, sticks */
+    ctx.clearRect(0,0,CW,CH);
+    for(const e of S.ents){if(!e.alive)continue;const q=pr(e.x,62,e.y);if(!q.ok||q.x<-40||q.x>CW+40||q.y<-40||q.y>CH+40)continue;const w=34;ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(q.x-w/2,q.y,w,4);ctx.fillStyle=e.hp/e.maxhp>.5?'#5fe38b':e.hp/e.maxhp>.25?'#ffd166':'#ff4d6d';ctx.fillRect(q.x-w/2,q.y,w*Math.max(0,e.hp)/e.maxhp,4);if(e.armor>0){ctx.fillStyle='#6ab7ff';ctx.fillRect(q.x-w/2,q.y+4,w*e.armor/100,2);}}
+    ctx.font='bold 14px Orbitron,sans-serif';ctx.textAlign='center';for(const t of S.txt){const q=pr(t.x,50,t.y);if(!q.ok)continue;ctx.globalAlpha=Math.min(1,t.l*2);ctx.fillStyle=t.c;ctx.strokeStyle='#000';ctx.lineWidth=3;ctx.strokeText(t.t,q.x,q.y-(.7-t.l)*30);ctx.fillText(t.t,q.x,q.y-(.7-t.l)*30);}ctx.globalAlpha=1;
+    if(S.hurt>0){ctx.fillStyle='rgba(255,40,70,'+S.hurt*1.2+')';ctx.fillRect(0,0,CW,CH);}
+    const mm=96,mx=CW-mm-8,my=8,k=mm/WORLD;ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(mx,my,mm,mm);ctx.strokeStyle='rgba(255,255,255,.4)';ctx.strokeRect(mx,my,mm,mm);
+    if(z){ctx.strokeStyle='#5aa0ff';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(mx+z.x*k,my+z.y*k,z.r*k,0,TAU);ctx.stroke();}
+    for(const e of S.ents){if(!e.alive)continue;ctx.fillStyle=e===P?'#fff':'#ff6b6b';ctx.fillRect(mx+e.x*k-1.5,my+e.y*k-1.5,e===P?4:3,e===P?4:3);}
+    ctx.font='12px Poppins,sans-serif';ctx.textAlign='left';S.feed.forEach((f,j)=>{ctx.globalAlpha=Math.min(1,f.l);ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(8,8+j*20,ctx.measureText(f.t).width+12,18);ctx.fillStyle='#fff';ctx.fillText(f.t,14,21+j*20);});ctx.globalAlpha=1;
+    for(const id in sticks){const s2=sticks[id],dx=s2.x-s2.ox,dy=s2.y-s2.oy,d=Math.min(50,rad(dx,dy)),a=Math.atan2(dy,dx);ctx.strokeStyle=s2.kind==='aim'?'rgba(255,90,120,.7)':'rgba(120,220,255,.7)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(s2.ox,s2.oy,50,0,TAU);ctx.stroke();ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.arc(s2.ox+Math.cos(a)*d,s2.oy+Math.sin(a)*d,20,0,TAU);ctx.fill();}}
+  function render(){if(T)render3();else render2d();}
+  if(br&&lsv('az_3d')!=='0'){const go=()=>{if(stopped)return;try{T=init3d();AY=1.25;}catch(e){T=null;}};
+    if(window.THREE)go();else{const sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';sc.onload=go;document.head.appendChild(sc);}}
   raf=requestAnimationFrame(loop);
-  return{S,stop(){stopped=true;cancelAnimationFrame(raf);removeEventListener('keydown',kd);removeEventListener('keyup',ku);document.removeEventListener('visibilitychange',vis);}};
+  return{S,stop(){stopped=true;if(T){try{T.rd.domElement.remove();T.rd.dispose();}catch(e){}T=null;}cancelAnimationFrame(raf);removeEventListener('keydown',kd);removeEventListener('keyup',ku);document.removeEventListener('visibilitychange',vis);}};
 }
 return{run};
 })();
@@ -721,6 +775,10 @@ function begin(lv){
     Az.finish({game:'br',level,diff:O.diff,won:r.won,base:60+r.kills*10,score:r.kills,title:r.won?'🏆 Winner Winner!':'Eliminated!',sub:r.sub,next:lv=>begin(lv),retry:lv=>begin(lv)});}});
 }
 $('rst').onclick=()=>O&&begin(O.level);
+$('gfx').onclick=()=>{try{const off=localStorage.getItem('az_3d')==='0',low=localStorage.getItem('az_low')==='1';
+  if(off){localStorage.setItem('az_3d','1');localStorage.setItem('az_low','0');Az.toast('🎨 3D High');}
+  else if(low){localStorage.setItem('az_3d','0');Az.toast('🖼️ 2D mode');}
+  else{localStorage.setItem('az_low','1');Az.toast('⚡ 3D Low graphics');}}catch(e){}O&&begin(O.level);};
 Az.start({game:'br',onStart:o=>{O=o;begin(o.level);}});
 window.__sh={get G(){return G;},begin:l=>{O=O||{diff:'medium'};begin(l);}};
 })();
