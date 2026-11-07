@@ -131,6 +131,12 @@ const $ = (s, r) => (r || document).querySelector(s);
 const el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
 
 /* ------------------------------ storage ------------------------------ */
+function genUid() {
+  const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = '';
+  try { const r = new Uint8Array(8); crypto.getRandomValues(r); r.forEach(b => s += A[b % 32]); }
+  catch (e) { for (let i = 0; i < 8; i++) s += A[Math.floor(Math.random() * 32)]; }
+  return 'AZ-' + s.slice(0, 4) + '-' + s.slice(4);
+}
 let D = null;
 function db() {
   if (D) return D;
@@ -139,6 +145,8 @@ function db() {
   if (D.coins == null) D.coins = 150;
   D.xp = D.xp || 0; D.lv = D.lv || {}; D.best = D.best || {}; D.own = D.own || {}; D.eq = D.eq || {};
   D.theme = D.theme || 'neon'; D.diff = D.diff || 'medium'; D.sound = D.sound !== false; D.daily = D.daily || '';
+  if (!/^AZ-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(D.uid || '')) { D.uid = genUid(); try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} }
+  D.name = typeof D.name === 'string' ? D.name : ''; D.nameSet = !!D.nameSet; D.nameAsked = !!D.nameAsked;
   return D;
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} if (window.__azPush) window.__azPush(); }
@@ -305,9 +313,40 @@ const Az = window.Az = {
     const c = $('#azcoins'); if (c) c.textContent = '🪙 ' + Az.coins();
     document.querySelectorAll('[data-az=coins]').forEach(e => e.textContent = Az.coins());
     document.querySelectorAll('[data-az=plvl]').forEach(e => e.textContent = Az.plvl());
+    document.querySelectorAll('[data-az=name]').forEach(e => e.textContent = Az.name());
+    document.querySelectorAll('[data-az=uid]').forEach(e => e.textContent = Az.uid());
   },
   setTheme(t) { db().theme = t; save(); document.documentElement.dataset.theme = t; const m = $('meta[name=theme-color]'); if (m) m.content = getComputedStyle(document.documentElement).getPropertyValue('--bg1').trim() || '#0a0614'; },
   cycleTheme() { const T = ['neon', 'sunset', 'ocean', 'forest']; Az.setTheme(T[(T.indexOf(db().theme) + 1) % T.length]); Az.toast('🎨 Theme: ' + db().theme); },
+};
+
+/* ------------------------------ player profile (random UID + name) ------------------------------ */
+Az.uid = () => db().uid;
+Az.name = () => db().name || ('Player-' + db().uid.slice(-4));
+Az.cleanName = n => String(n || '').replace(/[\u0000-\u001f<>&"'`\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, 14);
+Az.setName = function (n) {
+  n = Az.cleanName(n); if (n.length < 2) return false;
+  db().name = n; db().nameSet = true; db().nameAsked = true; save(); Az.refresh(); return true;
+};
+Az.profile = function (first) {
+  const m = Az.modal('<div class="azbig">🆔</div><h2 style="text-align:center">' + (first ? 'Welcome! 👋' : 'Your Profile') + '</h2>' +
+    '<p class="sub" style="text-align:center">' + (first ? 'Tumhe ek unique Player ID mil gayi hai. Ab apna naam daalo.' : 'Ye tumhari unique Player ID hai.') + '</p>' +
+    '<div class="azrow c"><span class="azpill" id="pfuid" style="font-size:16px;letter-spacing:1px;cursor:pointer" title="Tap to copy"></span></div>' +
+    '<div class="azrow c" style="margin-top:12px"><input id="pfname" maxlength="14" autocomplete="off" placeholder="Apna naam (2-14 letters)" style="width:100%;max-width:260px;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:inherit;font:inherit;text-align:center"></div>' +
+    '<p class="sub" id="pferr" style="text-align:center;color:#ff6b6b;min-height:18px"></p>' +
+    '<div class="azrow c"><button class="azbtn" id="pfsave">✅ Save</button><button class="azbtn ghost" id="pfskip">' + (first ? 'Skip' : 'Close') + '</button></div>',
+    { sticky: !!first });
+  m.querySelector('#pfuid').textContent = Az.uid();
+  const inp = m.querySelector('#pfname'); inp.value = db().nameSet ? db().name : '';
+  setTimeout(() => { try { inp.focus(); } catch (e) {} }, 50);
+  const doSave = () => { if (Az.setName(inp.value)) { m.close(); Az.toast('✅ Naam save: ' + Az.name()); } else m.querySelector('#pferr').textContent = 'Naam kam se kam 2 characters ka ho.'; };
+  m.addEventListener('click', e => {
+    if (e.target.id === 'pfsave') doSave();
+    else if (e.target.id === 'pfskip') { db().nameAsked = true; save(); Az.refresh(); m.close(); }
+    else if (e.target.id === 'pfuid') { try { navigator.clipboard.writeText(Az.uid()); Az.toast('📋 ID copied'); } catch (x) {} }
+  });
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') doSave(); });
+  return m;
 };
 
 /* ------------------------------ shop modal ------------------------------ */
@@ -387,7 +426,7 @@ function afterLogin(u) {
   const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 ' + String(u.displayName || u.phoneNumber || 'Me').split(' ')[0].slice(0, 8);
   fbDb.ref('users/' + u.uid).once('value').then(s => {
     const c = s.val();
-    if (c && typeof c === 'object') { try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} D = null; db(); Az.refresh && Az.refresh(); Az.toast && Az.toast('☁️ Progress loaded'); }
+    if (c && typeof c === 'object') { const L = db(); if (!c.uid) c.uid = L.uid; if (!c.name && L.name) { c.name = L.name; c.nameSet = true; } try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} D = null; db(); Az.refresh && Az.refresh(); Az.toast && Az.toast('☁️ Progress loaded'); }
     else window.__azPush();
   }).catch(() => {});
 }
@@ -525,18 +564,21 @@ function init() {
   document.body.prepend(bg);
   const gid = document.body.dataset.game, g = gid && Az.game(gid);
   if (g || document.body.dataset.bar) {
-    const bar = el('div', 'azbar', `<a class="azhome" href="${BASE}index.html" title="Home">🏠</a><div class="aztitle">${g ? g.emoji + ' ' + g.name : 'Ari Game Zone'}</div><div class="azbadges"><span class="azpill" id="azlv">${g ? 'Lv ' + Az.level(gid) : ''}</span><span class="azpill coin" id="azcoins">🪙 ${Az.coins()}</span>${g && g.shop.length ? '<button class="azbtn-i" id="azshopb" title="Shop">🛒</button>' : ''}<button class="azbtn-i" id="azsnd" title="Sound">${db().sound ? '🔊' : '🔇'}</button><button class="azbtn-i" id="azthm" title="Theme">🎨</button></div>`);
+    const bar = el('div', 'azbar', `<a class="azhome" href="${BASE}index.html" title="Home">🏠</a><div class="aztitle">${g ? g.emoji + ' ' + g.name : 'Ari Game Zone'}</div><div class="azbadges"><span class="azpill" id="azlv">${g ? 'Lv ' + Az.level(gid) : ''}</span><span class="azpill coin" id="azcoins">🪙 ${Az.coins()}</span>${g && g.shop.length ? '<button class="azbtn-i" id="azshopb" title="Shop">🛒</button>' : ''}<button class="azbtn-i" id="azsnd" title="Sound">${db().sound ? '🔊' : '🔇'}</button><button class="azbtn-i" id="azprof" title="Profile">🆔</button><button class="azbtn-i" id="azthm" title="Theme">🎨</button></div>`);
     document.body.insertBefore(bar, bg.nextSibling);
     bar.addEventListener('click', e => {
       const t = e.target.closest('button'); if (!t) return;
       if (t.id === 'azshopb') Az.shop(g.shop);
       else if (t.id === 'azsnd') { db().sound = !db().sound; save(); t.textContent = db().sound ? '🔊' : '🔇'; }
       else if (t.id === 'azthm') Az.cycleTheme();
+      else if (t.id === 'azprof') Az.profile();
     });
   }
   { const dly = document.getElementById('daily'); if (dly && !document.getElementById('azlogin')) { const b = el('button', 'azbtn sm ghost', '👤 Login'); b.id = 'azlogin'; dly.parentNode.insertBefore(b, dly); b.onclick = () => Az.login(); } }
   try { if (localStorage.getItem('az_login')) authInit(); } catch (e) {}
+  { const pb = document.getElementById('profb'); if (pb) pb.onclick = () => Az.profile(); }
   Az.refresh();
+  if (!db().nameAsked) setTimeout(() => Az.profile(true), 500);
   document.dispatchEvent(new Event('az-ready'));
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();

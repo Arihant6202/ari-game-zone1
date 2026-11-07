@@ -1,0 +1,16 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "coins": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000000" },
+        "xp":    { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000000" },
+        "uid":   { ".validate": "newData.isString() && newData.val().length <= 16" },
+        "name":  { ".validate": "newData.isString() && newData.val().length <= 14" }
+      }
+    }
+  }
+}
