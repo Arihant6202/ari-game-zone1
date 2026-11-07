@@ -152,11 +152,11 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:22px}
 </style>
 </head>
 <body>
-<header><div class="logo">YOUR MINI GAMING WORLD</div><div class="hero"><h1>🎮 Ari Game Zone</h1><p>10 free games · up to 100 levels · Shop · Online rooms · Play on phone or computer</p></div></header>
+<header><div class="logo">YOUR MINI GAMING WORLD</div><div class="hero"><h1>🎮 Ari Game Zone</h1><p>11 free games · up to 100 levels · Shop · Online rooms · Play on phone or computer</p></div></header>
 <main>
   <div class="azpanel me">
     <div class="l"><div class="avatar" data-az="avatar">😎</div><div><b>Player Level <span data-az="plvl">1</span></b><div class="xp"><i id="xpbar" style="width:0%"></i></div><small id="xptxt" style="color:var(--muted)"></small><div style="margin-top:4px;font-size:12px;color:var(--muted)">👤 <b data-az="name" style="color:inherit"></b> · 🆔 <span data-az="uid"></span></div></div></div>
-    <div class="r"><span class="coinbig">🪙 <span data-az="coins">0</span></span><button class="azbtn sm" id="daily">🎁 Daily bonus</button><button class="azbtn sm ghost" id="shopall">🛒 Shop</button><button class="azbtn sm ghost" id="profb">🆔 Profile</button><div class="themes" id="themes"></div></div>
+    <div class="r"><span class="coinbig">🪙 <span data-az="coins">0</span></span><button class="azbtn sm" id="daily">🎁 Daily bonus</button><button class="azbtn sm ghost" id="shopall">🛒 Shop</button><button class="azbtn sm ghost" id="profb">🆔 Profile</button><button class="azbtn sm ghost" id="admincoins">⚙️ My Coins</button><div class="themes" id="themes"></div></div>
   </div>
   <div class="toolbar"><input id="search" class="search" placeholder="🔍 Search games..." autocomplete="off"></div>
   <div class="cats" id="cats"></div>
@@ -660,6 +660,30 @@ function init() {
   { const dly = document.getElementById('daily'); if (dly && !document.getElementById('azlogin')) { const b = el('button', 'azbtn sm ghost', '👤 Login'); b.id = 'azlogin'; dly.parentNode.insertBefore(b, dly); b.onclick = () => Az.login(); } }
   try { if (localStorage.getItem('az_login')) authInit(); } catch (e) {}
   { const pb = document.getElementById('profb'); if (pb) pb.onclick = () => Az.profile(); }
+  {
+    // Owner-only convenience control. Frontend checks are NOT secure against tampering.
+    const OWNER_UID = '97835276';
+    const cb = document.getElementById('admincoins');
+    if (cb) {
+      if (Az.uid() !== OWNER_UID) {
+        cb.style.display = 'none';
+      } else {
+        cb.style.display = '';
+        cb.onclick = () => {
+          const raw = prompt('Enter custom coins to ADD:');
+          if (raw === null) return;
+          const amount = Number(raw.trim());
+          if (!Number.isSafeInteger(amount) || amount <= 0 || amount > 100000000) {
+            Az.toast('Enter a whole number from 1 to 100,000,000.');
+            return;
+          }
+          if (!confirm('Add ' + amount.toLocaleString() + ' coins to UID ' + OWNER_UID + '?')) return;
+          Az.addCoins(amount);
+          Az.toast('Added ' + amount.toLocaleString() + ' coins.');
+        };
+      }
+    }
+  }
   Az.refresh();
   if (!db().nameAsked) setTimeout(() => Az.profile(true), 500);
   document.dispatchEvent(new Event('az-ready'));
