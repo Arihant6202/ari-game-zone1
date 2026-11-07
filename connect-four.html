@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0614">
+<title>Connect Four · Ari Game Zone</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔴</text></svg>">
+<link rel="stylesheet" href="../shared/az.css">
+<style>
+.c4wrap{width:min(100%,460px);display:flex;flex-direction:column;gap:10px;align-items:center}
+#cv{width:100%;height:auto;aspect-ratio:440/450;cursor:pointer;transition:box-shadow .4s}
+.c4who{display:flex;gap:8px;width:100%;justify-content:center;flex-wrap:wrap}
+.c4who .azpill{display:flex;align-items:center;gap:6px;transition:all .25s}
+.c4who .azpill.turn{border-color:var(--a1);box-shadow:0 0 16px -4px var(--a1);transform:scale(1.06)}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%}
+.dot.r{background:radial-gradient(circle at 35% 30%,#ff9aae,#ff2d55 60%,#b3002b)}
+.dot.y{background:radial-gradient(circle at 35% 30%,#fff3a8,#ffd23f 60%,#c79500)}
+.azmsg.shake{animation:c4sh .35s}
+@keyframes c4sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+</style>
+</head>
+<body data-game="c4">
+<main class="azgame">
+  <div class="azhud"><span class="azpill" id="hInfo">🧠 …</span><span class="azpill" id="hMoves">Moves 0</span></div>
+  <div class="azstage c4wrap">
+    <div class="c4who"><span class="azpill" id="pR"><i class="dot r"></i><span id="nR">Red</span></span><span class="azpill" id="pY"><i class="dot y"></i><span id="nY">Yellow</span></span></div>
+    <canvas id="cv" width="440" height="450"></canvas>
+  </div>
+  <div class="azmsg" id="msg">&nbsp;</div>
+  <div class="azctl"><button class="azbtn ghost" id="restart">🔄 Restart</button></div>
+</main>
+<script src="../shared/az.js"></script>
+<script>
+'use strict';
+/* ---------------- AI search (self-contained so it can run inside a Web Worker) ---------------- */
+function c4search(cells, me, maxDepth, ms, order) {
+  const b = cells.slice(), h = [0, 0, 0, 0, 0, 0, 0];
+  let filled = 0;
+  for (let c = 0; c < 7; c++) for (let r = 0; r < 6; r++) if (b[r * 7 + c]) { h[c]++; filled++; }
+  const wins = [], D = [[0, 1], [1, 0], [1, 1], [1, -1]];
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 7; c++) for (const [dr, dc] of D) {
+    const er = r + dr * 3, ec = c + dc * 3; if (er < 0 || er > 5 || ec < 0 || ec > 6) continue;
+    const w = []; for (let k = 0; k < 4; k++) w.push((r + dr * k) * 7 + c + dc * k); wins.push(w);
+  }
+  const t0 = Date.now(); let nodes = 0, stop = false;
+  function win(idx, p) {
+    const r = (idx / 7) | 0, c = idx % 7;
+    for (const [dr, dc] of D) {
+      let n = 1;
+      for (let k = 1; k < 4; k++) { const rr = r + dr * k, cc = c + dc * k; if (rr < 0 || rr > 5 || cc < 0 || cc > 6 || b[rr * 7 + cc] !== p) break; n++; }
+      for (let k = 1; k < 4; k++) { const rr = r - dr * k, cc = c - dc * k; if (rr < 0 || rr > 5 || cc < 0 || cc > 6 || b[rr * 7 + cc] !== p) break; n++; }
+      if (n >= 4) return true;
+    }
+    return false;
+  }
+  function evalp(p) {
+    let s = 0;
+    for (let i = 0; i < wins.length; i++) {
+      const w = wins[i]; let a = 0, o = 0;
+      for (let k = 0; k < 4; k++) { const v = b[w[k]]; if (v === p) a++; else if (v) o++; }
+      if (!o) { if (a === 3) s += 6; else if (a === 2) s += 2; }
+      else if (!a) { if (o === 3) s -= 5; else if (o === 2) s -= 2; }
+    }
+    for (let r = 0; r < 6; r++) {
+      const m = b[r * 7 + 3]; if (m) s += m === p ? 3 : -3;
+      const l = b[r * 7 + 2], q = b[r * 7 + 4]; if (l) s += l === p ? 1 : -1; if (q) s += q === p ? 1 : -1;
+    }
+    return s;
+  }
+  function child(c, p, d, alpha, beta) {
+    const idx = (5 - h[c]) * 7 + c; b[idx] = p; h[c]++; filled++;
+    let sc;
+    if (win(idx, p)) sc = 100000 + d; else if (filled === 42) sc = 0; else if (d <= 1) sc = evalp(p); else sc = -nega(3 - p, d - 1, -beta, -alpha);
+    b[idx] = 0; h[c]--; filled--;
+    return sc;
+  }
+  function nega(p, d, alpha, beta) {
+    if (stop) return 0;
+    if ((++nodes & 1023) === 0 && Date.now() - t0 > ms) { stop = true; return 0; }
+    let best = -1e9, any = false;
+    for (let i = 0; i < 7; i++) {
+      const c = order[i]; if (h[c] >= 6) continue; any = true;
+      const sc = child(c, p, d, alpha, beta);
+      if (stop) return 0;
+      if (sc > best) best = sc; if (best > alpha) alpha = best; if (alpha >= beta) break;
+    }
+    return any ? best : 0;
+  }
+  let bestCol = -1, bestScore = 0, done = 0;
+  for (let d = 1; d <= maxDepth; d++) {
+    let alpha = -1e9, cur = -1, curS = -1e9;
+    for (let i = 0; i < 7; i++) {
+      const c = order[i]; if (h[c] >= 6) continue;
+      const sc = child(c, me, d, alpha, 1e9);
+      if (stop) break;
+      if (sc > curS) { curS = sc; cur = c; } if (curS > alpha) alpha = curS;
+    }
+    if (stop) { if (bestCol < 0) bestCol = cur; break; }
+    bestCol = cur; bestScore = curS; done = d;
+    if (curS >= 100000 || curS <= -100000) break;
+  }
+  if (bestCol < 0) for (let c = 0; c < 7; c++) if (h[c] < 6) { bestCol = c; break; }
+  return { col: bestCol, score: bestScore, depth: done };
+}
+let worker = null;
+try {
+  const src = 'onmessage=function(e){var d=e.data;postMessage((' + c4search.toString() + ')(d.cells,d.me,d.depth,d.ms,d.order))}';
+  worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+} catch (e) { worker = null; }
+function think(cells, me, depth, ms) {
+  const sh = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const order = [3].concat(sh([2, 4]), sh([1, 5]), sh([0, 6]));
+  return new Promise(res => {
+    const sync = () => setTimeout(() => res(c4search(cells, me, depth, ms, order)), 20);
+    if (!worker) return sync();
+    let fin = false;
+    const to = setTimeout(() => { if (!fin) { fin = true; worker = null; sync(); } }, ms + 2500);
+    worker.onmessage = e => { if (fin) return; fin = true; clearTimeout(to); res(e.data); };
+    worker.onerror = () => { if (fin) return; fin = true; clearTimeout(to); worker = null; sync(); };
+    worker.postMessage({ cells, me, depth, ms, order });
+  });
+}
+
+/* ---------------- game ---------------- */
+const COLS = 7, ROWS = 6, CELL = 60, PAD = 10, TOP = 70, W = 440, H = 450;
+const RED = 1, YEL = 2;
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const $ = id => document.getElementById(id);
+let O = null, grid, turn, over, busy, hover = -1, anims = [], winCells = null, moves = 0, token = 0, gameNo = 0;
+let myColor = RED, aiColor = YEL, place = Az.place(1), pal = {}, inbox = [], thinking = false, shownEnd = false;
+let myRq = false, oppRq = false;
+const net = () => O && O.net;
+
+function mix(h1, h2, t) {
+  const p = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16));
+  const a = p(h1), b = p(h2); return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * t).toString(16).padStart(2, '0')).join('');
+}
+function setPlace(level) {
+  place = Az.place(level);
+  pal = { frame: mix(place.ground, '#000000', .38), frame2: mix(place.ground, '#000000', .6), back0: mix(place.sky[0], '#000000', .5), back1: mix(place.sky[1], '#000000', .55), acc: place.accent };
+  cv.style.boxShadow = '0 0 0 1px var(--line),0 0 40px -10px ' + place.accent;
+}
+
+Az.start({ game: 'c4', onStart });
+window.__azStart = onStart;
+
+function onStart(o) {
+  O = o;
+  if (o.mode === 'online') {
+    myColor = o.host ? RED : YEL; aiColor = 0;
+    $('restart').hidden = true;
+    net().on(onNet); net().onclose(onGone);
+  } else if (o.mode === 'single') { aiColor = (o.diff === 'hard') ? RED : YEL; myColor = 3 - aiColor; }
+  else { myColor = 0; aiColor = 0; }
+  begin(o.level || 1);
+}
+function begin(level) {
+  O.level = level; gameNo = O.mode === 'single' ? 0 : gameNo;
+  setPlace(O.mode === 'single' ? level : Math.max(1, Math.floor(Math.random() * 40)));
+  if (O.mode === 'single') Az.setBadge('Lv ' + level + ' · ' + place.emoji + ' ' + place.name);
+  else Az.setBadge(O.mode === 'local' ? '👥 2 Players · ' + place.emoji : '🌐 Online · ' + place.emoji);
+  newGame();
+}
+function aiParams() {
+  const L = O.level, d = O.diff;
+  let depth = 1 + Math.round((L - 1) * 7 / 49) + Az.pick(d, -1, 0, 1);
+  depth = Math.max(1, Math.min(9, depth));
+  let mist = Math.max(0, .55 * (1 - (L - 1) / 38)) * Az.pick(d, 1.4, 1, .35) + Az.pick(d, .07, 0, 0);
+  const ms = 120 + L * 16 + Az.pick(d, 0, 100, 250);
+  return { depth, mist: Math.min(.8, mist), ms };
+}
+function newGame() {
+  token++; grid = new Array(42).fill(0); over = false; busy = false; anims = []; winCells = null; moves = 0; inbox = []; thinking = false; shownEnd = false;
+  turn = (O.mode === 'single') ? RED : ((gameNo % 2 === 0) ? RED : YEL);
+  hover = -1; setMsg('');
+  if (O.mode === 'single') { const p = aiParams(); $('hInfo').textContent = '🧠 AI depth ' + p.depth + (p.mist > .02 ? ' · slips ' + Math.round(p.mist * 100) + '%' : ' · no slips'); }
+  else $('hInfo').textContent = O.mode === 'local' ? '👥 Pass & play' : (O.host ? '🌐 You host (red)' : '🌐 You joined (yellow)');
+  const nm = { r: 'Red', y: 'Yellow' };
+  if (O.mode === 'single') { nm[myColor === RED ? 'r' : 'y'] = 'You'; nm[aiColor === RED ? 'r' : 'y'] = '🤖 AI'; }
+  if (O.mode === 'online') { nm[myColor === RED ? 'r' : 'y'] = 'You'; nm[aiColor || myColor === RED ? 'y' : 'r'] = 'Friend'; nm[myColor === RED ? 'y' : 'r'] = 'Friend'; }
+  $('nR').textContent = nm.r; $('nY').textContent = nm.y;
+  updHud();
+  afterTurnStart();
+}
+function setMsg(t, shake) { const m = $('msg'); m.innerHTML = t || '&nbsp;'; m.classList.remove('shake'); if (shake) { void m.offsetWidth; m.classList.add('shake'); } }
+function updHud() {
+  $('hMoves').textContent = 'Moves ' + moves;
+  $('pR').classList.toggle('turn', !over && turn === RED); $('pY').classList.toggle('turn', !over && turn === YEL);
+  if (over) return;
+  if (O.mode === 'local') setMsg((turn === RED ? '🔴 Red' : '🟡 Yellow') + ', your move');
+  else if (turn === myColor) setMsg('✨ Your move — tap a column');
+  else setMsg(O.mode === 'single' ? '🤖 AI is thinking…' : '⏳ Waiting for your friend…');
+}
+const canPlay = () => !over && !busy && !thinking && (O.mode === 'local' || turn === myColor);
+
+function afterTurnStart() {
+  if (over) return;
+  if (O.mode === 'single' && turn === aiColor) aiMove();
+  else pump();
+}
+function aiMove() {
+  const tok = token, p = aiParams(); thinking = true; updHud();
+  const t0 = Date.now();
+  think(grid.slice(), aiColor, p.depth, p.ms).then(r => {
+    const wait = Math.max(0, 450 - (Date.now() - t0));
+    setTimeout(() => {
+      if (tok !== token) return;
+      thinking = false;
+      let col = r.col;
+      const legal = []; for (let c = 0; c < 7; c++) if (grid[c] === 0) legal.push(c);
+      if (Math.random() < p.mist) col = legal[Math.floor(Math.random() * legal.length)];
+      play(col, aiColor);
+    }, wait);
+  });
+}
+function lowest(c) { for (let r = 5; r >= 0; r--) if (!grid[r * 7 + c]) return r; return -1; }
+const colX = c => PAD + c * CELL + CELL / 2, rowY = r => TOP + r * CELL + CELL / 2;
+
+function play(c, color) {
+  const r = lowest(c); if (r < 0 || over) return;
+  busy = true; thinking = false;
+  if (net() && color === myColor && O.mode === 'online') net().send({ t: 'm', c });
+  anims.push({ c, r, color, y: 36, vy: 0, bounced: false, tok: token });
+  Az.sfx('pop'); updHud();
+}
+function landed(a) {
+  grid[a.r * 7 + a.c] = a.color; moves++; Az.sfx('click');
+  const w = findWin(a.r, a.c, a.color);
+  if (w) { winCells = w; over = true; busy = false; updHud(); Az.sfx('win'); setMsg(winText(a.color)); endLater(a.color); return; }
+  if (moves >= 42) { over = true; busy = false; updHud(); setMsg('🤝 It\'s a draw!'); endLater(0); return; }
+  turn = 3 - a.color; busy = false; updHud(); afterTurnStart();
+}
+function winText(col) {
+  if (O.mode === 'local') return '🏆 ' + (col === RED ? 'Red' : 'Yellow') + ' connects four!';
+  return col === myColor ? '🏆 You connected four!' : (O.mode === 'single' ? '🤖 The AI connected four!' : '😮 Your friend connected four!');
+}
+function findWin(r, c, col) {
+  for (const [dr, dc] of [[0, 1], [1, 0], [1, 1], [1, -1]]) {
+    const line = [[r, c]];
+    for (let k = 1; k < 7; k++) { const rr = r + dr * k, cc = c + dc * k; if (rr < 0 || rr > 5 || cc < 0 || cc > 6 || grid[rr * 7 + cc] !== col) break; line.push([rr, cc]); }
+    for (let k = 1; k < 7; k++) { const rr = r - dr * k, cc = c - dc * k; if (rr < 0 || rr > 5 || cc < 0 || cc > 6 || grid[rr * 7 + cc] !== col) break; line.unshift([rr, cc]); }
+    if (line.length >= 4) return line.slice(0, Math.max(4, line.length)).map(([a, b]) => ({ r: a, c: b }));
+  }
+  return null;
+}
+function endLater(winner) {
+  const tok = token;
+  setTimeout(() => { if (tok === token && !shownEnd) { shownEnd = true; showResult(winner); } }, 1300);
+}
+function showResult(winner) {
+  const lv = O.level, draw = winner === 0;
+  if (O.mode === 'single') {
+    const won = winner === myColor;
+    Az.finish({ game: 'c4', level: lv, diff: O.diff, won, base: 40, title: draw ? 'Draw!' : won ? 'You Win!' : 'AI Wins', sub: draw ? 'The board is full. Try again!' : won ? 'Four in a row in ' + moves + ' moves.' : 'The AI got four in a row. Think about blocking!',
+      next: l => { O.level = l; begin(l); }, retry: l => begin(l) });
+  } else if (O.mode === 'local') {
+    Az.finish({ game: 'c4', level: 1, diff: O.diff, won: !draw, progress: false, base: 20, title: draw ? 'Draw!' : (winner === RED ? '🔴 Red wins!' : '🟡 Yellow wins!'), sub: draw ? 'Nobody wins this time.' : 'Great game, both of you!',
+      retry: () => { gameNo++; newGame(); } });
+  } else {
+    const won = winner === myColor;
+    Az.finish({ game: 'c4', level: 1, diff: O.diff, won, progress: false, base: 30, title: draw ? 'Draw!' : won ? 'You Win!' : 'Your friend wins', sub: draw ? 'A perfectly even match.' : won ? 'Four in a row, nicely done!' : 'So close! Ask for a rematch.',
+      retry: rematch });
+  }
+}
+/* ---- online ---- */
+function onNet(m) {
+  if (!m) return;
+  if (m.t === 'm') { inbox.push(m.c); pump(); }
+  else if (m.t === 'rq') { oppRq = true; Az.toast('🔁 Your friend wants a rematch'); tryRematch(); }
+  else if (m.t === 'go') { gameNo = m.n; myRq = oppRq = false; newGame(); }
+}
+function pump() {
+  if (O.mode !== 'online') return;
+  while (inbox.length && !over && !busy && turn !== myColor) {
+    const c = inbox.shift();
+    if (typeof c === 'number' && c >= 0 && c < 7 && lowest(c) >= 0) { play(c, turn); return; }
+  }
+}
+function rematch() { myRq = true; net().send({ t: 'rq' }); setMsg('🔁 Waiting for your friend to accept the rematch…'); tryRematch(); }
+function tryRematch() {
+  if (myRq && oppRq && O.host) { gameNo++; net().send({ t: 'go', n: gameNo }); myRq = oppRq = false; newGame(); }
+}
+function onGone() {
+  if (O.gone) return; O.gone = true; token++;
+  setMsg('👋 Your friend left the game.');
+  const m = Az.modal('<div class="azbig">👋</div><h2 style="text-align:center">Your friend left</h2><p class="sub" style="text-align:center">The connection was closed. You can start a new game any time.</p><div class="azrow c"><button class="azbtn" id="gl">⚙️ New game</button><a class="azbtn ghost" href="' + Az.BASE + 'index.html">🏠 Home</a></div>', { sticky: true });
+  m.addEventListener('click', e => { if (e.target.id === 'gl') location.reload(); });
+}
+
+/* ---- input ---- */
+function colFrom(e) {
+  const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width;
+  return Math.max(0, Math.min(6, Math.floor((x - PAD) / CELL)));
+}
+cv.addEventListener('pointermove', e => { if (O) hover = colFrom(e); });
+cv.addEventListener('pointerdown', e => { if (O) hover = colFrom(e); });
+cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hover = -1; });
+cv.addEventListener('pointerup', e => { if (!O) return; hover = colFrom(e); tryDrop(hover); if (e.pointerType !== 'mouse') setTimeout(() => { hover = -1; }, 350); });
+function tryDrop(c) {
+  if (!O || over) return;
+  if (!canPlay()) return;
+  if (lowest(c) < 0) { Az.sfx('lose'); setMsg('That column is full!', true); return; }
+  play(c, O.mode === 'local' ? turn : myColor);
+}
+document.addEventListener('keydown', e => {
+  if (!O || document.querySelector('.azmodal')) return;
+  if (e.key === 'ArrowLeft') { hover = Math.max(0, (hover < 0 ? 3 : hover) - 1); e.preventDefault(); }
+  else if (e.key === 'ArrowRight') { hover = Math.min(6, (hover < 0 ? 3 : hover) + 1); e.preventDefault(); }
+  else if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') { if (hover >= 0) tryDrop(hover); e.preventDefault(); }
+  else if (/^[1-7]$/.test(e.key)) { hover = +e.key - 1; tryDrop(hover); }
+});
+$('restart').onclick = () => { if (!O || O.mode === 'online') return; if (O.mode === 'local') gameNo++; newGame(); };
+
+/* ---- drawing ---- */
+function disc(x, y, col, a) {
+  const base = col === RED ? ['#ff9aae', '#ff2d55', '#a80027'] : ['#fff3a8', '#ffd23f', '#b98600'];
+  ctx.save(); ctx.globalAlpha = a == null ? 1 : a;
+  const g = ctx.createRadialGradient(x - 8, y - 9, 3, x, y, 28); g.addColorStop(0, base[0]); g.addColorStop(.55, base[1]); g.addColorStop(1, base[2]);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 25, 0, 7); ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 17, 0, 7); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.arc(x, y, 17, 3.6, 4.9); ctx.stroke();
+  ctx.restore();
+}
+let last = performance.now();
+function frame(t) {
+  const dt = Math.min(.04, (t - last) / 1000); last = t;
+  for (let i = anims.length - 1; i >= 0; i--) {
+    const a = anims[i]; if (a.tok !== token) { anims.splice(i, 1); continue; }
+    a.vy += 2600 * dt; a.y += a.vy * dt; const ty = rowY(a.r);
+    if (a.y >= ty) {
+      if (!a.bounced && a.vy > 380) { a.y = ty; a.vy = -a.vy * .22; a.bounced = true; }
+      else { anims.splice(i, 1); landed(a); }
+    }
+  }
+  draw(t); requestAnimationFrame(frame);
+}
+function draw(t) {
+  ctx.clearRect(0, 0, W, H);
+  const bg = ctx.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, pal.back0 || '#222'); bg.addColorStop(1, pal.back1 || '#111');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  // column highlight + preview
+  const can = O && canPlay();
+  if (can && hover >= 0) {
+    ctx.fillStyle = 'rgba(255,255,255,.10)'; ctx.fillRect(PAD + hover * CELL, TOP, CELL, ROWS * CELL);
+    const pc = O.mode === 'local' ? turn : myColor, r = lowest(hover);
+    const bob = Math.sin(t / 220) * 3;
+    disc(colX(hover), 36 + bob, pc, .9);
+    if (r >= 0) { ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.setLineDash([5, 5]); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(colX(hover), rowY(r), 22, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
+  }
+  // discs
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 7; c++) { const v = grid && grid[r * 7 + c]; if (v) disc(colX(c), rowY(r), v); }
+  for (const a of anims) disc(colX(a.c), a.y, a.color);
+  // frame with holes
+  ctx.save();
+  ctx.beginPath(); rr(PAD - 6, TOP - 6, COLS * CELL + 12, ROWS * CELL + 12, 16);
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 7; c++) { ctx.moveTo(colX(c) + 27, rowY(r)); ctx.arc(colX(c), rowY(r), 27, 0, Math.PI * 2, true); }
+  const fg = ctx.createLinearGradient(0, TOP, W, TOP + 360); fg.addColorStop(0, pal.frame || '#333'); fg.addColorStop(.5, pal.frame2 || '#111'); fg.addColorStop(1, pal.frame || '#333');
+  ctx.fillStyle = fg; ctx.fill('evenodd');
+  ctx.clip('evenodd'); const sh = ctx.createLinearGradient(0, TOP, 0, TOP + 360); sh.addColorStop(0, 'rgba(255,255,255,.22)'); sh.addColorStop(.3, 'rgba(255,255,255,.04)'); sh.addColorStop(1, 'rgba(0,0,0,.25)'); ctx.fillStyle = sh; ctx.fillRect(0, TOP - 6, W, 372);
+  ctx.restore();
+  ctx.lineWidth = 2; ctx.strokeStyle = pal.acc || '#fff'; ctx.globalAlpha = .75; ctx.beginPath(); rr(PAD - 6, TOP - 6, COLS * CELL + 12, ROWS * CELL + 12, 16); ctx.stroke(); ctx.globalAlpha = 1;
+  ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 3;
+  for (let r = 0; r < 6; r++) for (let c = 0; c < 7; c++) { ctx.beginPath(); ctx.arc(colX(c), rowY(r), 27, 0, 7); ctx.stroke(); }
+  // win line
+  if (winCells) {
+    const p = (Math.sin(t / 160) + 1) / 2;
+    ctx.strokeStyle = '#fff'; ctx.shadowColor = '#fff'; ctx.shadowBlur = 12 + 12 * p; ctx.lineWidth = 5;
+    for (const w of winCells) { ctx.beginPath(); ctx.arc(colX(w.c), rowY(w.r), 24 + p * 2, 0, 7); ctx.stroke(); }
+    ctx.lineWidth = 4; ctx.globalAlpha = .8; ctx.beginPath(); ctx.moveTo(colX(winCells[0].c), rowY(winCells[0].r)); const e = winCells[winCells.length - 1]; ctx.lineTo(colX(e.c), rowY(e.r)); ctx.stroke();
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+  }
+  // column numbers
+  ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.font = '600 11px Poppins,sans-serif'; ctx.textAlign = 'center';
+  for (let c = 0; c < 7; c++) ctx.fillText(c + 1, colX(c), H - 3);
+}
+function rr(x, y, w, h, r) { ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+setPlace(1); requestAnimationFrame(frame);
+window.__c4 = { get state() { return { grid, turn, over, busy, thinking, moves, level: O && O.level }; }, play: c => tryDrop(c), aiParams: () => aiParams() };
+</script>
+</body>
+</html>

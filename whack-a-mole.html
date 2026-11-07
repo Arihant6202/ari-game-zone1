@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0614">
+<title>Whack-a-Mole · Ari Game Zone</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐹</text></svg>">
+<link rel="stylesheet" href="../shared/az.css">
+<style>
+#field{display:grid;gap:10px;width:min(100%,420px);padding:14px;border-radius:24px;border:1px solid var(--line);touch-action:manipulation;user-select:none;-webkit-user-select:none;position:relative}
+.hole{position:relative;aspect-ratio:1;border-radius:50%;background:radial-gradient(ellipse at 50% 70%,#000 0,rgba(0,0,0,.6) 55%,rgba(255,255,255,.08) 70%);border:3px solid rgba(255,255,255,.2);overflow:hidden;cursor:pointer}
+.mole{position:absolute;left:0;right:0;bottom:-100%;text-align:center;font-size:var(--fs,44px);line-height:1;transition:bottom .12s ease-out;pointer-events:none;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.hole.up .mole{bottom:8%}
+.hole.hit{border-color:var(--a3);animation:shake .18s}
+.hole.bad{border-color:var(--bad);animation:shake .25s}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.pop{position:absolute;pointer-events:none;font-weight:800;font-family:Orbitron,sans-serif;animation:fl .8s forwards;z-index:3;text-shadow:0 2px 6px #000}
+@keyframes fl{to{transform:translateY(-50px);opacity:0}}
+#bar{width:min(100%,420px);height:10px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}#bar i{display:block;height:100%;background:linear-gradient(90deg,var(--a3),var(--a4));width:100%}
+</style>
+</head>
+<body data-game="mole">
+<main class="azgame">
+  <div class="azhud"><span class="azpill" id="hScore">Score 0/0</span><span class="azpill" id="hTime">⏱ 0</span><span class="azpill" id="hCombo">Combo ×1</span></div>
+  <div id="bar"><i id="barfill"></i></div>
+  <div class="azstage"><div id="field" class="azpanel"></div></div>
+  <div class="azmsg" id="msg">Tap the moles! 🐹 +1 · 🌟 golden +5 · 🪖 helmet needs 2 hits · 💣 bomb = penalty</div>
+  <div class="azctl"><button class="azbtn ghost" id="rst">🔄 Restart</button></div>
+</main>
+<script src="../shared/az.js"></script>
+<script>
+(function(){
+const $=id=>document.getElementById(id);let O,level,S=null,timer=null,spawnT=null;
+function cfg(){const L=level,d=O.diff;
+  const n=L<20?3:L<55?4:5;
+  return{n,
+   time:Math.round(Az.pick(d,32,28,25)),
+   target:Math.round((12+L*.9)*Az.pick(d,.8,1,1.2)),
+   life:Math.max(Az.pick(d,520,430,360),Math.round(1250-L*9)),            // how long a mole stays up
+   gap:Math.max(Az.pick(d,330,260,210),Math.round(780-L*6)),            // delay between spawns
+   multi:Math.min(4,1+Math.floor(L/22)),                                   // moles at once
+   gold:.08,helmet:L>=12?Math.min(.35,.08+L*.003):0,bomb:L>=6?Math.min(.28,.05+L*.0025):0};}
+function build(){const f=$('field');f.style.gridTemplateColumns='repeat(' + S.c.n + ',1fr)';f.innerHTML='';
+  const p=Az.place(level);f.style.background='linear-gradient(180deg,'+p.ground+','+p.sky[0]+'55)';
+  for(let i=0;i<S.c.n*S.c.n;i++){const h=document.createElement('div');h.className='hole';h.dataset.i=i;h.style.setProperty('--fs',(S.c.n===3?54:S.c.n===4?42:34)+'px');h.innerHTML='<div class="mole"></div>';
+    h.addEventListener('pointerdown',e=>{e.preventDefault();whack(i,e);});f.appendChild(h);}}
+function begin(lv){clearInterval(timer);clearTimeout(spawnT);level=lv;const c=cfg(),p=Az.place(level);
+  S={c,score:0,t:c.time,combo:1,streak:0,ups:{},over:false,misses:0};Az.setBadge('Lv '+level+' · '+p.emoji+' '+p.name);build();hud();
+  $('msg').textContent='Go go go! 🔨';
+  timer=setInterval(tick,1000);spawnT=setTimeout(spawn,400);}
+function hud(){$('hScore').textContent='Score '+S.score+'/'+S.c.target;$('hTime').textContent='⏱ '+S.t;$('hCombo').textContent='Combo ×'+S.combo;$('barfill').style.width=Math.max(0,S.t/S.c.time*100)+'%';}
+function tick(){if(S.over)return;S.t--;hud();if(S.t<=0)finish();}
+function spawn(){if(S.over)return;const holes=[...document.querySelectorAll('.hole')];
+  const free=holes.filter(h=>!S.ups[h.dataset.i]);
+  for(let k=0;k<S.c.multi&&free.length;k++){const h=free.splice(Math.floor(Math.random()*free.length),1)[0],i=+h.dataset.i,r=Math.random();
+    let type='mole',hp=1,emo='🐹';
+    if(r<S.c.bomb){type='bomb';emo='💣';}else if(r<S.c.bomb+S.c.gold){type='gold';emo='🌟';}else if(r<S.c.bomb+S.c.gold+S.c.helmet){type='helm';hp=2;emo='🪖';}
+    const life=S.c.life*(type==='gold'?.75:1)*(.85+Math.random()*.3);
+    const m={type,hp,i,tm:setTimeout(()=>down(i,true),life)};S.ups[i]=m;h.classList.add('up');h.firstChild.textContent=emo;}
+  spawnT=setTimeout(spawn,S.c.gap*(.7+Math.random()*.6));}
+function down(i,timeout){const m=S.ups[i];if(!m)return;clearTimeout(m.tm);delete S.ups[i];const h=document.querySelectorAll('.hole')[i];if(!h)return;h.classList.remove('up');
+  if(timeout&&m.type!=='bomb'){S.combo=1;S.streak=0;hud();}}
+function pop(h,txt,col){const p=document.createElement('div');p.className='pop';p.textContent=txt;p.style.color=col;p.style.left='50%';p.style.top='30%';p.style.transform='translateX(-50%)';h.appendChild(p);setTimeout(()=>p.remove(),800);}
+function whack(i){if(S.over)return;const h=document.querySelectorAll('.hole')[i],m=S.ups[i];
+  if(!m){S.combo=1;S.streak=0;hud();return;}
+  if(m.type==='bomb'){down(i);h.classList.add('bad');setTimeout(()=>h.classList.remove('bad'),250);S.score=Math.max(0,S.score-3);S.t=Math.max(0,S.t-2);S.combo=1;S.streak=0;Az.sfx('boom');pop(h,'💥 -3','#ff4d6d');hud();return;}
+  m.hp--;h.classList.add('hit');setTimeout(()=>h.classList.remove('hit'),180);
+  if(m.hp>0){Az.sfx('hit');pop(h,'🪖!','#ffd166');return;}
+  const pts=(m.type==='gold'?5:1)*S.combo;S.score+=pts;S.streak++;if(S.streak%5===0)S.combo=Math.min(5,S.combo+1);
+  if(m.type==='gold'){S.t+=2;pop(h,'+'+pts+' ⏱+2','#ffd700');Az.sfx('coin');}else{pop(h,'+'+pts,'#b6ff3b');Az.sfx('pop');}
+  down(i);hud();if(S.score>=S.c.target)finish(true);}
+function finish(early){if(S.over)return;S.over=true;clearInterval(timer);clearTimeout(spawnT);Object.keys(S.ups).forEach(k=>clearTimeout(S.ups[k].tm));
+  const won=S.score>=S.c.target;
+  Az.finish({game:'mole',level,diff:O.diff,won,base:26+Math.round(S.score*.6),score:S.score,title:won?'Mole Master!':'Time Up!',sub:'Score '+S.score+' / '+S.c.target+(won&&S.t>0?' · '+S.t+'s left':''),next:lv=>begin(lv),retry:lv=>begin(lv)});}
+$('rst').onclick=()=>O&&begin(O.level);
+document.addEventListener('contextmenu',e=>e.preventDefault());
+Az.start({game:'mole',onStart:o=>{O=o;begin(o.level);}});
+window.__mole={get S(){return S;},whack,begin:l=>{O=O||{diff:'medium'};begin(l);}};
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0614">
+<title>Zone Survivor · Ari Game Zone</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪂</text></svg>">
+<link rel="stylesheet" href="../shared/az.css">
+<style>
+.azgame{width:min(920px,100% - 12px);margin-top:6px;gap:6px}
+#cv{width:100%;height:calc(100vh - 170px);height:calc(100dvh - 170px);min-height:360px;max-height:760px;touch-action:none;cursor:crosshair}
+.azhud .azpill{font-size:12px;padding:5px 9px}
+.low{color:var(--bad)!important;border-color:var(--bad)!important}
+</style>
+</head>
+<body data-game="br">
+<main class="azgame">
+  <div class="azhud" id="hud"></div>
+  <canvas id="cv"></canvas>
+  <div class="azmsg" id="msg" style="min-height:20px;font-size:13px">Loot crates 🩹🛡️⚡🔫 · stay inside the blue zone · last one alive wins</div>
+  <div class="azctl"><button class="azbtn ghost sm" id="rst">🔄 Restart</button></div>
+</main>
+<script src="../shared/az.js"></script>
+<script src="../shared/shooter.js"></script>
+<script>
+(function(){
+const $=id=>document.getElementById(id);let G=null,O,level;
+function hud(h){
+  const pills=[['❤️ '+h.hp+'/'+h.maxhp,h.hp<h.maxhp*.3],['🛡️ '+h.armor,0],['🔫 '+h.gun+' '+(h.reload?'⟳ reloading':h.ammo+'/'+h.mag)+(h.boost?' ⚡':''),0],['👥 '+h.alive+' alive',0],['☠️ '+h.kills,0],['🌀 '+h.zone,!h.inZone]];
+  $('hud').innerHTML=pills.map(p=>'<span class="azpill '+(p[1]?'low':'')+'">'+p[0]+'</span>').join('');
+  if(h.msg)$('msg').textContent=h.msg;
+}
+function begin(lv){
+  if(G)G.stop();level=lv;const pl=Az.place(level);Az.setBadge('Lv '+level+' · '+pl.emoji+' '+pl.name);$('msg').textContent='Loot crates 🩹🛡️⚡🔫 · stay inside the blue zone · last one alive wins';
+  G=Shooter.run({cv:$('cv'),mode:'br',level,diff:O.diff,hud,end:r=>{
+    Az.finish({game:'br',level,diff:O.diff,won:r.won,base:60+r.kills*10,score:r.kills,title:r.won?'🏆 Winner Winner!':'Eliminated!',sub:r.sub,next:lv=>begin(lv),retry:lv=>begin(lv)});}});
+}
+$('rst').onclick=()=>O&&begin(O.level);
+Az.start({game:'br',onStart:o=>{O=o;begin(o.level);}});
+window.__sh={get G(){return G;},begin:l=>{O=O||{diff:'medium'};begin(l);}};
+})();
+</script>
+</body>
+</html>

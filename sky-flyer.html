@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0614">
+<title>Sky Flyer · Ari Game Zone</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐤</text></svg>">
+<link rel="stylesheet" href="../shared/az.css">
+</head>
+<body data-game="flyer">
+<main class="azgame">
+  <div class="azhud"><span class="azpill" id="hPipes">Gates 0/0</span><span class="azpill" id="hCoin">🪙 0</span><span class="azpill" id="hShield">🛡️ –</span></div>
+  <div class="azstage"><canvas id="cv" width="360" height="560" style="width:min(100%,400px);cursor:pointer"></canvas></div>
+  <div class="azmsg" id="msg">Tap / click / Space to flap</div>
+  <div class="azctl"><button class="azbtn" id="flap">🪽 FLAP</button><button class="azbtn ghost" id="rst">🔄 Restart</button></div>
+</main>
+<script src="../shared/az.js"></script>
+<script>
+(function(){
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d'),W=360,H=560,$=id=>document.getElementById(id);
+let O,level,place,S=null,raf,last=0,paused=false;
+const clouds=Array.from({length:7},(_,i)=>({x:Math.random()*W,y:30+Math.random()*300,s:.5+Math.random()*.9,v:6+Math.random()*10}));
+function cfg(){ // difficulty curve by level
+  const L=level, d=O.diff;
+  return {
+    target: Math.round((8+L*.55)*Az.pick(d,.8,1,1.2)),
+    gap: Math.max(Az.pick(d,92,80,70), (Az.pick(d,190,170,155)) - L*1.05),
+    speed: Az.pick(d,1.4,1.7,2.0)+L*.022,
+    spacing: Math.max(150, 215-L*.5),
+    moving: L>=15 ? Math.min(1,(L-10)/70) : 0,
+    wind: L>=40 ? Math.min(.6,(L-35)/90) : 0,
+  };
+}
+function begin(lv){
+  level=lv; place=Az.place(level); const c=cfg(); const bird=Az.eq('bird');
+  S={c,bird,y:H/2,vy:0,rot:0,pipes:[],coins:[],passed:0,collected:0,t:0,dist:0,shield:0,alive:true,started:false,nextX:W+60,flash:0,parts:[]};
+  Az.setBadge('Lv '+level+' · '+place.emoji+' '+place.name);
+  $('msg').textContent='Tap / click / Space to flap'; hud();
+  cancelAnimationFrame(raf); last=performance.now(); raf=requestAnimationFrame(loop);
+}
+function hud(){ $('hPipes').textContent='Gates '+S.passed+'/'+S.c.target; $('hCoin').textContent='🪙 '+S.collected; $('hShield').textContent=S.shield>0?'🛡️ '+Math.ceil(S.shield)+'s':'🛡️ –'; }
+function flap(){ if(!S||!S.alive||paused)return; S.started=true; S.vy=-6.1; Az.sfx('jump'); for(let i=0;i<4;i++)S.parts.push({x:70,y:S.y+10,vx:-1-Math.random()*2,vy:Math.random()*2-1,l:.4,c:'#fff'}); }
+function spawn(){
+  const c=S.c, gy=70+c.gap/2+Math.random()*(H-140-c.gap), mv=Math.random()<c.moving;
+  const p={x:S.nextX,gy,gap:c.gap,mv,ph:Math.random()*6,amp:mv?18+Math.random()*28*c.moving:0,scored:false};
+  S.pipes.push(p);
+  if(Math.random()<.55) S.coins.push({x:p.x+25,y:gy,got:false});
+  if(Math.random()<.06&&level>=5) S.coins.push({x:p.x+25,y:gy-c.gap*.28,got:false,shield:true});
+  S.nextX+=c.spacing+Math.random()*30;
+}
+function die(){ if(!S.alive)return; S.alive=false; Az.sfx('hit'); S.flash=1; setTimeout(()=>end(false),650); }
+function win(){ if(!S.alive)return; S.alive=false; setTimeout(()=>end(true),500); }
+function end(won){
+  Az.finish({game:'flyer',level,diff:O.diff,won,base:28+Math.floor(S.collected*1.5)+Math.round(S.passed*.5),score:S.passed,
+    title:won?'Sky Cleared!':'Crashed!',sub:'Gates '+S.passed+'/'+S.c.target+' · Coins '+S.collected,
+    next:lv=>begin(lv),retry:lv=>begin(lv)});
+}
+function update(dt){
+  if(!S.alive){S.vy+=.35*dt*60;S.y+=S.vy*dt*60;S.parts.forEach(p=>{p.x+=p.vx*dt*60;p.y+=p.vy*dt*60;p.l-=dt});S.parts=S.parts.filter(p=>p.l>0);return;}
+  const k=dt*60; S.t+=dt;
+  clouds.forEach(c=>{c.x-=c.v*dt;if(c.x<-80)c.x=W+60;});
+  if(!S.started){S.y=H/2+Math.sin(S.t*4)*8;return;}
+  S.vy+=.34*k; if(S.c.wind)S.vy+=Math.sin(S.t*1.7)*S.c.wind*.18*k; S.y+=S.vy*k; S.rot=Math.max(-.5,Math.min(1.1,S.vy*.09));
+  S.dist+=S.c.speed*k; if(S.shield>0)S.shield-=dt;
+  while(S.nextX<W+260&&S.passed+S.pipes.length<S.c.target+3) spawn();
+  S.pipes.forEach(p=>{p.x-=S.c.speed*k; if(p.mv)p.cy=p.gy+Math.sin(S.t*1.6+p.ph)*p.amp; else p.cy=p.gy;});
+  S.coins.forEach(c=>{c.x-=S.c.speed*k;});
+  S.nextX-=S.c.speed*k;
+  const bx=70,r=14;
+  if(S.y<r||S.y>H-40-r){ if(S.shield>0){S.shield=0;S.vy=-5;S.y=Math.max(r+2,Math.min(H-40-r-2,S.y));}else return die(); }
+  for(const p of S.pipes){
+    if(!p.scored&&p.x+22<bx){p.scored=true;S.passed++;Az.sfx('pop');hud(); if(S.passed>=S.c.target)return win();}
+    if(bx+r>p.x-22&&bx-r<p.x+22){ const cy=p.cy??p.gy; if(S.y-r<cy-p.gap/2||S.y+r>cy+p.gap/2){ if(S.shield>0){S.shield=0;p.scored=true;S.passed++;hud();Az.toast('🛡️ Shield saved you!',900);} else return die(); } }
+  }
+  for(const c of S.coins){ if(!c.got&&Math.hypot(c.x-bx,c.y-S.y)<26){c.got=true; if(c.shield){S.shield=6;Az.toast('🛡️ Shield!',900);}else{S.collected++;Az.addCoins(1);} Az.sfx('coin');hud();} }
+  S.pipes=S.pipes.filter(p=>p.x>-60); S.coins=S.coins.filter(c=>c.x>-30&&!c.got);
+  S.parts.forEach(p=>{p.x+=p.vx*k;p.y+=p.vy*k;p.l-=dt}); S.parts=S.parts.filter(p=>p.l>0);
+}
+function render(){
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,place.sky[0]); g.addColorStop(1,place.sky[1]); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  const dark=(place.sky[0].charAt(1)<'5'&&place.sky[0]!=='#7fd68c');
+  if(dark){ctx.fillStyle='#fff';for(let i=0;i<40;i++){ctx.globalAlpha=.3+.5*((i*37)%10)/10;ctx.fillRect((i*89+S.t*(5+i%4))%W,(i*53)%H*.8,2,2);}ctx.globalAlpha=1;}
+  clouds.forEach(c=>{ctx.globalAlpha=dark?.12:.8;ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(c.x,c.y,38*c.s,16*c.s,0,0,7);ctx.ellipse(c.x+22*c.s,c.y-8*c.s,24*c.s,14*c.s,0,0,7);ctx.fill();});ctx.globalAlpha=1;
+  S.pipes.forEach(p=>{const cy=p.cy??p.gy,top=cy-p.gap/2,bot=cy+p.gap/2; ctx.fillStyle=place.accent; ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=3;
+    ctx.fillRect(p.x-20,0,40,top-16);ctx.strokeRect(p.x-20,0,40,top-16);ctx.fillRect(p.x-26,top-16,52,16);ctx.strokeRect(p.x-26,top-16,52,16);
+    ctx.fillRect(p.x-20,bot+16,40,H-bot);ctx.strokeRect(p.x-20,bot+16,40,H-bot);ctx.fillRect(p.x-26,bot,52,16);ctx.strokeRect(p.x-26,bot,52,16);
+    ctx.fillStyle='rgba(255,255,255,.25)';ctx.fillRect(p.x-14,0,6,top-16);ctx.fillRect(p.x-14,bot+16,6,H-bot);
+    if(p.mv){ctx.fillStyle='rgba(0,0,0,.35)';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('↕',p.x,top-22);} });
+  S.coins.forEach(c=>{ctx.font='22px sans-serif';ctx.textAlign='center';ctx.fillText(c.shield?'🛡️':'🪙',c.x,c.y+8);});
+  ctx.fillStyle=place.ground;ctx.fillRect(0,H-40,W,40);ctx.fillStyle='rgba(255,255,255,.15)';for(let i=0;i<14;i++)ctx.fillRect(((i*40-S.dist)%W+W)%W,H-40,20,6);
+  S.parts.forEach(p=>{ctx.globalAlpha=Math.max(0,p.l*2);ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,4,4);});ctx.globalAlpha=1;
+  ctx.save();ctx.translate(70,S.y);ctx.rotate(S.alive?S.rot:1.4);ctx.font='34px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  if(S.shield>0){ctx.strokeStyle='rgba(120,220,255,.9)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,24,0,7);ctx.stroke();}
+  ctx.scale(-1,1);ctx.fillText(S.bird.emoji,0,2);ctx.restore();ctx.textBaseline='alphabetic';
+  ctx.fillStyle='#fff';ctx.strokeStyle='rgba(0,0,0,.6)';ctx.lineWidth=4;ctx.font='bold 30px Orbitron,sans-serif';ctx.textAlign='center';const t=S.passed+' / '+S.c.target;ctx.strokeText(t,W/2,60);ctx.fillText(t,W/2,60);
+  if(S.flash>0){ctx.fillStyle='rgba(255,60,60,'+S.flash*.5+')';ctx.fillRect(0,0,W,H);S.flash-=.04;}
+}
+function loop(t){raf=requestAnimationFrame(loop);let dt=(t-last)/1000;last=t;if(dt>.05)dt=.05;if(S&&!paused){update(dt);render();}}
+cv.addEventListener('pointerdown',e=>{e.preventDefault();flap();});
+$('flap').addEventListener('pointerdown',e=>{e.preventDefault();flap();});
+addEventListener('keydown',e=>{if(e.code==='Space'||e.key==='ArrowUp'){e.preventDefault();flap();}});
+$('rst').onclick=()=>O&&begin(O.level);
+document.addEventListener('visibilitychange',()=>{paused=document.hidden;last=performance.now();});
+Az.start({game:'flyer',onStart:o=>{O=o;begin(o.level);}});
+window.__fly={get S(){return S;},begin:l=>{O=O||{diff:'medium'};begin(l);},flap};
+})();
+</script>
+</body>
+</html>

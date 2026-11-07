@@ -1,0 +1,101 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0614">
+<meta name="description" content="Ari Game Zone - 10 free games: battle royale, racing, chess, online multiplayer and more.">
+<title>Ari Game Zone</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/az.css">
+<script>try{var t=JSON.parse(localStorage.getItem('az2')||'{}').theme;if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<style>
+header{padding:30px 16px 8px;text-align:center}
+.logo{font-size:12px;letter-spacing:4px;color:var(--a1);font-weight:700}
+.hero h1{margin:10px 0;font-weight:900;font-size:clamp(30px,8vw,56px);letter-spacing:1px;background:linear-gradient(90deg,var(--a1),var(--a2),var(--a4));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 18px var(--blob2))}
+.hero p{margin:0;color:var(--muted);font-size:14px}
+main{width:min(1040px,100% - 24px);margin:14px auto 40px}
+.me{display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:space-between;margin-bottom:16px}
+.me .l{display:flex;gap:12px;align-items:center;flex:1;min-width:220px}
+.avatar{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-size:28px;background:linear-gradient(135deg,var(--a1),var(--a2))}
+.xp{height:8px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:6px;width:min(260px,60vw)}
+.xp i{display:block;height:100%;background:linear-gradient(90deg,var(--a3),var(--a4));border-radius:99px;transition:width .6s}
+.me .r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.coinbig{font-weight:800;color:var(--a4);font-size:18px}
+.themes{display:flex;gap:8px}
+.dot{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.25);cursor:pointer;padding:0;transition:transform .2s}
+.dot[data-t=neon]{background:linear-gradient(135deg,#00e5ff,#ff3d9a)}.dot[data-t=sunset]{background:linear-gradient(135deg,#ff9f1c,#ff3b81)}.dot[data-t=ocean]{background:linear-gradient(135deg,#2dd4ff,#34f5b0)}.dot[data-t=forest]{background:linear-gradient(135deg,#7CFC8A,#ffd23f)}
+.dot:hover{transform:scale(1.15)}.dot.on{border-color:#fff;box-shadow:0 0 0 3px var(--ring)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.search{flex:1;min-width:170px;padding:13px 16px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.3);color:var(--text);font-family:inherit;font-size:15px}
+.search:focus{outline:none;border-color:var(--a1);box-shadow:0 0 0 4px var(--ring)}
+.cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px}
+.cats .azchip{white-space:nowrap}
+.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.card{--c:var(--a1);position:relative;overflow:hidden;display:block;text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:18px 16px 14px;color:var(--text);min-height:200px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:transform .25s,border-color .25s,box-shadow .25s;animation:azpop .5s backwards}
+.card::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 100% 0%,var(--c),transparent 55%);opacity:.16;transition:opacity .25s}
+.card>*{position:relative}
+.card[data-cat=Shooter]{--c:var(--a2)}.card[data-cat=Racing]{--c:var(--a4)}.card[data-cat=Board]{--c:var(--a1)}.card[data-cat=Arcade]{--c:var(--a3)}.card[data-cat=Puzzle]{--c:#b388ff}.card[data-cat=Brain]{--c:#4dd0e1}.card[data-cat=Fun]{--c:#ff8a65}
+.card:hover,.card:focus-visible{transform:translateY(-6px) scale(1.02);border-color:var(--c);box-shadow:0 16px 32px -12px var(--c);outline:none}.card:hover::before{opacity:.36}
+.emoji{font-size:32px;width:56px;height:56px;display:grid;place-items:center;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid var(--line);transition:transform .25s}
+.card:hover .emoji{transform:rotate(-8deg) scale(1.12)}
+.tag{margin-top:12px;font-size:10px;font-weight:700;color:var(--c);text-transform:uppercase;letter-spacing:1.5px}
+.card h2{font-size:16px;margin:4px 0 4px}
+.card p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
+.modes{display:flex;gap:5px;margin-top:10px;flex-wrap:wrap}
+.modes span{font-size:10px;padding:3px 7px;border-radius:99px;background:rgba(255,255,255,.1);border:1px solid var(--line)}
+.prog{margin-top:10px;font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:6px}
+.bar{height:5px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:4px}.bar i{display:block;height:100%;background:var(--c);border-radius:99px}
+.empty{text-align:center;color:var(--muted);padding:34px 10px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:22px}
+</style>
+</head>
+<body>
+<header><div class="logo">YOUR MINI GAMING WORLD</div><div class="hero"><h1>🎮 Ari Game Zone</h1><p>10 free games · up to 100 levels · Shop · Online rooms · Play on phone or computer</p></div></header>
+<main>
+  <div class="azpanel me">
+    <div class="l"><div class="avatar">😎</div><div><b>Player Level <span data-az="plvl">1</span></b><div class="xp"><i id="xpbar" style="width:0%"></i></div><small id="xptxt" style="color:var(--muted)"></small></div></div>
+    <div class="r"><span class="coinbig">🪙 <span data-az="coins">0</span></span><button class="azbtn sm" id="daily">🎁 Daily bonus</button><button class="azbtn sm ghost" id="shopall">🛒 Shop</button><div class="themes" id="themes"></div></div>
+  </div>
+  <div class="toolbar"><input id="search" class="search" placeholder="🔍 Search games..." autocomplete="off"></div>
+  <div class="cats" id="cats"></div>
+  <section class="games" id="games"></section>
+  <p class="empty" id="empty" hidden>😕 No games found. Try another search.</p>
+</main>
+<footer>Made with ❤️ using HTML, CSS and JavaScript · Ari Game Zone</footer>
+<script src="shared/az.js"></script>
+<script>
+const CATS=['All','Shooter','Racing','Board','Arcade','Puzzle','Brain','Fun','Online'];
+let cat='All';
+const MODE={single:'🤖 Solo',local:'👥 2P',online:'🌐 Online'};
+function render(){
+  const q=document.getElementById('search').value.toLowerCase().trim(),box=document.getElementById('games');box.innerHTML='';let n=0;
+  Az.GAMES.forEach((g,i)=>{
+    if(cat==='Online'?!g.modes.includes('online'):(cat!=='All'&&g.cat!==cat))return;
+    if(q&&!(g.name+' '+g.cat+' '+g.desc).toLowerCase().includes(q))return;
+    n++;const lv=Az.level(g.id),a=document.createElement('a');a.className='card';a.dataset.cat=g.cat;a.href='games/'+g.file;a.style.animationDelay=(n*40)+'ms';
+    a.innerHTML=`<div class="emoji">${g.emoji}</div><div class="tag">${g.cat}</div><h2>${g.name}</h2><p>${g.desc}</p><div class="modes">${g.modes.map(m=>`<span>${MODE[m]}</span>`).join('')}</div><div class="prog"><span>Level ${lv} / ${g.max}</span><span>${Az.place(lv).emoji}</span></div><div class="bar"><i style="width:${Math.min(100,(lv-1)/(g.max-1||1)*100)}%"></i></div>`;
+    box.appendChild(a);
+  });
+  document.getElementById('empty').hidden=n>0;
+}
+function drawCats(){const c=document.getElementById('cats');c.innerHTML=CATS.map(x=>`<button class="azchip ${x===cat?'on':''}" data-c="${x}">${x==='Online'?'🌐 Online':x}</button>`).join('');}
+document.getElementById('cats').onclick=e=>{const b=e.target.closest('button');if(!b)return;cat=b.dataset.c;drawCats();render();};
+document.getElementById('search').oninput=render;
+function drawTop(){const p=Az.plProgress();document.getElementById('xpbar').style.width=Math.min(100,p.cur/p.need*100)+'%';document.getElementById('xptxt').textContent=p.cur+' / '+p.need+' XP to next level';Az.refresh();
+  const today=new Date().toDateString();document.getElementById('daily').disabled=Az.get('daily')===today;document.getElementById('daily').textContent=Az.get('daily')===today?'✅ Claimed today':'🎁 Daily bonus';}
+document.getElementById('daily').onclick=()=>{const t=new Date().toDateString();if(Az.get('daily')===t)return;Az.set('daily',t);Az.addCoins(100);Az.sfx('coin');Az.toast('🎁 +100 coins! Come back tomorrow.');drawTop();};
+document.getElementById('shopall').onclick=()=>Az.shop();
+const th=document.getElementById('themes');['neon','sunset','ocean','forest'].forEach(t=>{const b=document.createElement('button');b.className='dot';b.dataset.t=t;b.title=t;b.setAttribute('aria-label',t+' theme');b.onclick=()=>{Az.setTheme(t);mark();};th.appendChild(b);});
+function mark(){th.querySelectorAll('.dot').forEach(d=>d.classList.toggle('on',d.dataset.t===Az.get('theme')));}
+document.addEventListener('az-ready',()=>{mark();drawTop();});
+drawCats();render();
+// refresh when coming back from a game with the back button
+window.addEventListener('pageshow',e=>{if(e.persisted)location.reload();});
+</script>
+</body>
+</html>
+
+</body></html>
