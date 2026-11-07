@@ -495,7 +495,7 @@ function loadFb() {
   fbP = new Promise((res, rej) => {
     const c = window.AZ_FIREBASE;
     if (!c || !c.apiKey || /PASTE/.test(c.apiKey)) return rej(new Error('Firebase keys missing. firebase-config.js me apni keys daalo.'));
-    const L = ['app', 'auth', 'database'];
+    const L = ['app', 'auth', 'database', 'functions'];
     const next = i => { if (i === L.length) { try { firebase.initializeApp(c); fbDb = firebase.database(); firebase.auth().onAuthStateChanged(u => { if (u) afterLogin(u); }); res(); } catch (e) { rej(e); } return; }
       const s = document.createElement('script'); s.src = FBV + L[i] + '-compat.js'; s.onload = () => next(i + 1); s.onerror = () => rej(new Error('Login service load nahi hua. Internet check karo.')); document.head.appendChild(s); };
     next(0);
@@ -506,6 +506,8 @@ function loadFb() {
 window.__azPush = () => { if (!fbUser || !fbDb) return; clearTimeout(pushT); pushT = setTimeout(() => { try { fbDb.ref('users/' + fbUser.uid).set(JSON.parse(JSON.stringify(db()))); } catch (e) {} }, 1500); };
 function afterLogin(u) {
   fbUser = u; try { localStorage.setItem('az_login', '1'); } catch (e) {}
+  // Server-enforced moderation check. Requires deployed Firebase callable functions.
+  try { firebase.functions().httpsCallable('checkMyBan')({}).then(r => { if (r.data && r.data.banned) { Az.toast('This account is currently suspended.'); firebase.auth().signOut(); fbUser = null; } }).catch(() => {}); } catch (e) {}
   const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 ' + String(u.displayName || u.phoneNumber || 'Me').split(' ')[0].slice(0, 8);
   fbDb.ref('users/' + u.uid).once('value').then(s => {
     const c = s.val();
@@ -661,29 +663,21 @@ function init() {
   try { if (localStorage.getItem('az_login')) authInit(); } catch (e) {}
   { const pb = document.getElementById('profb'); if (pb) pb.onclick = () => Az.profile(); }
   {
-    // Owner-only convenience control. Frontend checks are NOT secure against tampering.
-    const OWNER_UID = '97835276';
+    // Owner-only entry point. Actual admin authorization is enforced by Firebase callable functions.
+    const OWNER_GAME_UID = '97835276';
     const cb = document.getElementById('admincoins');
     if (cb) {
-      if (Az.uid() !== OWNER_UID) {
+      if (String(Az.uid()) !== OWNER_GAME_UID) {
         cb.style.display = 'none';
+        cb.onclick = null;
       } else {
         cb.style.display = '';
-        cb.onclick = () => {
-          const raw = prompt('Enter custom coins to ADD:');
-          if (raw === null) return;
-          const amount = Number(raw.trim());
-          if (!Number.isSafeInteger(amount) || amount <= 0 || amount > 100000000) {
-            Az.toast('Enter a whole number from 1 to 100,000,000.');
-            return;
-          }
-          if (!confirm('Add ' + amount.toLocaleString() + ' coins to UID ' + OWNER_UID + '?')) return;
-          Az.addCoins(amount);
-          Az.toast('Added ' + amount.toLocaleString() + ' coins.');
-        };
+        cb.textContent = '👑 Owner Admin';
+        cb.onclick = () => { location.href = BASE + 'owner-admin.html'; };
       }
     }
   }
+
   Az.refresh();
   if (!db().nameAsked) setTimeout(() => Az.profile(true), 500);
   document.dispatchEvent(new Event('az-ready'));

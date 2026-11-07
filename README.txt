@@ -32,3 +32,7 @@ Upload karte waqt purani files replace kar do (sab ek hi folder me, index.html r
   (left/right half wala tap nahi), keyboard A/D ya arrows pehle jaise.
 * Naya game: ludo.html (12 files ab). Single (computer ke saath), Same phone (2-4 players), Online (2 insaan, baaki computer).
   Online me dono phones par game same seed se chalta hai, isliye sirf dice/goti ka choice bheja jaata hai.
+
+OWNER ADMIN PANEL
+Open owner-admin.html for owner coin controls, UID transfers, bans and unbans.
+See ADMIN-SETUP.txt before using it. Secure actions require deploying the supplied Firebase Cloud Functions and configuring the owner's Firebase Authentication UID. The 8-digit game UID alone is not secure authorization.

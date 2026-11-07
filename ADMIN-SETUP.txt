@@ -1,0 +1,30 @@
+ARI GAME ZONE — OWNER ADMIN SETUP
+================================
+Owner game UID: 97835276
+
+IMPORTANT
+This package includes the owner panel and Firebase Cloud Functions source. Coin changes and bans are NOT active securely until you deploy the Functions and set the owner's Firebase Authentication UID. The 8-digit game UID is not the same as the Firebase Authentication UID.
+
+1) Configure firebase-config.js with your real Firebase Web App config.
+2) In Firebase Console > Authentication, enable the sign-in provider used by the game.
+3) Install Node.js 20 and Firebase CLI on a computer (Firebase Functions deployment is not practical from the GitHub phone editor alone).
+4) In the project folder, run:
+   firebase login
+   firebase init functions
+   (Choose JavaScript and Node 20; keep the supplied functions/index.js and functions/package.json.)
+5) Find the Firebase Authentication UID of the owner account in Firebase Console > Authentication > Users. This is a long Firebase UID, NOT 97835276.
+6) Set it as an environment variable for the Functions deployment. For Functions v1, configure a runtime environment variable ADMIN_AUTH_UID with that exact Firebase Auth UID in your deployment environment. Never put it in public HTML or commit it to GitHub.
+7) Deploy: firebase deploy --only functions
+8) Deploy the website files to GitHub Pages. Open owner-admin.html after logging in with the owner Firebase account.
+
+DATABASE RULES
+The current database.rules.json denies root access and lets users write their own profile. Do not loosen these rules to allow public admin writes. Cloud Functions use the Admin SDK and enforce the owner Firebase Auth UID on the server.
+
+BAN LIMITATION
+The website calls checkMyBan after Firebase login. Bans apply to accounts that sign in through Firebase. Local/offline play without login cannot be reliably moderated. A 24-hour temporary ban is supported; permanent bans have no expiry. The player profile and purchased data are retained.
+
+UID REQUIREMENT
+A target player must have a cloud user record at users/{firebaseAuthUid} with its 8-digit game UID in the uid field. Duplicate/missing game UIDs are rejected.
+
+SECURITY
+Never share Firebase service-account keys, private keys, passwords, OTPs, or admin credentials. Do not store ADMIN_AUTH_UID as a secret in frontend files. Test with a second account before public launch.
