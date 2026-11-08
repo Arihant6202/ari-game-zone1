@@ -1,0 +1,9 @@
+{
+  "name": "Ari Game Zone",
+  "short_name": "Ari Games",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#08091b",
+  "theme_color": "#08091b",
+  "icons": [{"src":"ari-game-zone-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

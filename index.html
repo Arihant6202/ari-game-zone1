@@ -111,7 +111,35 @@ a{color:inherit}
 @keyframes azfade{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-.coinbig,.azpill.coin,#azcoins,#hC,#hCoin,#mycoins{color:#ffbf24!important}.az-coin-icon{width:1.22em;height:1.22em;object-fit:contain;vertical-align:-.22em;display:inline-block;filter:drop-shadow(0 1px 2px rgba(255,190,30,.35))}</style>
+.coinbig,.azpill.coin,#azcoins,#hC,#hCoin,#mycoins{color:#ffbf24!important}.az-coin-icon{width:1.22em;height:1.22em;object-fit:contain;vertical-align:-.22em;display:inline-block;filter:drop-shadow(0 1px 2px rgba(255,190,30,.35))}
+/* Ari Game Zone v15 visual refresh */
+:root{--bg1:#050817;--bg2:#17104b;--panel:rgba(13,19,48,.88);--panel2:rgba(27,31,76,.88);--line:rgba(112,102,255,.35);--a1:#a855f7;--a2:#2563eb;--a3:#45f0b5;--a4:#ffd166}
+body{background:radial-gradient(ellipse at 50% -15%,#332078 0,transparent 48%),radial-gradient(circle at 90% 40%,rgba(87,28,150,.18),transparent 35%),#050817}
+header{padding:24px 16px 30px!important;background:linear-gradient(120deg,rgba(14,12,48,.96),rgba(29,10,68,.84));border-bottom:1px solid #5841a8;box-shadow:0 15px 50px #03030c}
+header .logo{font-family:Orbitron,sans-serif;letter-spacing:2px;color:#ffd166;font-size:13px;font-weight:900}
+header .hero h1{font-size:clamp(30px,6vw,58px)!important;text-shadow:0 0 25px #a855f7;margin:14px 0 5px}
+header .hero p{letter-spacing:3px;color:#c9c4ff;font-weight:700}
+.hero-actions{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+main{width:min(1200px,calc(100% - 24px))!important;margin:18px auto 40px!important}
+.quicknav{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:0 0 15px}
+.quicknav a{padding:10px 17px;border-radius:13px;background:#17183d;border:1px solid #4843a0;text-decoration:none;font-weight:700}
+.azpanel{border-radius:20px!important;box-shadow:0 12px 34px rgba(0,0,0,.25),0 0 24px rgba(110,60,255,.08)}
+.me{border-color:#6551c7!important;background:linear-gradient(110deg,rgba(29,22,74,.94),rgba(9,18,43,.96))!important}
+.rewardpanel{background:linear-gradient(110deg,rgba(42,18,84,.92),rgba(13,22,57,.95))!important}
+.sectionhead{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:26px 0 12px}.sectionhead h2{margin:0}.sectionhead p{margin:4px 0;color:var(--muted);font-size:12px}
+.toolbar{margin:0!important}.search{min-width:min(300px,80vw);border:1px solid #6353c6!important;background:#101631!important;border-radius:14px!important}
+.cats{display:flex;gap:8px;overflow-x:auto;padding:5px 0 13px;scrollbar-width:thin}
+.games{grid-template-columns:repeat(auto-fill,minmax(205px,1fr))!important;gap:14px!important}
+.card{position:relative;overflow:hidden;background:linear-gradient(155deg,rgba(29,31,76,.97),rgba(9,15,38,.98))!important;border:1px solid rgba(130,105,255,.45)!important;border-radius:19px!important;box-shadow:0 10px 25px rgba(0,0,0,.22);transition:transform .2s,border-color .2s,box-shadow .2s}
+.card:hover{transform:translateY(-5px);border-color:#c084fc!important;box-shadow:0 15px 35px rgba(112,58,255,.22)}
+.card .emoji{filter:drop-shadow(0 0 12px rgba(168,85,247,.45))}
+.card .tag{background:#33206d!important;color:#e7d7ff!important;border-radius:99px;padding:4px 9px}
+.azbtn{background:linear-gradient(120deg,#a855f7,#315eea)!important;color:white!important;box-shadow:0 7px 20px rgba(105,65,235,.25)!important}
+.azbtn.ghost{background:#191d43!important;border:1px solid #5550a6!important;color:#f4f1ff!important}
+footer{border-top:1px solid var(--line);margin-top:30px}
+@media(max-width:640px){header{padding:20px 12px!important}.hero-actions .azbtn{padding:10px 13px}.sectionhead{align-items:stretch}.toolbar,.search{width:100%;min-width:0}.games{grid-template-columns:repeat(2,minmax(0,1fr))!important}.quicknav a{padding:8px 11px;font-size:12px}}
+
+</style>
 <script>try{var t=JSON.parse(localStorage.getItem('az2')||'{}').theme;if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
 header{padding:30px 16px 8px;text-align:center}
@@ -156,26 +184,54 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:22px}
 .me{align-items:center}.me .r{justify-content:flex-end;gap:7px}.me .r .azbtn{white-space:nowrap}.themes{padding:4px 7px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.04)}
 @media(max-width:640px){.me .r{width:100%;justify-content:center}.me .l{min-width:0}.games{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.card{padding:13px 11px;min-height:185px;border-radius:18px}.card .emoji{width:48px;height:48px;font-size:28px}.card h2{font-size:14px}.card p{font-size:11px}.me .r .azbtn{padding:7px 9px;font-size:11px}.coinbig{font-size:15px}}
 @media(max-width:380px){.games{grid-template-columns:1fr}.me .r{gap:5px}}
+
+/* Ari Game Zone v15 visual refresh */
+:root{--bg1:#050817;--bg2:#17104b;--panel:rgba(13,19,48,.88);--panel2:rgba(27,31,76,.88);--line:rgba(112,102,255,.35);--a1:#a855f7;--a2:#2563eb;--a3:#45f0b5;--a4:#ffd166}
+body{background:radial-gradient(ellipse at 50% -15%,#332078 0,transparent 48%),radial-gradient(circle at 90% 40%,rgba(87,28,150,.18),transparent 35%),#050817}
+header{padding:24px 16px 30px!important;background:linear-gradient(120deg,rgba(14,12,48,.96),rgba(29,10,68,.84));border-bottom:1px solid #5841a8;box-shadow:0 15px 50px #03030c}
+header .logo{font-family:Orbitron,sans-serif;letter-spacing:2px;color:#ffd166;font-size:13px;font-weight:900}
+header .hero h1{font-size:clamp(30px,6vw,58px)!important;text-shadow:0 0 25px #a855f7;margin:14px 0 5px}
+header .hero p{letter-spacing:3px;color:#c9c4ff;font-weight:700}
+.hero-actions{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+main{width:min(1200px,calc(100% - 24px))!important;margin:18px auto 40px!important}
+.quicknav{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:0 0 15px}
+.quicknav a{padding:10px 17px;border-radius:13px;background:#17183d;border:1px solid #4843a0;text-decoration:none;font-weight:700}
+.azpanel{border-radius:20px!important;box-shadow:0 12px 34px rgba(0,0,0,.25),0 0 24px rgba(110,60,255,.08)}
+.me{border-color:#6551c7!important;background:linear-gradient(110deg,rgba(29,22,74,.94),rgba(9,18,43,.96))!important}
+.rewardpanel{background:linear-gradient(110deg,rgba(42,18,84,.92),rgba(13,22,57,.95))!important}
+.sectionhead{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:26px 0 12px}.sectionhead h2{margin:0}.sectionhead p{margin:4px 0;color:var(--muted);font-size:12px}
+.toolbar{margin:0!important}.search{min-width:min(300px,80vw);border:1px solid #6353c6!important;background:#101631!important;border-radius:14px!important}
+.cats{display:flex;gap:8px;overflow-x:auto;padding:5px 0 13px;scrollbar-width:thin}
+.games{grid-template-columns:repeat(auto-fill,minmax(205px,1fr))!important;gap:14px!important}
+.card{position:relative;overflow:hidden;background:linear-gradient(155deg,rgba(29,31,76,.97),rgba(9,15,38,.98))!important;border:1px solid rgba(130,105,255,.45)!important;border-radius:19px!important;box-shadow:0 10px 25px rgba(0,0,0,.22);transition:transform .2s,border-color .2s,box-shadow .2s}
+.card:hover{transform:translateY(-5px);border-color:#c084fc!important;box-shadow:0 15px 35px rgba(112,58,255,.22)}
+.card .emoji{filter:drop-shadow(0 0 12px rgba(168,85,247,.45))}
+.card .tag{background:#33206d!important;color:#e7d7ff!important;border-radius:99px;padding:4px 9px}
+.azbtn{background:linear-gradient(120deg,#a855f7,#315eea)!important;color:white!important;box-shadow:0 7px 20px rgba(105,65,235,.25)!important}
+.azbtn.ghost{background:#191d43!important;border:1px solid #5550a6!important;color:#f4f1ff!important}
+footer{border-top:1px solid var(--line);margin-top:30px}
+@media(max-width:640px){header{padding:20px 12px!important}.hero-actions .azbtn{padding:10px 13px}.sectionhead{align-items:stretch}.toolbar,.search{width:100%;min-width:0}.games{grid-template-columns:repeat(2,minmax(0,1fr))!important}.quicknav a{padding:8px 11px;font-size:12px}}
+
 </style>
 </head>
 <body>
-<header><div class="logo">YOUR MINI GAMING WORLD</div><div class="hero"><h1>🎮 Ari Game Zone</h1><p>15 games · 100 levels · 150+ shop items · Online rooms · Mobile & desktop</p></div></header>
-<main>
-  <div class="azpanel me">
+<header><div class="logo">👑 ARI GAME ZONE</div><div class="hero"><h1>🎮 Ari Game Zone</h1><p>PLAY · COMPETE · EARN · UPGRADE</p><div class="hero-actions"><a class="azbtn" href="#games">▶ Explore Games</a><span class="azpill">20 Games</span><span class="azpill">Gold Rewards</span></div></div></header>
+<main><nav class="quicknav"><a href="#games">🎮 Games</a><a href="#rewards">🎁 Rewards</a><a href="#games">🏆 Compete</a><a href="#profile">👤 Profile</a></nav>
+  <div class="azpanel me" id="profile">
     <div class="l"><div class="avatar" data-az="avatar">😎</div><div><b>Level <span data-az="plvl">1</span></b><div class="xp"><i id="xpbar" style="width:0%"></i></div><small id="xptxt" style="color:var(--muted)"></small><div style="margin-top:4px;font-size:12px;color:var(--muted)">👤 <b data-az="name" style="color:inherit"></b> · 🆔 <span data-az="uid"></span></div></div></div>
     <div class="r"><span class="coinbig"><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="A gold coin"> <span data-az="coins">0</span></span><button class="azbtn sm" id="daily">🎁 Daily bonus</button><button class="azbtn sm ghost" id="shopall">🛒 Shop</button><button class="azbtn sm ghost" id="mailbtn">✉️ Mail <span id="mailcount"></span></button><button class="azbtn sm ghost" id="profb">🆔 Profile</button><button class="azbtn sm ghost" id="admincoins">⚙️ My Coins</button><div class="themes" id="themes" aria-label="Choose theme"></div></div>
   </div>
-  <section class="azpanel" style="margin:14px 0"><div style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap"><div><h2 style="margin:0 0 4px">🎡 Lucky Reward</h2><small style="color:var(--muted)">Spin for a random game item or Gold Coins · Cost: 100 coins</small></div><button class="azbtn" id="luckyspin">🎁 Spin now</button></div><p id="luckyresult" style="margin:8px 0 0;color:var(--a3);font-weight:700"></p></section>
+  <section class="azpanel rewardpanel" id="rewards" style="margin:14px 0"><div style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap"><div><h2 style="margin:0 0 4px">🎡 Lucky Reward</h2><small style="color:var(--muted)">Spin for a random game item or Gold Coins · Cost: 100 coins</small></div><button class="azbtn" id="luckyspin">🎁 Spin now</button></div><p id="luckyresult" style="margin:8px 0 0;color:var(--a3);font-weight:700"></p></section>
   <section class="azpanel" style="margin:14px 0"><h2 style="margin:0 0 8px">🏆 Next Level Rewards</h2><p style="color:var(--muted);font-size:12px;margin:0 0 8px">Every level: +100 Gold Coins · Every 5th level: a special item (rare, epic, legendary & more). Preview up to Level 100.</p><div id="rewardpreview" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px"></div><button class="azbtn ghost sm" id="allrewards" style="margin-top:10px">View rewards up to Level 100</button></section>
-  <div class="toolbar"><input id="search" class="search" placeholder="🔍 Search games..." autocomplete="off"></div>
+  <div class="sectionhead"><div><h2>Choose your game</h2><p>Fresh challenges. Earn Gold. Unlock rewards.</p></div><div class="toolbar"><input id="search" class="search" placeholder="🔍 Search games..." autocomplete="off"></div></div>
   <div class="cats" id="cats"></div>
   <section class="games" id="games"></section>
   <p class="empty" id="empty" hidden>😕 No games found. Try another search.</p>
 </main>
 <footer>Made with ❤️ using HTML, CSS and JavaScript · Ari Game Zone</footer>
-<script src="az.js?v=14"></script>
+<script src="az.js?v=15"></script>
 <script>
-const CATS=['All','Shooter','Racing','Sports','Board','Cards','Arcade','Platformer','Fun','Online'];
+const CATS=['All','Shooter','Racing','Sports','Board','Cards','Puzzle','Arcade','Platformer','Fun','Online'];
 let cat='All';
 const MODE={single:'🤖 Solo',local:'👥 2P',online:'🌐 Online'};
 function render(){

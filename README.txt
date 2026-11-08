@@ -30,3 +30,23 @@ DEPLOYMENT
 4. Test Google login, guest save, Mail claiming, and multiplayer on two separate devices.
 
 For owner instructions, see ADMIN-SETUP.txt.
+
+
+--- VERSION 15 UPDATE NOTES ---
+- Homepage visual refresh: dark neon dashboard, clearer navigation, responsive game cards and updated branding.
+- Added five original playable mini-games: Memory Match, Quick Math, Color Dash, Space Dodge and Tap Rush.
+- Game registry now contains 20 games total (15 existing + 5 new).
+- Added Ari Game Zone SVG app/favicon icon and installable web manifest.
+- Existing account separation, Firebase Google sign-in/cloud save, in-game mailbox and PeerJS room framework retained.
+
+IMPORTANT INTEGRATION LIMITS (NOT CLAIMED AS COMPLETE):
+- Secure player-to-player Gold transfer needs a trusted Firebase Cloud Function (or equivalent server) and server-enforced transaction validation. It is not safe to implement by allowing browsers to edit another player's balance.
+- Actual email notifications need an email provider and a trusted server trigger; the existing in-game mailbox is not email delivery.
+- The current badminton page is a playable solo game; its online mode needs a dedicated synchronized real-time game-state implementation before it can be called live multiplayer.
+- Firebase rules were preserved; no production rules were loosened.
+
+TESTING PERFORMED:
+- JavaScript syntax check for az.js passed.
+- New game registry count checked: 20.
+- New game HTML inline scripts passed Node syntax checks.
+- No live Firebase authentication, email delivery, multi-device cloud sync or multiplayer session test was possible in this offline project-editing environment.

@@ -92,7 +92,12 @@ const GAMES = [
   { id: 'leveldevil', file: 'level-devil.html', name: 'Level Devil', emoji: '😈', cat: 'Platformer', max: 20, modes: ['single', 'online'], shop: ['hero'], desc: 'A tricky platform challenge with hidden surprises and 20 stages. Race a friend online to the door!' },
   { id: 'uno', file: 'uno.html', name: 'UNO', emoji: '🃏', cat: 'Cards', max: 1, modes: ['single', 'local', 'online'], shop: ['cardback'], desc: 'Classic colour-and-number card game: vs computer bots, pass-and-play, or online 1v1 with a friend.' },
   { id: 'runner', file: 'runner.html', name: 'Neon Runner', emoji: '🏃', cat: 'Arcade', max: 100, modes: ['single', 'online'], shop: ['runner', 'trail'], desc: 'Endless runner v2: jump, slide, double-jump, grab coins & shields. Race a friend online!' },
-  { id: 'badminton', file: 'badminton.html', name: 'Badminton Rally', emoji: '🏸', cat: 'Sports', max: 100, modes: ['single', 'online'], shop: ['racket', 'shuttle'], desc: 'Real badminton v2: move, clear, drop & smash against a smart AI. Race a friend online too!' },
+  { id: 'badminton', file: 'badminton.html', name: 'Badminton Rally', emoji: '🏸', cat: 'Sports', max: 100, modes: ['single', 'online'], shop: ['racket', 'shuttle'], desc: 'Move, clear, drop and smash against a smart AI.' },
+  { id: 'memory', file: 'memory-match.html', name: 'Memory Match', emoji: '🧠', cat: 'Puzzle', max: 100, modes: ['single'], shop: [], desc: 'Flip cards and find matching pairs with the fewest moves.' },
+  { id: 'quickmath', file: 'quick-math.html', name: 'Quick Math', emoji: '➗', cat: 'Puzzle', max: 100, modes: ['single'], shop: [], desc: 'Solve rapid-fire arithmetic before the timer runs out.' },
+  { id: 'colordash', file: 'color-dash.html', name: 'Color Dash', emoji: '🎨', cat: 'Arcade', max: 100, modes: ['single'], shop: [], desc: 'Match the target color as the pace gets faster.' },
+  { id: 'spacedodge', file: 'space-dodge.html', name: 'Space Dodge', emoji: '🚀', cat: 'Arcade', max: 100, modes: ['single'], shop: [], desc: 'Pilot your ship and dodge incoming asteroids.' },
+  { id: 'taprush', file: 'tap-rush.html', name: 'Tap Rush', emoji: '⚡', cat: 'Fun', max: 100, modes: ['single'], shop: [], desc: 'Hit the targets quickly and build a high score.' },
 ];
 
 /* ------------------------------ places (change as levels go up) ------------------------------ */
