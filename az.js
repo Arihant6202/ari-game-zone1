@@ -97,7 +97,7 @@ const GAMES = [
   { id: 'memory', file: 'memory-match.html', name: 'Memory Match', emoji: '🧠', cat: 'Puzzle', max: 100, modes: ['single'], shop: [], desc: 'Flip cards and find matching pairs with the fewest moves.' },
   { id: 'quickmath', file: 'quick-math.html', name: 'Quick Math', emoji: '➗', cat: 'Puzzle', max: 100, modes: ['single'], shop: [], desc: 'Solve rapid-fire arithmetic before the timer runs out.' },
   { id: 'colordash', file: 'color-dash.html', name: 'Color Dash', emoji: '🎨', cat: 'Arcade', max: 100, modes: ['single'], shop: [], desc: 'Match the target color as the pace gets faster.' },
-  { id: 'spacedodge', file: 'space-dodge.html', name: 'Space Dodge', emoji: '🚀', cat: 'Arcade', max: 100, modes: ['single'], shop: [], desc: 'Pilot your ship and dodge incoming asteroids.' },
+  { id: 'rps', file: 'stone-paper-scissor.html', name: 'Stone Paper Scissor', emoji: '✊', cat: 'Online', max: 1, modes: ['single', 'local', 'online'], shop: [], desc: 'Classic Rock Paper Scissors: challenge the computer, play on one device, or battle a friend online.' },
   { id: 'taprush', file: 'tap-rush.html', name: 'Tap Rush', emoji: '⚡', cat: 'Fun', max: 100, modes: ['single'], shop: [], desc: 'Hit the targets quickly and build a high score.' },
 ];
 

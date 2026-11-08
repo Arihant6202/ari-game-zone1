@@ -5,7 +5,7 @@ A mobile-friendly HTML5 gaming site with Firebase account saves, player IDs, Goo
 GAMES
 - Zone Survivor and Arena Strike
 - Turbo Racing, Royal Chess, Tic Tac Toe, Connect Four, Ludo, UNO
-- Sky Flyer, Snake Evolution, Brick Breaker, Whack-a-Mole, Level Devil
+- Sky Flyer, Snake Evolution, Brick Breaker, Whack-a-Mole, Level Devil, Stone Paper Scissor
 - Neon Runner and Badminton Rally
 
 PLAYER FEATURES
@@ -34,7 +34,7 @@ For owner instructions, see ADMIN-SETUP.txt.
 
 --- VERSION 15 UPDATE NOTES ---
 - Homepage visual refresh: dark neon dashboard, clearer navigation, responsive game cards and updated branding.
-- Added five original playable mini-games: Memory Match, Quick Math, Color Dash, Space Dodge and Tap Rush.
+- Added original mini-games: Memory Match, Quick Math, Color Dash and Tap Rush.
 - Game registry now contains 20 games total (15 existing + 5 new).
 - Added Ari Game Zone SVG app/favicon icon and installable web manifest.
 - Existing account separation, Firebase Google sign-in/cloud save, in-game mailbox and PeerJS room framework retained.
@@ -56,4 +56,12 @@ TESTING PERFORMED:
 - Space Dodge rebuilt on canvas (ship, falling asteroids, stars, drag/arrow controls, survive-to-win timer). Fixes the blank game screen.
 - Lucky Spin: first spin 2000 Gold, +100 per spin, capped at 10000. Item chance raised to ~18% (still lower than Gold prizes).
 - Removed link underlines on game cards and menus.
-- Cache-busting (?v=19) on logo, favicon, manifest, CSS and JS so the new app logo shows. To refresh the installed app icon: remove the app from the home screen and add it again.
+- Cache-busting (?v=20) on logo, favicon, manifest, CSS and JS so the new app logo shows. To refresh the installed app icon: remove the app from the home screen and add it again.
+
+
+--- VERSION 20 UPDATE NOTES ---
+- Removed Space Dodge from the game list and archive.
+- Added Stone Paper Scissor with Solo vs Computer, same-device 2-player, and PeerJS online room-code multiplayer.
+- Updated PWA app icons and browser icons using the supplied ARI gold-and-black logo.
+- Bumped site asset cache versions to v20 so installed PWA refreshes its branding and game files.
+- Online multiplayer requires both players to have internet access and PeerJS connectivity; test with two devices before announcing it as production-ready.
