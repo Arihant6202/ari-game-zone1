@@ -15,9 +15,9 @@
   <canvas id="cv" width="420" height="600" style="width:min(100%,420px)"></canvas>
   <p class="azmsg" id="msg">Drag on the court to move. Get under the shuttle, then HIT!</p>
 </div>
-<div class="bd-ctl"><button class="azbtn" id="hit">🏸 HIT<br><small>safe clear</small></button><button class="azbtn ghost" id="drop">🎯 DROP<br><small>short, at the net</small></button><button class="azbtn" id="smash" style="background:linear-gradient(135deg,#ff9f1c,#ff3d5a)">💥 SMASH<br><small>hit it high & early</small></button></div>
+<div class="bd-ctl"><button class="azbtn" id="hit">🏸 HIT<br><small>default shot</small></button><button class="azbtn ghost" id="drop">🎯 DROP<br><small>short, at the net</small></button><button class="azbtn" id="smash" style="background:linear-gradient(135deg,#ff9f1c,#ff3d5a)">💥 SMASH<br><small>hit it high & early</small></button></div>
 <div class="bd-sub"><button class="azbtn ghost sm" id="restart">↻ Restart</button><button class="azbtn ghost sm" id="emoji">👏 React</button></div>
-<p class="bd-tip">Move: drag on the court / arrow keys / WASD · HIT = Space · DROP = Z · SMASH = X. Hold a direction while hitting to aim. Hit the shuttle while it is inside your green ring.</p>
+<p class="bd-tip">Move: drag on the court / arrow keys / WASD · HIT = Space · DROP = Z · SMASH = X. Hold a direction while hitting to aim. Serve with HIT/Space. After the serve the shuttle is hit ONLY when your character moves into it (green ring). HIT / DROP / SMASH choose which shot you play on contact.</p>
 </main>
 <script src="az.js?v=15"></script>
 <script>
@@ -101,6 +101,7 @@ function playerAim() {
   const st = steer(); if (Math.abs(st) > .25) return clamp(MID + st * 125, LF + 30, RT - 30);
   return A.x < MID ? rnd(245, 340) : rnd(80, 175);       // auto: aim at the open side
 }
+let armed = { type: 'clear', t: 0 };
 function doSwing() { P.sw = .26; }
 function playerHit(type) {
   if (over || !started) return;
@@ -109,12 +110,17 @@ function playerHit(type) {
     if (type === 'smash') type = 'clear';
     doSwing(); Az.sfx('hit'); makeShot('p', type, P.x, P.y, 60, playerAim(), 8); phase = 'rally'; setHint('Rally!'); $('msg').textContent = 'Rally! Watch the CPU\'s return.'; return;
   }
-  if (phase !== 'rally' || P.cd > 0) return;
-  P.cd = .32; doSwing();
-  if (!shot || shot.by !== 'a') { Az.sfx('pop'); return; }
+  if (phase !== 'rally') return;
+  armed = { type, t: .9 };                       // buttons only CHOOSE the shot; contact happens by moving the character
+  setHint(type === 'smash' ? 'Smash ready — move into the shuttle' : type === 'drop' ? 'Drop ready — move into the shuttle' : 'Clear ready — move into the shuttle');
+}
+function contactHit() {                          // runs every frame: the shuttle is hit only when the moving character reaches it
+  if (phase !== 'rally' || !shot || shot.by !== 'a' || P.cd > 0 || over) return;
   const q = pos(), d = Math.hypot(q.x - P.x, q.y - P.y), R = 46 * racket.reach;
-  if (d > R || q.z > 150 || q.s < .2) { Az.sfx('pop'); setHint(d > R ? 'Too far! Move closer' : 'Wait for it…'); return; }
-  if (type === 'smash' && q.z < 70) { Az.sfx('lose'); netFault('p', P.x, P.y); rally++; setHint('Smash too low → net!'); floatText(P.x, P.y - 70, 'NET!', '#ff7a7a'); return; }
+  if (d > R || q.z > 150 || q.s < .2) return;
+  let type = armed.t > 0 ? armed.type : 'clear';
+  if (type === 'smash' && q.z < 70) { type = 'clear'; setHint('Too low to smash — safe clear'); }
+  P.cd = .32; doSwing(); armed.t = 0;
   const err = 6 + d * .5 / racket.reach;
   Az.sfx(type === 'smash' ? 'boom' : 'hit'); burst(q.x, q.y - q.z * .55, racket.color, type === 'smash' ? 16 : 8);
   if (type === 'smash') shake = 7;
@@ -186,7 +192,7 @@ function moveAI(dt) {
 }
 function update(dt) {
   t += dt; P.cd = Math.max(0, P.cd - dt); P.sw = Math.max(0, P.sw - dt); A.sw = Math.max(0, A.sw - dt);
-  movePlayer(dt); moveAI(dt);
+  movePlayer(dt); moveAI(dt); armed.t = Math.max(0, armed.t - dt); contactHit();
   if (phase === 'serve') {
     phaseT += dt;
     if (server === 'p') S = { x: P.x, y: P.y, z: 60 + Math.sin(t * 5) * 4 };
