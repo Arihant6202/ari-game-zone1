@@ -91,8 +91,8 @@ const GAMES = [
   { id: 'mole', file: 'whack-a-mole.html', name: 'Whack-a-Mole', emoji: '🐹', cat: 'Fun', max: 100, modes: ['single'], shop: [], desc: 'Tap the moles fast, avoid bombs and grab golden moles.' },
   { id: 'leveldevil', file: 'level-devil.html', name: 'Level Devil', emoji: '😈', cat: 'Platformer', max: 20, modes: ['single', 'online'], shop: ['hero'], desc: 'A tricky platform challenge with hidden surprises and 20 stages. Race a friend online to the door!' },
   { id: 'uno', file: 'uno.html', name: 'UNO', emoji: '🃏', cat: 'Cards', max: 1, modes: ['single', 'local', 'online'], shop: ['cardback'], desc: 'Classic colour-and-number card game: vs computer bots, pass-and-play, or online 1v1 with a friend.' },
-  { id: 'runner', file: 'runner.html', name: 'Neon Runner', emoji: '🏃', cat: 'Arcade', max: 100, modes: ['single'], shop: ['hero'], desc: 'Jump over obstacles, collect coins and survive increasingly fast stages.' },
-  { id: 'badminton', file: 'badminton.html', name: 'Badminton Rally', emoji: '🏸', cat: 'Sports', max: 100, modes: ['single'], shop: [], desc: 'Time your shots, keep the shuttle in play and beat the target rally score.' },
+  { id: 'runner', file: 'runner.html', name: 'Neon Runner', emoji: '🏃', cat: 'Arcade', max: 100, modes: ['single', 'online'], shop: ['hero'], desc: 'A polished endless runner. Race a friend online and compare live distance.' },
+  { id: 'badminton', file: 'badminton.html', name: 'Badminton Rally', emoji: '🏸', cat: 'Sports', max: 100, modes: ['single', 'online'], shop: [], desc: 'Fast badminton rally challenge. Compete online with a friend using a room code.' },
 ];
 
 /* ------------------------------ places (change as levels go up) ------------------------------ */
@@ -359,7 +359,8 @@ const Az = window.Az = {
   plProgress() { const L = Az.plvl(), a = 40 * (L - 1) * (L - 1), b = 40 * L * L; return { lvl: L, cur: db().xp - a, need: b - a }; },
   rewardPreview(from = Az.plvl(), count = 5) { return Array.from({length:count},(_,i)=>{const lv=from+i;return {level:lv,coins:100,item:lv%5===0,unlocked:!!db().levelRewards[lv]};}); },
 
-  mailCount: () => db().mail.filter(m => !m.claimed).length,
+  mailCount: () => db().mail.filter(m => !m.claimed && !m.read).length,
+  markMailRead(i) { const m=db().mail[i]; if(!m || m.claimed || m.read) return false; m.read=true; m.readAt=Date.now(); save(); Az.refresh(); return true; },
   claimMail(i) {
     const m = db().mail[i]; if (!m || m.claimed) return false;
     const n = Math.round(+m.coins || 0);
@@ -370,10 +371,10 @@ const Az = window.Az = {
     const m = Az.modal('<div id="azmailbox"></div>');
     const draw = () => {
       const list = db().mail.slice().reverse();
-      const rows = list.length ? list.map((v,j) => { const i=db().mail.length-1-j; return `<div class="azitem"><b>✉️ ${esc(v.title || 'Message from Ari Game Zone')}</b>${v.message?`<p class="sub">${esc(v.message)}</p>`:''}<small>${v.coins?`🪙 ${v.coins} Gold Coins`:'Game update / announcement'}</small>${v.claimed?'<span class="azpill">✅ Claimed / Read</span>':(v.coins>0?`<button class="azbtn sm" data-claim="${i}">Claim reward</button>`:'<span class="azpill">📨 Read</span>')}</div>`; }).join('') : '<p class="sub">No messages yet. Gifts and updates will appear here.</p>';
+      const rows = list.length ? list.map((v,j) => { const i=db().mail.length-1-j; return `<div class="azitem"><b>✉️ ${esc(v.title || 'Message from Ari Game Zone')}</b>${v.message?`<p class="sub">${esc(v.message)}</p>`:''}<small>${v.coins?`🪙 ${v.coins} Gold Coins`:'Game update / announcement'}</small>${v.claimed?'<span class="azpill">✅ Claimed / Read</span>':(v.coins>0?`<button class="azbtn sm" data-claim="${i}">Claim reward</button>`:`<button class="azbtn sm ghost" data-read="${i}">Mark as read</button>`)}</div>`; }).join('') : '<p class="sub">No messages yet. Gifts and updates will appear here.</p>';
       document.getElementById('azmailbox').innerHTML = `<h2>✉️ Mail</h2><p class="sub">Claim gifts sent to your Player ID.</p><div class="azshopgrid">${rows}</div><div class="azrow c"><button class="azbtn ghost" id="mailclose">Close</button></div>`;
     };
-    m.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.claim!==undefined){Az.claimMail(+b.dataset.claim);draw();}if(b.id==='mailclose')m.close();});
+    m.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.claim!==undefined){Az.claimMail(+b.dataset.claim);draw();}if(b.dataset.read!==undefined){Az.markMailRead(+b.dataset.read);draw();}if(b.id==='mailclose')m.close();});
     draw(); return m;
   },
   level: id => db().lv[id] || 1,                       // highest unlocked level of a game
@@ -427,6 +428,8 @@ const Az = window.Az = {
     document.querySelectorAll('[data-az=name]').forEach(e => e.textContent = Az.name());
     document.querySelectorAll('[data-az=avatar]').forEach(e => Az.avatarFill(e));
     document.querySelectorAll('[data-az=uid]').forEach(e => e.textContent = Az.uid());
+    const mc = $('#mailcount'); if (mc) mc.textContent = Az.mailCount() ? '(' + Az.mailCount() + ')' : '';
+    const mb = $('#azmailtop'); if (mb) mb.setAttribute('aria-label', Az.mailCount() + ' unread mail messages');
   },
   applyTheme(t) { document.documentElement.dataset.theme = t; const m = $('meta[name=theme-color]'); if (m) m.content = getComputedStyle(document.documentElement).getPropertyValue('--bg1').trim() || '#0a0614'; },
   setTheme(t) { const ch = db().theme !== t; db().theme = t; if (ch) save(); Az.applyTheme(t); },
@@ -645,9 +648,9 @@ function startGrants(u) {
       if (seenGrants[id]) return; seenGrants[id] = 1; const g = v[id];
       ref.child(id).remove().then(() => {
         if (g && typeof g.coins === 'number' && fbUser && fbUser.uid === u.uid) {
-          db().mail.push({ title: g.title || 'Gift from Ari Game Zone', message: String(g.message || '').slice(0,240), coins: Math.max(0,Math.round(+g.coins||0)), mode: 'add', ts: g.ts || Date.now(), claimed: !(+g.coins>0) });
-          save(); Az.toast('✉️ New mail received! Open Mail to read or claim it.', 4500);
-          document.dispatchEvent(new Event('az-mail'));
+          db().mail.push({ title: g.title || 'Gift from Ari Game Zone', message: String(g.message || '').slice(0,240), coins: Math.max(0,Math.round(+g.coins||0)), mode: 'add', ts: g.ts || Date.now(), claimed: false });
+          save(); Az.refresh(); Az.toast('✉️ New mail received! Open Mail to read or claim it.', 4500);
+          document.dispatchEvent(new Event('az-mail')); try { if (document.getElementById('mailcount')) Az.refresh(); } catch(e) {}
         }
       }).catch(() => { delete seenGrants[id]; });
     });

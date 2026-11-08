@@ -100,3 +100,16 @@ a{color:inherit}
 @keyframes azfade{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
+
+/* V13 visual refresh: cleaner arcade dashboard and consistent controls */
+:root{--panel:rgba(15,24,48,.86);--panel2:rgba(25,38,68,.9);--line:rgba(157,190,255,.19);--a1:#62e6ff;--a2:#8b7cff;--a3:#72f0bd;--a4:#ffd166}
+body{background:radial-gradient(900px 500px at 8% -5%,rgba(66,91,190,.30),transparent 65%),radial-gradient(700px 500px at 100% 30%,rgba(0,195,190,.14),transparent 65%),linear-gradient(155deg,#080d1d,#101b34 55%,#080d1d);background-attachment:fixed}
+.azbar{padding:9px clamp(10px,2vw,22px);gap:9px;background:rgba(7,12,27,.92);border-bottom:1px solid rgba(125,170,255,.22);box-shadow:0 8px 28px rgba(0,0,0,.22)}
+.azbar .azhome,.azbtn-i{width:40px;height:40px;border-radius:13px;background:linear-gradient(145deg,rgba(37,56,95,.95),rgba(15,27,52,.95));border:1px solid rgba(150,190,255,.22);display:inline-grid;place-items:center;flex:0 0 auto}
+.azbadges{gap:7px;flex-wrap:nowrap}.azbar .aztitle{font-size:clamp(12px,2.8vw,17px)}
+.azbtn-i{font-size:17px;cursor:pointer}.azbtn-i:focus-visible,.azbtn:focus-visible{outline:2px solid var(--a1);outline-offset:2px}
+.azpanel,.card,.azbox{background:linear-gradient(145deg,rgba(20,34,63,.94),rgba(10,19,39,.96));border-color:rgba(145,183,255,.2);box-shadow:0 12px 32px rgba(0,0,0,.18)}
+.azbtn{background:linear-gradient(120deg,#64e6ff,#8b83ff);color:#081326;box-shadow:0 8px 22px rgba(88,180,255,.18)}
+.azbtn.ghost,.azchip{background:rgba(36,54,88,.72);border-color:rgba(145,183,255,.22)}
+.azmodal{background:rgba(3,8,20,.82)}.azbox{border-radius:22px}
+@media(max-width:560px){.azbar{gap:5px;padding:7px 8px}.azbar .azhome,.azbtn-i{width:35px;height:35px;border-radius:11px}.azbadges{gap:4px}.azpill.coin{font-size:10px;padding:5px 7px}.azbar .aztitle{font-size:11px}.azbar .azbtn-i{font-size:14px}}
