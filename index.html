@@ -164,7 +164,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:22px}
   <p class="empty" id="empty" hidden>😕 No games found. Try another search.</p>
 </main>
 <footer>Made with ❤️ using HTML, CSS and JavaScript · Ari Game Zone</footer>
-<script src="az.js?v=3"></script>
+<script src="az.js?v=4"></script>
 <script>
 const CATS=['All','Shooter','Racing','Board','Cards','Arcade','Platformer','Fun','Online'];
 let cat='All';
@@ -185,7 +185,7 @@ document.getElementById('cats').onclick=e=>{const b=e.target.closest('button');i
 document.getElementById('search').oninput=render;
 function drawTop(){const p=Az.plProgress();document.getElementById('xpbar').style.width=Math.min(100,p.cur/p.need*100)+'%';document.getElementById('xptxt').textContent=p.cur+' / '+p.need+' XP to next level';Az.refresh();
   const today=new Date().toDateString();document.getElementById('daily').disabled=Az.get('daily')===today;document.getElementById('daily').textContent=Az.get('daily')===today?'✅ Claimed today':'🎁 Daily bonus';}
-document.getElementById('daily').onclick=()=>{const t=new Date().toDateString();if(Az.get('daily')===t)return;Az.set('daily',t);Az.addCoins(100);Az.sfx('coin');Az.toast('🎁 +100 coins! Come back tomorrow.');drawTop();};
+document.getElementById('daily').onclick=()=>{const t=new Date().toDateString();if(Az.get('daily')===t)return;Az.set('daily',t);Az.addCoins(Az.DAILY_BONUS);Az.sfx('coin');Az.toast('🎁 +'+Az.DAILY_BONUS+' coins! Come back tomorrow.');drawTop();};
 document.getElementById('shopall').onclick=()=>Az.shop();
 const th=document.getElementById('themes');['neon','sunset','ocean','forest'].forEach(t=>{const b=document.createElement('button');b.className='dot';b.dataset.t=t;b.title=t;b.setAttribute('aria-label',t+' theme');b.onclick=()=>{Az.setTheme(t);mark();};th.appendChild(b);});
 function mark(){th.querySelectorAll('.dot').forEach(d=>d.classList.toggle('on',d.dataset.t===Az.get('theme')));}

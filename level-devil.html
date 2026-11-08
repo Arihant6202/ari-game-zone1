@@ -108,20 +108,61 @@ a{color:inherit}
 </style>
 </head>
 <body data-game="leveldevil">
-<main class="azgame">
+<main class="azgame" id="ldmain">
   <div class="azhud"><span class="azpill" id="hLv">Level 1 / 20</span><span class="azpill" id="hDeath">💀 0</span><span class="azpill" id="hName">—</span></div>
-  <div class="azstage"><canvas id="cv" width="800" height="450" style="width:min(100%,800px)"></canvas></div>
+  <div class="azstage" id="stage"><canvas id="cv" width="800" height="450" style="width:min(100%,800px)"></canvas></div>
   <div class="azmsg" id="msg">Door tak pahucho. Bharosa mat karna! 😈</div>
-  <div class="azctl ldpad">
-    <button class="azbtn ghost" id="bl" aria-label="Left">◀</button>
-    <button class="azbtn" id="bj" aria-label="Jump">⤒ JUMP</button>
-    <button class="azbtn ghost" id="br" aria-label="Right">▶</button>
+  <div class="ldpad" id="pad">
+    <div class="ldmv" id="mv" aria-label="Move: slide thumb left or right"><span id="bl">◀</span><span id="br">▶</span></div>
+    <button class="ldj" id="bj" aria-label="Jump">⤒<small>JUMP</small></button>
+  </div>
+  <div class="azctl ldopts">
+    <button class="azbtn sm" id="rotb">🔄 Rotate mode</button>
+    <button class="azbtn ghost sm" id="swp">↔️ Swap hands</button>
     <button class="azbtn ghost sm" id="rst">🔄 Restart</button>
   </div>
-  <p class="azmsg" style="color:var(--muted);font-size:12px;font-weight:400">⌨️ Arrow keys / A D move · Space / W / ↑ jump · R restart</p>
+  <p class="azmsg ldhint" style="color:var(--muted);font-size:12px;font-weight:400">📱 Control chhota lag raha hai? <b>Rotate mode</b> dabao — game poori landscape screen me khulegi. Thumb ko ◀ ▶ ke beech slide kar sakte ho.<br>⌨️ Arrow keys / A D move · Space / W / ↑ jump · R restart</p>
+  <div class="ldtop" id="ldtop"><span class="azpill" id="rHud">Lv 1</span><span class="rbtns"><button class="azbtn-i" id="rst2" aria-label="Restart">↻</button><button class="azbtn-i" id="swp2" aria-label="Swap hands">↔</button><button class="azbtn-i" id="rotx" aria-label="Exit rotate mode">✖</button></span></div>
 </main>
-<style>.ldpad .azbtn{min-width:84px;font-size:18px;padding:14px 18px;touch-action:none;user-select:none;-webkit-user-select:none}.ldpad .azbtn.sm{min-width:0;font-size:13px;padding:10px 14px}</style>
-<script src="az.js?v=3"></script>
+<style>
+/* ---- Level Devil controls ---- */
+#ldmain,.ldpad,.ldmv,.ldj{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.ldpad{width:min(100%,800px);display:flex;justify-content:space-between;align-items:center;gap:14px;padding:0 4px;touch-action:none}
+.ldpad.swap{flex-direction:row-reverse}
+.ldmv{flex:1;max-width:380px;height:92px;display:grid;grid-template-columns:1fr 1fr;gap:8px;touch-action:none;cursor:pointer}
+.ldmv span{pointer-events:none;display:grid;place-items:center;font-size:36px;border-radius:22px;border:1px solid var(--line);background:var(--panel2);transition:background .06s,transform .06s}
+.ldj{width:140px;height:92px;border:0;border-radius:24px;background:linear-gradient(135deg,var(--a1),var(--a2));color:var(--ink);font:700 30px/1 'Orbitron',system-ui,sans-serif;display:grid;place-items:center;align-content:center;gap:2px;touch-action:none;cursor:pointer;box-shadow:0 10px 22px -10px var(--a1)}
+.ldj small{font-size:12px;letter-spacing:2px}
+.ldmv span.on{background:var(--a1);color:var(--ink);transform:scale(.95)}
+.ldj.on{filter:brightness(1.25);transform:scale(.94)}
+.ldopts .azbtn{touch-action:manipulation}
+.ldtop{display:none}.rbtns{display:flex}
+/* ---- Rotate mode: full-screen landscape. On a portrait phone the whole game is turned 90deg, so just tilt the phone. ---- */
+body.ld-rot{overflow:hidden}
+body.ld-rot .azbar,body.ld-rot .azbg,body.ld-rot .azhud,body.ld-rot .ldopts,body.ld-rot .ldhint,body.ld-rot #msg{display:none!important}
+body.ld-rot #ldmain{--G:clamp(100px,15vmax,190px);position:fixed;inset:0;z-index:60;width:100%;height:100%;margin:0;padding:0;gap:0;display:block;background:#05020c}
+body.ld-rot #stage{position:absolute;inset:0;display:block}
+/* the game sits in the middle; the controls live in the two side gutters, so they never cover the player or the door */
+body.ld-rot #cv{position:absolute;top:0;bottom:0;left:var(--G);width:calc(100% - 2*var(--G))!important;height:100%!important;max-width:none;object-fit:contain;border-radius:0;box-shadow:none}
+body.ld-rot .ldpad{position:absolute;inset:0;width:auto;padding:0;display:block;pointer-events:none}
+body.ld-rot .ldmv,body.ld-rot .ldj{position:absolute;bottom:4vmin;width:calc(var(--G) - 16px);height:min(32vmin,130px);max-width:none;flex:none;pointer-events:auto}
+body.ld-rot .ldmv{left:8px;gap:6px}
+body.ld-rot .ldj{right:8px}
+body.ld-rot .ldpad.swap .ldmv{left:auto;right:8px}
+body.ld-rot .ldpad.swap .ldj{right:auto;left:8px}
+body.ld-rot .ldmv span{font-size:min(8vmin,34px);border-radius:16px}
+body.ld-rot .ldj{font-size:min(7vmin,28px)}
+body.ld-rot .ldtop{display:block;position:absolute;inset:0;z-index:3;pointer-events:none}
+body.ld-rot #rHud{position:absolute;top:2.5vmin;left:8px;width:calc(var(--G) - 16px);text-align:center;white-space:pre-line;line-height:1.35;padding:6px 4px;border-radius:14px}
+body.ld-rot .rbtns{position:absolute;top:2.5vmin;right:8px;width:calc(var(--G) - 16px);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:auto}
+body.ld-rot .rbtns .azbtn-i{width:44px;height:44px;font-size:18px}
+@media (orientation:portrait){
+  body.ld-rot #ldmain,body.ld-rot .azmodal{inset:auto;top:0;left:100vw;width:100vh;height:100vw;transform-origin:0 0;transform:rotate(90deg)}
+  body.ld-rot .azbox{max-height:88vw}
+}
+@supports (height:100dvh){@media (orientation:portrait){body.ld-rot #ldmain,body.ld-rot .azmodal{left:100dvw;width:100dvh;height:100dvw}body.ld-rot .azbox{max-height:88dvw}}}
+</style>
+<script src="az.js?v=4"></script>
 <script>
 (function(){
 'use strict';
@@ -283,7 +324,7 @@ function drawParts(){for(let i=parts.length-1;i>=0;i--){const q=parts[i];q.x+=q.
 /* ============================ game flow ============================ */
 let HERO={color:'#1d2433',hat:''},net=null,ghost=null,ghostName='Friend',tick=0,O=null,level=1,S=null,place=null,deaths=0,totalDeaths=0,held={l:0,r:0,j:0},acc=0,last=0,raf=0,paused=false,over=false,dieT=0;
 const TAUNT=['Hehe, phir se! 😈','Ye to trap tha!','Dhyaan se dekho...','Aise nahi, waise!','Shaitan jeet gaya 😂','Ek aur koshish!','Mere paas aur bhi traps hain 😈'];
-function hud(){$('hLv').textContent='Level '+level+' / '+LEVELS.length;$('hDeath').textContent='💀 '+deaths;$('hName').textContent=S?LEVELS[level-1]().name:'—';}
+function hud(){$('hLv').textContent='Level '+level+' / '+LEVELS.length;$('hDeath').textContent='💀 '+deaths;$('hName').textContent=S?LEVELS[level-1]().name:'—';$('rHud').textContent='Lv '+level+'\n💀 '+deaths;}
 function begin(n){HERO=Az.eq('hero');ghost=null;tick=0;level=Math.max(1,Math.min(LEVELS.length,n|0));place=Az.place(level);S=build(level);deaths=0;over=false;dieT=0;parts.length=0;acc=0;last=performance.now();held={l:0,r:0,j:0};hud();$('msg').textContent=LEVELS[level-1]().taunt;if(!raf)raf=requestAnimationFrame(loop);}
 function respawn(){S=build(level);dieT=0;parts.length=0;$('msg').textContent=TAUNT[(Math.max(1,deaths)-1)%TAUNT.length];hud();}
 function win(){over=true;Az.sfx('win');
@@ -325,7 +366,7 @@ function loop(t){
   if(!S||paused){last=t;return;}
   acc+=Math.min(100,t-last);last=t;
   while(acc>=1000/60){acc-=1000/60;if(!over)frame();}
-  draw(S,place);drawGhost();drawParts();
+  draw(S,place);drawGhost();drawParts();paintPad();
 }
 document.addEventListener('visibilitychange',()=>{paused=document.hidden;last=performance.now();});
 
@@ -334,14 +375,45 @@ const KEY={ArrowLeft:'l',a:'l',A:'l',ArrowRight:'r',d:'r',D:'r',ArrowUp:'j',w:'j
 addEventListener('keydown',e=>{const k=KEY[e.key];if(k){held[k]=1;e.preventDefault();}else if(e.key==='r'||e.key==='R'){if(S&&!over)respawn();}});
 addEventListener('keyup',e=>{const k=KEY[e.key];if(k){held[k]=0;e.preventDefault();}});
 addEventListener('blur',()=>{held={l:0,r:0,j:0};});
-[['bl','l'],['br','r'],['bj','j']].forEach(([id,k])=>{const b=$(id);
-  const on=e=>{e.preventDefault();held[k]=1;try{b.setPointerCapture(e.pointerId);}catch(x){}},off=e=>{held[k]=0;};
-  b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('lostpointercapture',off);b.addEventListener('contextmenu',e=>e.preventDefault());});
-$('rst').onclick=()=>{if(S&&!over)respawn();};
+/* Move pad: ONE touch area. Thumb on the left half = ◀, right half = ▶, and you can slide between them without lifting. */
+const mvEl=$('mv'),bl=$('bl'),brr=$('br'),bj=$('bj'),pad=$('pad');let mvId=null;
+function setDir(e){const w=mvEl.clientWidth||1,x=e.offsetX;held.l=x<w*.5?1:0;held.r=x>=w*.5?1:0;}
+mvEl.addEventListener('pointerdown',e=>{e.preventDefault();if(mvId!==null)return;mvId=e.pointerId;try{mvEl.setPointerCapture(e.pointerId);}catch(x){}setDir(e);});
+mvEl.addEventListener('pointermove',e=>{if(e.pointerId===mvId){e.preventDefault();setDir(e);}});
+const mvOff=e=>{if(e.pointerId===mvId){mvId=null;held.l=0;held.r=0;}};
+['pointerup','pointercancel','lostpointercapture'].forEach(n=>mvEl.addEventListener(n,mvOff));
+let jId=null;
+bj.addEventListener('pointerdown',e=>{e.preventDefault();jId=e.pointerId;held.j=1;try{bj.setPointerCapture(e.pointerId);}catch(x){}});
+['pointerup','pointercancel','lostpointercapture'].forEach(n=>bj.addEventListener(n,e=>{if(e.pointerId===jId){jId=null;held.j=0;}}));
+[mvEl,bj,pad].forEach(b=>b.addEventListener('contextmenu',e=>e.preventDefault()));
+function paintPad(){bl.classList.toggle('on',!!held.l);brr.classList.toggle('on',!!held.r);bj.classList.toggle('on',!!held.j);}
+const doRestart=()=>{if(S&&!over)respawn();};
+$('rst').onclick=doRestart;$('rst2').onclick=doRestart;
+
+/* ---- layout options (saved with the account): rotate mode + left-handed swap ---- */
+let rot=false;
+const uiPref=()=>Az.get('ldui')||{};
+function savePref(k,v){const u=Object.assign({},uiPref());if(u[k]===v)return;u[k]=v;Az.set('ldui',u);}
+function setSwap(on){pad.classList.toggle('swap',!!on);savePref('swap',on?1:0);}
+function setRot(on){
+  rot=!!on;document.body.classList.toggle('ld-rot',rot);$('rotb').textContent=rot?'📱 Normal mode':'🔄 Rotate mode';
+  try{
+    const de=document.documentElement;
+    if(rot){const rf=de.requestFullscreen||de.webkitRequestFullscreen;if(rf)Promise.resolve(rf.call(de)).then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape')).catch(()=>{});}
+    else{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});try{screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock();}catch(x){}}
+  }catch(x){}
+  savePref('rot',rot?1:0);
+}
+$('rotb').onclick=()=>setRot(!rot);$('rotx').onclick=()=>setRot(false);
+$('swp').onclick=()=>setSwap(!pad.classList.contains('swap'));$('swp2').onclick=()=>setSwap(!pad.classList.contains('swap'));
+if(uiPref().swap)pad.classList.add('swap');
+addEventListener('pagehide',()=>{held={l:0,r:0,j:0};});
 
 window.__LD={LEVELS,build,step,hit,PW,PH,W,H,get S(){return S;},begin:n=>{O=O||{};begin(n);},over:()=>over};
-Az.start({game:'leveldevil',noDiff:true,onStart:o=>{
+const _p=uiPref(),viewOpts=_p.rot?[['r','🔄 Rotate mode (landscape)'],['n','📱 Normal']]:[['n','📱 Normal'],['r','🔄 Rotate mode (landscape)']];
+Az.start({game:'leveldevil',noDiff:true,extra:[{key:'view',label:'Screen / Controls',options:viewOpts}],onStart:o=>{
   O=o;net=o.mode==='online'?o.net:null;
+  setRot(o.mode==='online'?!!uiPref().rot:(o.extra&&o.extra.view==='r'));   // online: joiner gets host's extra, so use own saved choice
   if(net){
     ghostName=(net.peer&&net.peer.name)||'Friend';
     net.on(onNet);

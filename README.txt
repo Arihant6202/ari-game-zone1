@@ -68,3 +68,21 @@ UPDATE v3 (shop + online + developer mode)
 - database.rules.json badla hai: ab admin/uidIndex/adminGrants rules bhi hain. PASTE_OWNER_...
   placeholder ko apne Firebase UID se badalna zaroori hai, warna Developer Mode ka "dusre ko coins"
   hissa kaam nahi karega (apne coins wala hissa kaam karega).
+
+
+UPDATE v4 (guest profiles, link-to-Gmail, premium guns, Level Devil controls)
+- GUESTS: logout par guest ka progress ab kabhi nahi hatta. Logout ke baad tum wapas usi guest par aate ho.
+  Is device par kitne bhi guest ban sakte hain (👤 Guest/Login box > "Naya guest banao"), har ek ka alag
+  coins/XP/levels/items/Player ID. Box me list se kisi bhi guest par "Use" dabao ya 🗑 se delete karo.
+  Purane (v2/v3 me "kho gaye") guest bhi isi browser me saved the - ab wo list me dikhenge.
+- NAYA GMAIL = bilkul naya account (150 coins). Purana Gmail = uska apna cloud progress.
+- LINK: guest se "🔗 Is guest progress ko Gmail se link karo" dabao ya Gmail login ke baad guest ke saamne
+  "🔗 Link" dabao. Naya Gmail ho to guest ka poora progress seedha us Gmail me chala jata hai. Agar Gmail me pehle se
+  progress hai to poochta hai: Dono ka best milao / Guest se replace / Gmail waisa hi rakho.
+- GUNS: 8 nayi premium guns (Twin Fang 9,000 ... Divine Cannon 150,000). Purani 6 guns jaisi thi waisi hi hain.
+- COINS: har win/loss ke coins ab aadhe (Az.COIN_RATE = 0.5 az.js me), daily bonus 100 -> 50.
+  Aur kam/zyada karna ho to az.js me COIN_RATE badlo.
+- LEVEL DEVIL: naya move pad (anguthe ko ◀ aur ▶ ke beech bina uthaye slide karo), bada JUMP, "↔️ Swap hands"
+  (lefty), aur "🔄 Rotate mode": poori landscape screen, controls side me (player/door ko nahi dhakte).
+  Phone portrait me ho tab bhi game 90° ghoom jata hai - bas phone ko tilt karo. Choice account ke saath save hoti hai.
+- Saari HTML ab az.js?v=4 load karti hain (cache refresh ke liye). GitHub me poora folder dobara upload karo.

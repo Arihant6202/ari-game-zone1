@@ -3,9 +3,12 @@
 const SRC = document.currentScript ? document.currentScript.src : '';
 const BASE = SRC.replace(/az\.js.*$/, '');
 const KEY = 'az2';
+// Global reward multiplier. Lower = slower coin earning = items feel more valuable (was 1.0 before).
+const COIN_RATE = 0.5;
+const DAILY_BONUS = 50;
 /* ---- safe localStorage helpers + account keys ----
    Every account has its OWN local record:
-     guest   -> az2:guest:<guestId>   (a real logout rotates guestId, so the next guest is brand new)
+     guest   -> az2:guest:<guestId>   (many guests can live on one device; logout NEVER deletes them)
      google  -> az2:user:<firebaseUid> (different Gmail = different record, never shared)         */
 const LS = {
   get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -16,6 +19,21 @@ const newId = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() :
 function guestId() { let id = LS.get('az_guest_id'); if (!id) { id = newId(); LS.set('az_guest_id', id); } return id; }
 const guestKey = () => 'az2:guest:' + guestId();
 const rotateGuest = () => { LS.set('az_guest_id', newId()); };
+const GPFX = 'az2:guest:';
+// Every guest profile saved on this device (a guest that never played is hidden, unless it is the current one).
+function listGuests() {
+  const out = [], cur = guestId();
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i); if (!k || k.indexOf(GPFX) !== 0) continue;
+      let r = null; try { r = JSON.parse(localStorage.getItem(k)); } catch (e) {}
+      if (!r || typeof r !== 'object') continue;
+      const id = k.slice(GPFX.length), uid = String(r.uid || '');
+      out.push({ id, uid, name: (typeof r.name === 'string' && r.name) || ('Player-' + uid.slice(-4)), coins: +r.coins || 0, xp: +r.xp || 0, rev: +r.rev || 0, ts: +r.ts || 0, cur: id === cur });
+    }
+  } catch (e) {}
+  return out.filter(g => g.cur || g.rev > 0).sort((a, b) => (b.cur - a.cur) || (b.ts - a.ts) || (b.rev - a.rev));
+}
 // If a login session existed last time, start straight on that account's local record (no guest flash).
 let ACTIVE_KEY = (() => { const k = LS.get('az_active_key'); return (LS.get('az_login') && k && k.indexOf('az2:user:') === 0) ? k : guestKey(); })();
 const $ = (s, r) => (r || document).querySelector(s);
@@ -40,6 +58,7 @@ function normalize(d) {
   d.uid = String(d.uid);
   d.name = typeof d.name === 'string' ? d.name : ''; d.nameSet = !!d.nameSet; d.nameAsked = !!d.nameAsked;
   d.rev = (typeof d.rev === 'number' && d.rev > 0) ? d.rev : 0;
+  d.ts = (typeof d.ts === 'number' && d.ts > 0) ? d.ts : 0;
   return d;
 }
 let D = null;
@@ -51,7 +70,7 @@ function db() {
   if (!had) LS.set(ACTIVE_KEY, JSON.stringify(D));   // brand-new account: create its record with a NEW uid
   return D;
 }
-function save() { db().rev++; LS.set(ACTIVE_KEY, JSON.stringify(D)); if (window.__azPush) window.__azPush(); }
+function save() { db().rev++; D.ts = Date.now(); LS.set(ACTIVE_KEY, JSON.stringify(D)); if (window.__azPush) window.__azPush(); }
 
 /* ------------------------------ games registry ------------------------------ */
 // modes: single (vs computer) | local (2 players, one device) | online (room code)
@@ -96,6 +115,15 @@ const SHOP = {
     { id: 'g_shotgun', name: 'Shotgun Blast', price: 1300, color: '#ff9f1c', dmg: 11, rate: 1.4, pellets: 6, spread: .34, speed: 9, desc: 'Deadly up close.' },
     { id: 'g_sniper', name: 'Sniper Eagle', price: 2200, color: '#c77dff', dmg: 90, rate: .9, pellets: 1, spread: 0, speed: 20, desc: 'One shot, huge damage.' },
     { id: 'g_golden', name: 'Golden AR', price: 6000, color: '#ffd700', dmg: 34, rate: 9, pellets: 1, spread: .05, speed: 13, desc: 'Legendary. Best of everything.' },
+    /* ---- PREMIUM guns (heavy prices). Added after the 6 old guns, so bots & loot are unchanged. ---- */
+    { id: 'g_twin', name: 'Twin Fang', price: 9000, color: '#ff5d8f', dmg: 17, rate: 6.5, pellets: 2, spread: .05, speed: 12, mag: 26, desc: '2 bullets per shot. Double hits.' },
+    { id: 'g_laser', name: 'Laser Storm', price: 15000, color: '#00f5ff', dmg: 15, rate: 14, pellets: 1, spread: .02, speed: 19, mag: 60, range: 1100, desc: 'Super-fast laser. Long range.' },
+    { id: 'g_inferno', name: 'Inferno Blaster', price: 22000, color: '#ff4500', dmg: 13, rate: 2.2, pellets: 9, spread: .38, speed: 10, mag: 10, desc: '9 fire pellets. Melts anything close.' },
+    { id: 'g_mini', name: 'Hurricane Minigun', price: 30000, color: '#b5ff3b', dmg: 11, rate: 20, pellets: 1, spread: .16, speed: 13, mag: 100, desc: '100 rounds. Bullet rain!' },
+    { id: 'g_rail', name: 'Rail Cannon', price: 40000, color: '#c77dff', dmg: 140, rate: .65, pellets: 1, spread: 0, speed: 28, mag: 4, range: 1400, desc: 'One shot, deletes enemies. 4 shots.' },
+    { id: 'g_dragon', name: 'Dragon Breath', price: 55000, color: '#ff7b00', dmg: 18, rate: 5, pellets: 6, spread: .22, speed: 11, mag: 18, range: 700, desc: 'Dragon fire cone. Mid range monster.' },
+    { id: 'g_void', name: 'Void Ripper', price: 80000, color: '#7c3aed', dmg: 48, rate: 8.5, pellets: 1, spread: .025, speed: 21, mag: 40, range: 1200, desc: 'Dark-matter rifle. Fast & deadly.' },
+    { id: 'g_divine', name: 'Divine Cannon', price: 150000, color: '#fff4a3', dmg: 70, rate: 10, pellets: 2, spread: .03, speed: 24, mag: 50, range: 1300, desc: 'THE ULTIMATE. Only for true legends.' },
   ] },
   outfit: { title: 'Outfits', emoji: '🧥', items: [
     { id: 'o_rookie', name: 'Rookie', price: 0, color: '#4cc9f0', hat: '', hp: 100, desc: 'Starter. 100 HP.' },
@@ -198,7 +226,7 @@ Object.keys(SHOP).forEach(s => SHOP[s].items.forEach(i => { i.slot = s; ALL_ITEM
 
 /* ------------------------------ core API ------------------------------ */
 const Az = window.Az = {
-  BASE, GAMES, PLACES, SHOP,
+  BASE, GAMES, PLACES, SHOP, COIN_RATE, DAILY_BONUS,
   game: id => GAMES.find(g => g.id === id),
   get: k => db()[k],
   set: (k, v) => { db()[k] = v; save(); },
@@ -385,7 +413,7 @@ const code4 = () => { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; 
    - Different Gmail  -> different uid -> different local record + different cloud record.
    - Same Gmail       -> same record on every device.
    - Logout           -> a brand-new guest id (fresh coins, fresh progress, fresh player ID).            */
-let fbUser = null, fbDb = null, pushT = null, fbP = null, loadSeq = 0, cloudUid = null, nameTimer = null, grantRef = null;
+let linkG = null, fbUser = null, fbDb = null, pushT = null, fbP = null, loadSeq = 0, cloudUid = null, nameTimer = null, grantRef = null;
 const OWNER_UID = '97835276', MAXC = 999999999, seenGrants = {};
 Az.OWNER_UID = OWNER_UID; Az.ownerOK = false;
 const FBV = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-';
@@ -400,12 +428,12 @@ function accountChanged() {            // tell the page (home screen) to repaint
 }
 function setLoginBtn() {
   const b = document.getElementById('azlogin'); if (!b) return;
-  b.textContent = fbUser ? '👤 ' + String(fbUser.displayName || fbUser.email || fbUser.phoneNumber || 'Me').split(' ')[0].slice(0, 8) : '👤 Login';
+  b.textContent = fbUser ? '👤 ' + String(fbUser.displayName || fbUser.email || fbUser.phoneNumber || 'Me').split(' ')[0].slice(0, 8) : '👤 Guest / Login';
 }
 function doPush() {                    // write the CURRENT account's data to its own cloud node
-  if (!fbUser || !fbDb || cloudUid !== fbUser.uid || !D) return Promise.resolve();
-  try { return fbDb.ref(gdPath(fbUser.uid)).set(JSON.parse(JSON.stringify(D))).catch(e => { Az.toast && Az.toast('Cloud save failed: ' + (e.message || 'check database rules')); }); }
-  catch (e) { return Promise.resolve(); }
+  if (!fbUser || !fbDb || cloudUid !== fbUser.uid || !D) return Promise.resolve(false);
+  try { return fbDb.ref(gdPath(fbUser.uid)).set(JSON.parse(JSON.stringify(D))).then(() => true).catch(e => { Az.toast && Az.toast('Cloud save failed: ' + (e.message || 'check database rules')); return false; }); }
+  catch (e) { return Promise.resolve(false); }
 }
 function flushPush() { if (pushT) { clearTimeout(pushT); pushT = null; return doPush(); } return Promise.resolve(); }
 window.__azPush = () => { if (!fbUser || !fbDb) return; clearTimeout(pushT); pushT = setTimeout(() => { pushT = null; doPush(); }, 1200); };
@@ -510,9 +538,9 @@ Az.whenAuth = () => { if (!LS.get('az_login')) return Promise.resolve(null); ret
 
 function afterLogout() {
   // 'az_login' is the cross-tab "a session is still open" flag: whoever sees it first does the cleanup once.
-  const hadSession = !!fbUser || !!LS.get('az_login');
   fbUser = null; cloudUid = null; loadSeq++; clearTimeout(pushT); pushT = null; stopGrants(); Az.ownerOK = false;
-  if (hadSession && LS.get('az_login')) rotateGuest();      // NEW guest identity after a real logout
+  // NOTE: the guest id is NOT rotated any more: after logout you are back on the SAME guest you had before,
+  // and every other guest stays saved on this device (see Az.guests / Az.switchGuest / Az.newGuest).
   LS.del('az_login'); LS.del('az_active_key');
   ACTIVE_KEY = guestKey(); D = null; db();
   setLoginBtn(); accountChanged();
@@ -522,6 +550,7 @@ function afterLogout() {
 function afterLogin(u) {
   if (fbUser && fbUser.uid === u.uid && cloudUid === u.uid && ACTIVE_KEY === 'az2:user:' + u.uid) return;
   if (fbUser && fbUser.uid !== u.uid) flushPush();           // save the previous account first, to ITS own node
+  const lg = linkG; linkG = null;                              // guest the player asked to link into this login (or null)
   const key = 'az2:user:' + u.uid, hadLocal = !!LS.get(key);
   stopGrants(); Az.ownerOK = false;
   fbUser = u; cloudUid = null; clearTimeout(pushT); pushT = null;
@@ -547,6 +576,7 @@ function afterLogin(u) {
     } else {
       cloudUid = u.uid; D = db(); doPush(); Az.toast && Az.toast('☁️ New account created');
     }
+    if (lg) linkInto(u, lg);
     accountChanged(); askNameIfNeeded(); postLogin(u, seq);
   }).catch(e => {
     if (seq !== loadSeq) return;
@@ -555,8 +585,67 @@ function afterLogin(u) {
 }
 function authInit() { loadFb().catch(() => {}); }
 
+/* ------------------------------ guests: many separate profiles + link-to-Gmail ------------------------------ */
+const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const lvOfXp = xp => Math.floor(Math.sqrt((xp || 0) / 40)) + 1;
+function readGuest(id) { try { const r = JSON.parse(LS.get(GPFX + id) || 'null'); return r ? normalize(r) : null; } catch (e) { return null; } }
+function signOutAll() {
+  return flushPush().then(() => ((fbUser || LS.get('az_login')) ? loadFb().then(() => firebase.auth().signOut()) : null)).catch(() => {})
+    .then(() => { LS.del('az_login'); LS.del('az_active_key'); });
+}
+function reloadSoon() { setTimeout(() => location.reload(), 60); }
+Az.guests = listGuests;
+Az.guestId = guestId;
+Az.switchGuest = function (id) {            // become another saved guest (logs out of Gmail first, if needed)
+  if (!LS.get(GPFX + id)) return;
+  LS.set('az_guest_id', id); signOutAll().then(reloadSoon);
+};
+Az.newGuest = function () {                  // brand-new guest; all the old ones stay saved
+  rotateGuest(); signOutAll().then(reloadSoon);
+};
+Az.deleteGuest = function (id) {
+  const wasCur = id === guestId(); LS.del(GPFX + id);
+  if (wasCur) { rotateGuest(); signOutAll().then(reloadSoon); }
+};
+function mergeData(a, g) {                   // keep the BEST of both records
+  const r = normalize(JSON.parse(JSON.stringify(a)));
+  r.coins = Math.max(a.coins, g.coins); r.xp = Math.max(a.xp, g.xp);
+  Object.keys(g.lv).forEach(k => { r.lv[k] = Math.max(r.lv[k] || 1, g.lv[k] || 1); });
+  Object.keys(g.best).forEach(k => { r.best[k] = Math.max(r.best[k] || 0, g.best[k] || 0); });
+  r.own = Object.assign({}, g.own, a.own);
+  return r;
+}
+function adoptGuest(u, lg, data) {           // make `data` (a guest's progress) THE progress of this signed-in account
+  if (!fbUser || fbUser.uid !== u.uid) return;
+  data.rev = Math.max(data.rev, db().rev) + 1; data.ts = Date.now();
+  D = data; LS.set(ACTIVE_KEY, JSON.stringify(D)); cloudUid = u.uid;
+  accountChanged();
+  doPush().then(ok => {
+    if (!ok) { Az.toast && Az.toast('⚠️ Cloud save nahi hua — guest progress safe hai, dobara link karo.', 3500); return; }
+    LS.del(GPFX + lg); if (guestId() === lg) rotateGuest();
+    Az.toast && Az.toast('🔗 Guest progress ab ' + (u.email || u.phoneNumber || 'is account') + ' se linked hai ☁️', 3500);
+    accountChanged();
+  });
+  postLogin(u, loadSeq);
+}
+function linkInto(u, lg) {                   // called right after login (or from the Link button) with the account's data already loaded
+  const g = readGuest(lg); if (!g) { Az.toast && Az.toast('Guest progress nahi mila.'); return; }
+  const acc = db();
+  if (acc.rev === 0) return adoptGuest(u, lg, g);         // brand-new Gmail: nothing to lose, just move the guest in
+  const row = (t, d) => '<div class="azstat" style="margin:4px 0"><div><b style="font-size:14px">' + esc(t) + '</b><small>' + esc(d.name || ('Player-' + String(d.uid).slice(-4))) + '</small></div><div><b>🪙 ' + d.coins + '</b><small>coins</small></div><div><b>Lv ' + lvOfXp(d.xp) + '</b><small>player</small></div></div>';
+  const m = Az.modal('<div class="azbig">🔗</div><h2 style="text-align:center">Is Gmail me pehle se progress hai</h2><p class="sub" style="text-align:center">' + esc(u.email || u.phoneNumber || '') + '</p>' + row('☁️ Gmail', acc) + row('👤 Guest', g) +
+    '<div class="azrow c" style="flex-direction:column;align-items:stretch"><button class="azbtn" id="lk_mg">🧮 Dono ka best milao (recommended)</button><button class="azbtn ghost" id="lk_rp">⬆️ Guest se Gmail replace karo</button><button class="azbtn ghost" id="lk_kp">☁️ Gmail waisa hi rakho (guest alag rahe)</button></div>', { sticky: true });
+  m.addEventListener('click', e => {
+    const id = e.target.id; if (!/^lk_/.test(id)) return; m.close();
+    if (!fbUser || fbUser.uid !== u.uid) return;
+    if (id === 'lk_mg') adoptGuest(u, lg, mergeData(db(), g));
+    else if (id === 'lk_rp') adoptGuest(u, lg, g);
+    else Az.toast && Az.toast('Gmail ka progress waisa hi hai. Guest progress alag safe hai.', 3000);
+  });
+}
+
 Az.logout = function () {
-  // push the last changes to THIS account first, then sign out (afterLogout() gives a fresh guest)
+  // push the last changes to THIS account first, then sign out (afterLogout() puts you back on your last guest)
   return flushPush().then(() => loadFb()).then(() => firebase.auth().signOut()).catch(() => {});
 };
 Az.account = () => fbUser ? { uid: fbUser.uid, email: fbUser.email || '', name: fbUser.displayName || '', phone: fbUser.phoneNumber || '' } : null;
@@ -564,31 +653,62 @@ Az.account = () => fbUser ? { uid: fbUser.uid, email: fbUser.email || '', name: 
 Az.login = function () {
   const m = Az.modal('<div id="lgin"></div>', {});
   const box = () => m.querySelector('#lgin');
+  const gRow = g => {
+    const act = !fbUser && g.cur;
+    const tag = act ? '<span class="azpill" style="color:var(--a3)">✔ Playing</span>' : (fbUser && g.cur ? '<span class="azpill">Logout ke baad</span>' : '');
+    const b = (a, t, ghost) => '<button class="azbtn sm' + (ghost ? ' ghost' : '') + '" data-' + a + '="' + esc(g.id) + '">' + t + '</button>';
+    return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 10px;margin:6px 0;border:1px solid ' + (act ? 'var(--a3)' : 'var(--line)') + ';border-radius:14px;background:var(--panel)">' +
+      '<div style="flex:1;min-width:120px"><b>' + esc(g.name) + '</b><br><small style="color:var(--muted)">🆔 ' + esc(g.uid) + ' · 🪙 ' + g.coins + ' · Lv ' + lvOfXp(g.xp) + '</small></div>' +
+      tag + (act ? '' : (!g.cur || !fbUser ? b('gsw', fbUser ? 'Switch' : '▶ Use') : '')) + (fbUser ? b('glk', '🔗 Link', 1) : '') + b('gdel', '🗑', 1) + '</div>';
+  };
+  const drawGuests = () => { const c = m.querySelector('#glist'); if (c) c.innerHTML = listGuests().map(gRow).join('') || '<p class="sub" style="text-align:center">Koi saved guest nahi.</p>'; };
+  const guestBlock = '<div class="azlbl">👥 Is device ke saved guests</div><div id="glist"></div><div class="azrow c"><button class="azbtn ghost sm" id="gnew">➕ Naya guest banao</button></div>';
   if (fbUser) {
-    const who = String(fbUser.email || fbUser.phoneNumber || fbUser.displayName || '').replace(/[<>&"]/g, '');
-    box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + who + '<br>Player ID: <b>' + Az.uid() + '</b><br>Profile cloud me saved hai ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div><p class="sub" style="text-align:center;font-size:11px">Logout ke baad naya guest ID banega (naya progress).</p><p class="sub" style="text-align:center;font-size:10px;word-break:break-all;opacity:.7">Firebase UID (tap to copy):<br><span id="fbuid" style="cursor:pointer"></span></p>';
+    const who = esc(fbUser.email || fbUser.phoneNumber || fbUser.displayName || '');
+    box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + who + '<br>Player ID: <b>' + esc(Az.uid()) + '</b><br>Profile cloud me saved hai ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div><p class="sub" style="text-align:center;font-size:11px">Logout ke baad tum wapas apne guest progress par aaoge — guest ka progress kabhi delete nahi hota.</p>' + guestBlock + '<p class="sub" style="text-align:center;font-size:10px;word-break:break-all;opacity:.7">Firebase UID (tap to copy):<br><span id="fbuid" style="cursor:pointer"></span></p>';
     const fu = box().querySelector('#fbuid'); fu.textContent = fbUser.uid; fu.onclick = () => { try { navigator.clipboard.writeText(fbUser.uid); Az.toast('📋 Firebase UID copied'); } catch (x) {} };
-    m.addEventListener('click', e => { if (e.target.id === 'lo') { e.target.disabled = true; e.target.textContent = 'Logging out…'; Az.logout().then(() => { m.close(); Az.toast && Az.toast('👋 Logout ho gaya — naya guest ID'); }); } });
+    drawGuests();
+    m.addEventListener('click', e => {
+      const t = e.target.closest('button'); if (!t) return;
+      if (t.id === 'lo') { t.disabled = true; t.textContent = 'Logging out…'; Az.logout().then(() => { m.close(); Az.toast && Az.toast('👋 Logout ho gaya — guest progress wapas'); }); }
+      else if (t.dataset.gsw) Az.switchGuest(t.dataset.gsw);
+      else if (t.dataset.glk) { if (cloudUid !== fbUser.uid) { Az.toast('Cloud load ho raha hai, thoda ruko…'); return; } m.close(); linkInto(fbUser, t.dataset.glk); }
+      else if (t.dataset.gdel) { if (confirm('Ye guest aur uska progress hamesha ke liye delete ho jayega. Pakka?')) { Az.deleteGuest(t.dataset.gdel); drawGuests(); } }
+      else if (t.id === 'gnew') Az.newGuest();
+    });
     return m;
   }
-  box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login</h2><p class="sub" style="text-align:center">Google/Phone se login karo; coins, XP, levels aur items us account me hi sync honge. Har Gmail ka apna alag account hoga.</p><div class="azrow c"><button class="azbtn" id="gg">🔵 Google (Gmail) se login</button></div><p class="sub" style="text-align:center;margin-top:12px">ya phone OTP se:</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>';
+  const me = db();
+  box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login / Guest</h2>' +
+    '<p class="sub" style="text-align:center">Abhi tum <b>Guest</b> ho: ' + esc(Az.name()) + ' · 🆔 ' + esc(me.uid) + ' · 🪙 ' + me.coins + '</p>' +
+    '<p class="sub" style="text-align:center">Har Gmail ka apna alag progress hota hai. Naya Gmail = bilkul naya account. Purana Gmail = uska purana progress.</p>' +
+    '<div class="azrow c" style="flex-direction:column;align-items:center"><button class="azbtn" id="gg">🔵 Google (Gmail) se login</button><button class="azbtn ghost" id="gl">🔗 Is guest progress ko Gmail se link karo</button></div>' +
+    '<p class="sub" style="text-align:center;margin-top:12px">ya phone OTP se:</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>' + guestBlock;
+  drawGuests();
   const err = t => { const e = box() && box().querySelector('#lerr'); if (e) e.textContent = t; }; let conf = null, ver = null;
+  const google = link => {
+    err('Google khul raha hai…'); linkG = link ? guestId() : null;
+    loadFb().then(() => {
+      const p = new firebase.auth.GoogleAuthProvider();
+      p.setCustomParameters({ prompt: 'select_account' });   // always show the Gmail chooser, so a 2nd Gmail can really be picked
+      return firebase.auth().signInWithPopup(p);
+    }).then(() => { m.close(); Az.toast && Az.toast('✅ Login ho gaya!'); })
+      .catch(x => { linkG = null; err(x.code === 'auth/popup-closed-by-user' ? 'Login cancel hua.' : (x.code === 'auth/popup-blocked' ? 'Popup block hua — browser me popup allow karo.' : (x.message || 'Google login fail hua.'))); });
+  };
   m.addEventListener('click', e => {
-    if (e.target.id === 'gg') {
-      err('Google khul raha hai…');
-      loadFb().then(() => {
-        const p = new firebase.auth.GoogleAuthProvider();
-        p.setCustomParameters({ prompt: 'select_account' });   // always show the Gmail chooser, so a 2nd Gmail can really be picked
-        return firebase.auth().signInWithPopup(p);
-      }).then(() => { m.close(); Az.toast && Az.toast('✅ Login ho gaya!'); })
-        .catch(x => err(x.code === 'auth/popup-closed-by-user' ? 'Login cancel hua.' : (x.code === 'auth/popup-blocked' ? 'Popup block hua — browser me popup allow karo.' : (x.message || 'Google login fail hua.'))));
-    } else if (e.target.id === 'sn' && !conf) {
+    const t = e.target.closest('button'); if (!t) return;
+    if (t.id === 'gg') google(false);
+    else if (t.id === 'gl') google(true);
+    else if (t.dataset.gsw) Az.switchGuest(t.dataset.gsw);
+    else if (t.dataset.gdel) { if (confirm('Ye guest aur uska progress hamesha ke liye delete ho jayega. Pakka?')) { Az.deleteGuest(t.dataset.gdel); drawGuests(); } }
+    else if (t.id === 'gnew') Az.newGuest();
+    else if (t.id === 'sn' && !conf) {
       let n = box().querySelector('#ph').value.replace(/[\s-]/g, ''); if (!n.startsWith('+')) n = '+91' + n.replace(/^0+/, '');
       if (n.length < 12) return err('Sahi phone number daalo.'); err('OTP bhej raha hoon…');
       loadFb().then(() => { ver = ver || new firebase.auth.RecaptchaVerifier(box().querySelector('#rc'), { size: 'invisible' }); return firebase.auth().signInWithPhoneNumber(n, ver); })
-        .then(c => { conf = c; err(''); box().querySelector('#otpr').style.display = ''; e.target.textContent = 'Verify OTP'; })
+        .then(c => { conf = c; err(''); box().querySelector('#otpr').style.display = ''; t.textContent = 'Verify OTP'; })
         .catch(x => err(x.message || 'OTP nahi gaya. Dobara try karo.'));
-    } else if (e.target.id === 'sn' && conf) {
+    } else if (t.id === 'sn' && conf) {
       conf.confirm(box().querySelector('#otp').value.trim()).then(() => { m.close(); Az.toast && Az.toast('✅ Login ho gaya!'); }).catch(() => err('Galat OTP. Dobara try karo.'));
     }
   });
@@ -666,7 +786,7 @@ Az.start = function (cfg) {
    base = coins for a normal win at level 1 (Az scales by difficulty and level). */
 Az.finish = function (r) {
   const g = Az.game(r.game), lvl = r.level || 1, dm = Az.diffMul(r.diff || 'medium');
-  const coins = Math.round((r.base || 0) * dm * (1 + lvl * .04) * (r.won ? 1 : .25));
+  const coins = Math.round(COIN_RATE * (r.base || 0) * dm * (1 + lvl * .04) * (r.won ? 1 : .25));
   const xp = Math.round(coins * .6 + (r.won ? 15 : 3));
   Az.addCoins(coins); Az.addXp(xp);
   let note = '', newBest = false;
