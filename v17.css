@@ -51,3 +51,8 @@ header{display:none}
  .bnav .mid{width:54px;height:54px;margin-top:-26px;border-radius:50%;justify-content:center;background:linear-gradient(135deg,#8b5cff,#d04dff);color:#fff;font-size:22px;box-shadow:0 0 22px #a24dff}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* v19: no underlines on links/cards */
+a,a:hover,a:visited,a:active{text-decoration:none}
+.games .card,.games .card *,.ft,.ft *{text-decoration:none!important}
+.games .card{color:inherit}

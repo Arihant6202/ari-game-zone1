@@ -97,7 +97,7 @@ const GAMES = [
   { id: 'memory', file: 'memory-match.html', name: 'Memory Match', emoji: '🧠', cat: 'Puzzle', max: 100, modes: ['single'], shop: [], desc: 'Flip cards and find matching pairs with the fewest moves.' },
   { id: 'quickmath', file: 'quick-math.html', name: 'Quick Math', emoji: '➗', cat: 'Puzzle', max: 100, modes: ['single'], shop: [], desc: 'Solve rapid-fire arithmetic before the timer runs out.' },
   { id: 'colordash', file: 'color-dash.html', name: 'Color Dash', emoji: '🎨', cat: 'Arcade', max: 100, modes: ['single'], shop: [], desc: 'Match the target color as the pace gets faster.' },
-  { id: 'spacedodge', file: 'space-dodge.html', name: 'Space Dodge', emoji: '🚀', cat: 'Arcade', max: 100, modes: ['single'], shop: [], desc: 'Pilot your ship and dodge incoming asteroids.' },
+  { id: 'rps', file: 'stone-paper-scissor.html', name: 'Stone Paper Scissor', emoji: '✊', cat: 'Online', max: 1, modes: ['single', 'local', 'online'], shop: [], desc: 'Classic Rock Paper Scissors: challenge the computer, play on one device, or battle a friend online.' },
   { id: 'taprush', file: 'tap-rush.html', name: 'Tap Rush', emoji: '⚡', cat: 'Fun', max: 100, modes: ['single'], shop: [], desc: 'Hit the targets quickly and build a high score.' },
 ];
 
@@ -554,9 +554,9 @@ const Az = window.Az = {
   equip(id) { if (!Az.owned(id)) return false; db().eq[ALL_ITEMS[id].slot] = id; save(); return true; },
   buy(id) { const it = ALL_ITEMS[id]; if (!it || it.lvl || Az.owned(id) || Az.coins() < it.price) return false; db().coins -= it.price; db().own[id] = 1; db().eq[it.slot] = id; save(); Az.refresh(); return true; },
 
-  /* Lucky Spin: first spin costs 2000 Gold, every next spin costs 500 more. Luck is low on purpose. */
-  SPIN_BASE: 2000, SPIN_STEP: 500,
-  spinCost() { return Az.SPIN_BASE + Az.SPIN_STEP * (db().spins || 0); },
+  /* Lucky Spin: first spin costs 2000 Gold, every next spin costs 100 more, capped at 10000. Items are rarer than Gold but do drop. */
+  SPIN_BASE: 2000, SPIN_STEP: 100, SPIN_MAX: 10000, ITEM_CHANCE: 0.18,
+  spinCost() { return Math.min(Az.SPIN_MAX, Az.SPIN_BASE + Az.SPIN_STEP * (db().spins || 0)); },
   luckySpin() {
     const cost = Az.spinCost();
     if (Az.coins() < cost) { Az.toast('Not enough Gold. This spin costs ' + cost + '.'); return null; }
@@ -564,7 +564,7 @@ const Az = window.Az = {
     db().coins -= cost; db().spins = (db().spins || 0) + 1;
     const wpick = (arr, wf) => { let t = arr.reduce((a, x) => a + wf(x), 0), r = Math.random() * t; for (const x of arr) { r -= wf(x); if (r < 0) return x; } return arr[arr.length - 1]; };
     let reward;
-    if (pool.length && Math.random() < 0.06) {            // only ~6% chance to win an item
+    if (pool.length && Math.random() < Az.ITEM_CHANCE) {     // ~18% chance to win an item
       const RW = { common: 62, rare: 26, epic: 9, legendary: 3, mythic: 0.5 };
       const it = wpick(pool, x => RW[rarityOf(x)] || 1);
       db().own[it.id] = 1; db().eq[it.slot] = it.id;

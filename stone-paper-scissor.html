@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="firebase-config.js"></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080a12"><link rel="manifest" href="manifest.webmanifest?v=20">
+<link rel="icon" href="./icon-64.png?v=20" type="image/png" sizes="64x64">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=20">
+<title>Stone Paper Scissor · Ari Game Zone</title>
+<link rel="stylesheet" href="az.css?v=20"><link rel="stylesheet" href="v17.css?v=20">
+<style>
+#pg{max-width:900px;margin:auto;padding:18px 14px 100px}.rps-head{text-align:center;margin:8px 0 22px}
+.rps-head h1{font-size:clamp(27px,6vw,42px);margin:8px 0;background:linear-gradient(90deg,#fff,#f7c65b);-webkit-background-clip:text;background-clip:text;color:transparent}
+.rps-head p{color:var(--muted);margin:0}.rps-card{background:linear-gradient(145deg,rgba(25,29,48,.96),rgba(10,13,24,.98));border:1px solid rgba(255,195,75,.24);border-radius:24px;padding:clamp(16px,4vw,28px);box-shadow:0 20px 60px #0005}
+.rps-score{display:flex;justify-content:center;align-items:center;gap:clamp(20px,8vw,70px);margin:8px 0 20px}.score{text-align:center;min-width:75px}.score b{display:block;font-size:clamp(28px,7vw,42px);color:#ffd166}.score small{color:var(--muted);font-weight:700;letter-spacing:1px}.versus{color:#7d8499;font-weight:900}
+.rps-arena{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}.player{border:1px solid #ffffff18;background:#ffffff08;border-radius:18px;padding:15px;text-align:center;min-width:0}.player h3{font-size:13px;color:var(--muted);margin:0 0 12px;letter-spacing:1px;text-transform:uppercase}.hand{font-size:clamp(48px,13vw,76px);height:90px;display:grid;place-items:center;filter:drop-shadow(0 8px 15px #0008)}.hand span{display:block}.caption{font-size:12px;color:var(--muted);min-height:18px}
+.rps-status{text-align:center;min-height:48px;font-weight:700;font-size:16px;color:#ffd166;padding:8px}.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.choice{border:1px solid #ffffff20;border-radius:17px;background:linear-gradient(145deg,#252b40,#151a2a);color:white;padding:14px 6px;cursor:pointer;transition:.16s;font:inherit}.choice:hover{border-color:#ffc44d;transform:translateY(-3px)}.choice:disabled{opacity:.45;cursor:not-allowed;transform:none}.choice .emo{display:block;font-size:clamp(32px,8vw,45px);margin-bottom:5px}.choice b{font-size:13px}.rps-actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:16px}.rps-note{text-align:center;color:var(--muted);font-size:12px;margin:12px 0 0}.online-pill{display:inline-flex;padding:6px 12px;border:1px solid #ffc44d55;border-radius:30px;color:#ffd166;font-size:12px;margin-top:8px}
+@media(max-width:430px){.rps-card{padding:14px}.player{padding:10px}.hand{height:72px}.choice{padding:11px 4px}}
+</style></head>
+<body data-page="games"><div class="azbg"><i></i><i></i><i></i></div><div id="pg">
+<div class="rps-head"><div style="font-size:38px">✊ ✋ ✌️</div><h1>STONE PAPER SCISSOR</h1><p>Quick match. Smart moves. Friendly rivalry.</p><div id="modeTag" class="online-pill">Choose your game mode</div></div>
+<section class="rps-card">
+<div class="rps-score"><div class="score"><b id="myScore">0</b><small id="myLabel">YOU</small></div><div class="versus">VS</div><div class="score"><b id="opScore">0</b><small id="opLabel">COMPUTER</small></div></div>
+<div class="rps-arena"><div class="player"><h3 id="leftName">Your move</h3><div class="hand" id="myHand">❔</div><div class="caption" id="myCaption">Choose below</div></div><div class="player"><h3 id="rightName">Opponent</h3><div class="hand" id="opHand">❔</div><div class="caption" id="opCaption">Waiting</div></div></div>
+<div class="rps-status" id="status" aria-live="polite">First to 3 points wins the match.</div>
+<div class="choices" id="choices">
+<button class="choice" data-choice="stone"><span class="emo">✊</span><b>STONE</b></button>
+<button class="choice" data-choice="paper"><span class="emo">✋</span><b>PAPER</b></button>
+<button class="choice" data-choice="scissor"><span class="emo">✌️</span><b>SCISSOR</b></button>
+</div>
+<div class="rps-actions"><button class="azbtn ghost" id="newRound">↻ Next Round</button><button class="azbtn ghost" id="backHome">⌂ Home</button></div>
+<p class="rps-note" id="hint">Choose your move. The match ends when a player reaches 3 points.</p>
+</section></div>
+<script src="az.js?v=20"></script><script src="nav.js"></script>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id), ICON={stone:'✊',paper:'✋',scissor:'✌️'}, LABEL={stone:'Stone',paper:'Paper',scissor:'Scissor'};
+let mode='single',net=null,host=true,score=[0,0],myPick=null,opPick=null,round=1,locked=false,finished=false,localTurn=0,localPicks=[];
+function say(t){$('status').textContent=t}
+function paint(){
+ $('myScore').textContent=score[0];$('opScore').textContent=score[1];
+ $('myHand').textContent=myPick?ICON[myPick]:'❔';$('opHand').textContent=opPick?ICON[opPick]:'❔';
+ $('myCaption').textContent=myPick?LABEL[myPick]:'Choose below';$('opCaption').textContent=opPick?LABEL[opPick]:'Waiting';
+ $('choices').querySelectorAll('button').forEach(b=>b.disabled=locked||finished||!!myPick);
+ $('newRound').disabled=finished||(!locked&&(!myPick&&!opPick));
+}
+function outcome(a,b){if(a===b)return 0;if((a==='stone'&&b==='scissor')||(a==='paper'&&b==='stone')||(a==='scissor'&&b==='paper'))return 1;return -1}
+function showResult(a,b){
+ myPick=a;opPick=b;locked=true;const r=outcome(a,b);
+ if(r===1){score[0]++;say('🎉 You won this round!');}
+ else if(r===-1){score[1]++;say('Opponent wins this round.');}
+ else say('🤝 It is a draw!');
+ paint();
+ if(score[0]>=3||score[1]>=3){finished=true;const won=score[0]>score[1];say(won?'🏆 MATCH WON!':'MATCH FINISHED — GOOD TRY!');$('hint').textContent='Final score: '+score[0]+' - '+score[1];$('newRound').textContent='Play Again';$('newRound').disabled=false;
+ if(window.Az){Az.finish({game:'rps',level:1,diff:'medium',won,base:35,progress:false,title:won?'You won the match!':'Match over',sub:'Final score '+score[0]+' - '+score[1]});}
+ }else{$('hint').textContent='Round '+round+' complete. Select Next Round to continue.';$('newRound').disabled=false;}
+}
+function resetRound(){if(finished){score=[0,0];round=1;finished=false;$('newRound').textContent='↻ Next Round';$('hint').textContent='First to 3 points wins the match.';}
+ else round++;
+ myPick=null;opPick=null;locked=false;localTurn=0;localPicks=[];say(mode==='local'?'Player 1, choose your move.':'Choose your move.');paint();}
+function choose(c){
+ if(locked||finished||myPick)return;
+ if(mode==='local'){
+   localPicks[localTurn]=c;
+   if(localTurn===0){localTurn=1;$('myHand').textContent='🔒';$('myCaption').textContent='Player 1 locked';$('rightName').textContent='Player 2';$('leftName').textContent='Player 1';say('Player 2, choose your move.');$('choices').querySelectorAll('button').forEach(b=>b.disabled=false);return;}
+   const a=localPicks[0],b=localPicks[1];myPick=a;opPick=b;locked=true;
+   $('myLabel').textContent='PLAYER 1';$('opLabel').textContent='PLAYER 2';showLocal(a,b);return;
+ }
+ myPick=c; $('myHand').textContent=ICON[c];$('myCaption').textContent=LABEL[c];$('choices').querySelectorAll('button').forEach(b=>b.disabled=true);
+ if(mode==='single'){
+   const opts=['stone','paper','scissor'],ai=opts[Math.floor(Math.random()*3)];
+   setTimeout(()=>showResult(c,ai),350);
+ }else{
+   net.send({type:'rps-choice',choice:c,round});
+   say('Move locked. Waiting for your opponent…');
+   if(opPick)showResult(c,opPick);else paint();
+ }
+}
+function showLocal(a,b){
+ $('myHand').textContent=ICON[a];$('opHand').textContent=ICON[b];$('myCaption').textContent=LABEL[a];$('opCaption').textContent=LABEL[b];
+ const r=outcome(a,b);if(r===0)say('🤝 Draw!');else if(r===1){score[0]++;say('🏆 Player 1 wins this round!');}else{score[1]++;say('🏆 Player 2 wins this round!');}
+ $('myScore').textContent=score[0];$('opScore').textContent=score[1];
+ if(score[0]>=3||score[1]>=3){finished=true;say(score[0]>score[1]?'🏆 PLAYER 1 WINS THE MATCH!':'🏆 PLAYER 2 WINS THE MATCH!');$('newRound').textContent='Play Again';$('hint').textContent='Final score '+score[0]+' - '+score[1];}
+ else{$('hint').textContent='Round '+round+' complete.';$('newRound').disabled=false;}paint();
+}
+function init(o){
+ mode=o.mode;net=o.net||null;host=!!o.host;
+ $('modeTag').textContent=mode==='online'?'🌐 Online Multiplayer':mode==='local'?'👥 2 Players · Same Device':'🤖 Solo vs Computer';
+ $('myLabel').textContent=mode==='local'?'PLAYER 1':'YOU';$('opLabel').textContent=mode==='local'?'PLAYER 2':mode==='single'?'COMPUTER':'OPPONENT';
+ $('leftName').textContent=mode==='local'?'Player 1':'Your move';$('rightName').textContent=mode==='local'?'Player 2':mode==='single'?'Computer':'Opponent';
+ $('hint').textContent=mode==='online'?'Connected! First to 3 points wins.': 'First to 3 points wins the match.';
+ if(net){net.on(d=>{if(!d)return;
+ if(d.type==='rps-next'&&d.round===round&&locked&&!finished){resetRound();return;}
+ if(d.type!=='rps-choice'||d.round!==round||!['stone','paper','scissor'].includes(d.choice))return;opPick=d.choice;if(myPick)showResult(myPick,opPick);else{$('opHand').textContent='🔒';$('opCaption').textContent='Move locked';say('Opponent has chosen. Your turn!');}});net.onclose(()=>{say('Opponent disconnected. Return to the game menu to reconnect.');locked=true;paint();});}
+ resetRound();
+}
+$('choices').addEventListener('click',e=>{const b=e.target.closest('[data-choice]');if(b)choose(b.dataset.choice);});
+$('newRound').addEventListener('click',()=>{if(finished||locked){if(mode==='online'&&net&&net.open){net.send({type:'rps-next',round});resetRound();}else resetRound();}});
+$('backHome').addEventListener('click',()=>location.href='index.html');
+Az.start({game:'rps',noDiff:true,noLevels:true,onStart:init});
+})();
+</script></body></html>
