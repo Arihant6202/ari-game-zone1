@@ -27,3 +27,13 @@ FREE SPARK CLOUD SAVE UPDATE
 - Coins, XP, unlocked levels, best scores, owned/equipped items and profile sync across devices using the same Firebase account.
 - This is client-side sync on Spark. Players can tamper with their own gameData; it is not cheat-proof. Do not use for real-money value.
 - Publish database.rules.json in Firebase Realtime Database > Rules. Each account can read/write only its own user node.
+
+
+ACCOUNT ISOLATION UPDATE
+- Local profiles are now namespaced per Firebase Auth UID.
+- Guest profile uses its own persistent guest ID; a real logout rotates to a fresh guest ID.
+- Google accounts load/save only users/{authUid}/gameData.
+- Existing legacy users/{authUid} profile data is imported once when gameData is absent.
+- Added Level Devil (20-stage platform challenge) and local pass-and-play UNO.
+- JavaScript inline scripts passed Node syntax checks. Live Firebase behavior still requires testing
+  on the deployed GitHub Pages domain with the published Firebase rules.

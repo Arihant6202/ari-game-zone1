@@ -135,6 +135,7 @@ a{color:inherit}
 const SRC = document.currentScript ? document.currentScript.src : '';
 const BASE = SRC.replace(/az\.js.*$/, '');
 const KEY = 'az2';
+let ACTIVE_KEY = 'az2:guest:' + (localStorage.getItem('az_guest_id') || (() => { const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()); localStorage.setItem('az_guest_id', id); return id; })());
 const $ = (s, r) => (r || document).querySelector(s);
 const el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
 
@@ -148,16 +149,16 @@ function genUid() {
 let D = null;
 function db() {
   if (D) return D;
-  try { D = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { D = null; }
+  try { D = JSON.parse(localStorage.getItem(ACTIVE_KEY) || 'null'); } catch (e) { D = null; }
   if (!D || typeof D !== 'object') D = {};
   if (D.coins == null) D.coins = 150;
   D.xp = D.xp || 0; D.lv = D.lv || {}; D.best = D.best || {}; D.own = D.own || {}; D.eq = D.eq || {};
   D.theme = D.theme || 'neon'; D.diff = D.diff || 'medium'; D.sound = D.sound !== false; D.daily = D.daily || '';
-  if (!/^\d{8}$/.test(D.uid || '')) { D.uid = genUid(); try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} }
+  if (!/^\d{8}$/.test(D.uid || '')) { D.uid = genUid(); try { localStorage.setItem(ACTIVE_KEY, JSON.stringify(D)); } catch (e) {} }
   D.name = typeof D.name === 'string' ? D.name : ''; D.nameSet = !!D.nameSet; D.nameAsked = !!D.nameAsked;
   return D;
 }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch (e) {} if (window.__azPush) window.__azPush(); }
+function save() { try { localStorage.setItem(ACTIVE_KEY, JSON.stringify(D)); } catch (e) {} if (window.__azPush) window.__azPush(); }
 
 /* ------------------------------ games registry ------------------------------ */
 // modes: single (vs computer) | local (2 players, one device) | online (room code)
@@ -455,29 +456,64 @@ function loadFb() {
     const c = window.AZ_FIREBASE;
     if (!c || !c.apiKey || /PASTE/.test(c.apiKey)) return rej(new Error('Firebase keys missing. firebase-config.js me apni keys daalo.'));
     const L = ['app', 'auth', 'database'];
-    const next = i => { if (i === L.length) { try { firebase.initializeApp(c); fbDb = firebase.database(); firebase.auth().onAuthStateChanged(u => { if (u) afterLogin(u); }); res(); } catch (e) { rej(e); } return; }
+    const next = i => { if (i === L.length) { try { firebase.initializeApp(c); fbDb = firebase.database(); firebase.auth().onAuthStateChanged(u => {
+          if (u) afterLogin(u);
+          else {
+            const wasSignedIn = !!fbUser;
+            fbUser = null;
+            let guestId = localStorage.getItem('az_guest_id');
+            if (wasSignedIn || !guestId) {
+              guestId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
+              try { localStorage.setItem('az_guest_id', guestId); } catch (e) {}
+            }
+            try { localStorage.removeItem('az_login'); } catch (e) {}
+            ACTIVE_KEY = 'az2:guest:' + guestId; D = null; db();
+            const loginBtn = document.getElementById('azlogin'); if (loginBtn) loginBtn.textContent = '👤 Login';
+            Az.refresh && Az.refresh(); if (typeof drawTop === 'function') drawTop();
+          }
+        }); res(); } catch (e) { rej(e); } return; }
       const s = document.createElement('script'); s.src = FBV + L[i] + '-compat.js'; s.onload = () => next(i + 1); s.onerror = () => rej(new Error('Login service load nahi hua. Internet check karo.')); document.head.appendChild(s); };
     next(0);
   });
   fbP.catch(() => { fbP = null; });
   return fbP;
 }
-window.__azPush = () => { if (!fbUser || !fbDb) return; clearTimeout(pushT); pushT = setTimeout(() => { try { fbDb.ref('users/' + fbUser.uid).set(JSON.parse(JSON.stringify(db()))); } catch (e) {} }, 1500); };
+window.__azPush = () => { if (!fbUser || !fbDb) return; clearTimeout(pushT); pushT = setTimeout(() => {
+  try { fbDb.ref('users/' + fbUser.uid + '/gameData').set(JSON.parse(JSON.stringify(db()))).catch(e => Az.toast && Az.toast('Cloud save failed: ' + (e.message || 'rules'))); } catch (e) {}
+}, 1200); };
 function afterLogin(u) {
-  fbUser = u; try { localStorage.setItem('az_login', '1'); } catch (e) {}
-  const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 ' + String(u.displayName || u.phoneNumber || 'Me').split(' ')[0].slice(0, 8);
-  fbDb.ref('users/' + u.uid).once('value').then(s => {
-    const c = s.val();
-    if (c && typeof c === 'object') { const L = db(); if (!c.uid) c.uid = L.uid; if (!c.name && L.name) { c.name = L.name; c.nameSet = true; } try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} D = null; db(); Az.refresh && Az.refresh(); Az.toast && Az.toast('☁️ Progress loaded'); }
-    else window.__azPush();
-  }).catch(() => {});
+  if (fbUser && fbUser.uid === u.uid && ACTIVE_KEY === 'az2:user:' + u.uid) return;
+  fbUser = u; ACTIVE_KEY = 'az2:user:' + u.uid; D = null;
+  try { localStorage.setItem('az_login', '1'); } catch (e) {}
+  const b = document.getElementById('azlogin');
+  if (b) b.textContent = '👤 ' + String(u.displayName || u.email || 'Me').split(' ')[0].slice(0, 8);
+  fbDb.ref('users/' + u.uid + '/gameData').once('value').then(s => {
+    let cloud = s.val();
+    if (!cloud || typeof cloud !== 'object') {
+      // One-time compatibility with older builds that saved the profile at users/{uid}.
+      return fbDb.ref('users/' + u.uid).once('value').then(old => {
+        const v = old.val(); cloud = v && v.gameData ? v.gameData : (v && v.coins != null ? v : null);
+        if (cloud) return fbDb.ref('users/' + u.uid + '/gameData').set(cloud).then(() => cloud);
+        return null;
+      });
+    }
+    return cloud;
+  }).then(cloud => {
+    if (fbUser && fbUser.uid === u.uid) {
+      if (cloud && typeof cloud === 'object') {
+        D = cloud; try { localStorage.setItem(ACTIVE_KEY, JSON.stringify(D)); } catch (e) {}
+      } else { D = null; db(); window.__azPush(); }
+      Az.refresh && Az.refresh(); if (typeof drawTop === 'function') drawTop();
+      Az.toast && Az.toast(cloud ? '☁️ Account progress restored' : '☁️ New account created');
+    }
+  }).catch(e => Az.toast && Az.toast('Cloud load failed: ' + (e.message || 'check database rules')));
 }
 function authInit() { loadFb().catch(() => {}); }
 Az.login = function () {
   const m = Az.modal('<div id="lgin"></div>', {});
   const box = () => m.querySelector('#lgin');
   if (fbUser) { box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + (fbUser.email || fbUser.phoneNumber) + '<br>Coins & levels cloud me save ho rahe hain ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div>';
-    m.addEventListener('click', e => { if (e.target.id === 'lo') { firebase.auth().signOut(); fbUser = null; try { localStorage.removeItem('az_login'); } catch (x) {} const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 Login'; m.close(); } }); return m; }
+    m.addEventListener('click', e => { if (e.target.id === 'lo') { firebase.auth().signOut(); try { localStorage.removeItem('az_login'); } catch (x) {} const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 Login'; m.close(); } }); return m; }
   box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login</h2><p class="sub" style="text-align:center">Account banao, coins aur levels save rahenge.</p><div class="azrow c"><button class="azbtn" id="gg">🔵 Google (Gmail) se login</button></div><p class="sub" style="text-align:center;margin-top:12px">ya phone OTP se:</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>';
   const err = t => { box().querySelector('#lerr').textContent = t; }; let conf = null, ver = null;
   m.addEventListener('click', e => {

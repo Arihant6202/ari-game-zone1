@@ -1,0 +1,23 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Level Devil · Ari Game Zone</title><style>
+*{box-sizing:border-box}body{margin:0;background:#101426;color:#fff;font:16px system-ui;text-align:center}.wrap{max-width:760px;margin:auto;padding:18px}.panel{background:#202943;border-radius:18px;padding:16px;margin:12px 0}canvas{width:100%;max-width:640px;background:linear-gradient(#8bd5ff,#e9f6ff 70%,#537b47 70%);border-radius:14px;touch-action:none}.btn{border:0;border-radius:12px;padding:12px 18px;margin:5px;background:#ffca55;font-weight:700}.muted{color:#bac6dd}
+</style></head><body><div class="wrap"><h1>😈 Level Devil</h1><p class="muted">A tricky platform challenge — reach the glowing exit and watch for surprise traps.</p><div class="panel"><b id="stage">Level 1 / 20</b> · <span id="status">Reach the door!</span><br><canvas id="game" width="640" height="300"></canvas><p><button class="btn" id="left">◀</button><button class="btn" id="jump">JUMP ▲</button><button class="btn" id="right">▶</button><button class="btn" id="restart">Restart</button></p><small class="muted">Keyboard: ← → and Space. Touch buttons also work.</small></div><button class="btn" onclick="location.href='index.html'">Back to games</button></div>
+<script>
+const c=document.getElementById('game'),x=c.getContext('2d');let level=1,p={x:30,y:238,vx:0,vy:0},held={},dead=false,won=false,trap=0;
+function reset(){p={x:30,y:238,vx:0,vy:0};dead=won=false;trap=Math.min(1,level*.045);document.getElementById('status').textContent='Reach the door!';}
+function draw(){x.clearRect(0,0,640,300);x.fillStyle='#456b42';x.fillRect(0,260,640,40);x.fillStyle='#202943';x.fillRect(0,270,640,30);x.fillStyle='#19a66a';x.fillRect(580,210,34,50);x.fillStyle='#fff';x.fillRect(590,220,14,30);
+x.fillStyle='#db475c';if(level>1)x.fillRect(230,252,70,8);if(level>3)x.fillRect(390,252,70,8);
+if(level>2 && trap>.2){x.fillStyle='#e44';x.fillRect(310,245,26,15);}
+x.fillStyle='#27324b';x.fillRect(p.x,p.y,22,22);x.fillStyle='#fff';x.fillRect(p.x+5,p.y+5,4,4);x.fillRect(p.x+14,p.y+5,4,4);
+if(!dead&&!won){p.vx=(held.right?3.4:0)-(held.left?3.4:0);p.x+=p.vx;p.vy+=.45;p.y+=p.vy;if(p.y>238){p.y=238;p.vy=0;}if(p.x<0)p.x=0;if(p.x>618)p.x=618;
+if(level>2&&p.x>300&&p.x<345&&Math.random()<.035){dead=true;}
+if(level>1&&p.x>230&&p.x<300&&p.y>230){dead=true;}
+if(p.x>560){won=true;document.getElementById('status').textContent='Level cleared!';}}
+if(dead){document.getElementById('status').textContent='Oops! Trap caught you — restart.';}
+if(won){x.fillStyle='#073';x.fillRect(160,90,320,70);x.fillStyle='#fff';x.font='24px system-ui';x.fillText('LEVEL CLEARED!',220,133);}
+requestAnimationFrame(draw)}
+function jump(){if(p.y>=238&&!dead&&!won)p.vy=-9.5}
+['left','right'].forEach(k=>{let b=document.getElementById(k);b.onpointerdown=()=>held[k]=true;b.onpointerup=b.onpointerleave=()=>held[k]=false});
+document.getElementById('jump').onclick=jump;document.getElementById('restart').onclick=reset;
+onkeydown=e=>{if(e.key==='ArrowLeft')held.left=true;if(e.key==='ArrowRight')held.right=true;if(e.code==='Space')jump()};onkeyup=e=>{if(e.key==='ArrowLeft')held.left=false;if(e.key==='ArrowRight')held.right=false};
+document.getElementById('stage').onclick=()=>{};const old=draw;let stageCheck=setInterval(()=>{if(won){level=Math.min(20,level+1);document.getElementById('stage').textContent='Level '+level+' / 20';reset();}},300);draw();
+</script></body></html>
