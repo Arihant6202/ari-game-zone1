@@ -108,11 +108,11 @@ a{color:inherit}
 @keyframes azfade{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-</style>
+.coinbig,.azpill.coin,#azcoins,#hC,#hCoin,#mycoins{color:#ffbf24!important}.az-coin-icon{width:1.22em;height:1.22em;object-fit:contain;vertical-align:-.22em;display:inline-block;filter:drop-shadow(0 1px 2px rgba(255,190,30,.35))}</style>
 </head>
 <body data-game="flyer">
 <main class="azgame">
-  <div class="azhud"><span class="azpill" id="hPipes">Gates 0/0</span><span class="azpill" id="hCoin">🪙 0</span><span class="azpill" id="hShield">🛡️ –</span></div>
+  <div class="azhud"><span class="azpill" id="hPipes">Gates 0/0</span><span class="azpill" id="hCoin"><img class="az-coin-icon" src="assets/coin-a.png" alt="A gold coin"> 0</span><span class="azpill" id="hShield">🛡️ –</span></div>
   <div class="azstage"><canvas id="cv" width="360" height="560" style="width:min(100%,400px);cursor:pointer"></canvas></div>
   <div class="azmsg" id="msg">Tap / click / Space to flap</div>
   <div class="azctl"><button class="azbtn" id="flap">🪽 FLAP</button><button class="azbtn ghost" id="rst">🔄 Restart</button></div>
@@ -141,7 +141,7 @@ function begin(lv){
   $('msg').textContent='Tap / click / Space to flap'; hud();
   cancelAnimationFrame(raf); last=performance.now(); raf=requestAnimationFrame(loop);
 }
-function hud(){ $('hPipes').textContent='Gates '+S.passed+'/'+S.c.target; $('hCoin').textContent='🪙 '+S.collected; $('hShield').textContent=S.shield>0?'🛡️ '+Math.ceil(S.shield)+'s':'🛡️ –'; }
+function hud(){ $('hPipes').textContent='Gates '+S.passed+'/'+S.c.target; $('hCoin').textContent='<img class="az-coin-icon" src="assets/coin-a.png" alt="A gold coin"> '+S.collected; $('hShield').textContent=S.shield>0?'🛡️ '+Math.ceil(S.shield)+'s':'🛡️ –'; }
 function flap(){ if(!S||!S.alive||paused)return; S.started=true; S.vy=-6.1; Az.sfx('jump'); for(let i=0;i<4;i++)S.parts.push({x:70,y:S.y+10,vx:-1-Math.random()*2,vy:Math.random()*2-1,l:.4,c:'#fff'}); }
 function spawn(){
   const c=S.c, gy=70+c.gap/2+Math.random()*(H-140-c.gap), mv=Math.random()<c.moving;
@@ -189,7 +189,7 @@ function render(){
     ctx.fillRect(p.x-20,bot+16,40,H-bot);ctx.strokeRect(p.x-20,bot+16,40,H-bot);ctx.fillRect(p.x-26,bot,52,16);ctx.strokeRect(p.x-26,bot,52,16);
     ctx.fillStyle='rgba(255,255,255,.25)';ctx.fillRect(p.x-14,0,6,top-16);ctx.fillRect(p.x-14,bot+16,6,H-bot);
     if(p.mv){ctx.fillStyle='rgba(0,0,0,.35)';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('↕',p.x,top-22);} });
-  S.coins.forEach(c=>{ctx.font='22px sans-serif';ctx.textAlign='center';ctx.fillText(c.shield?'🛡️':'🪙',c.x,c.y+8);});
+  S.coins.forEach(c=>{ctx.font='22px sans-serif';ctx.textAlign='center';ctx.fillText(c.shield?'🛡️':'Ⓐ',c.x,c.y+8);});
   ctx.fillStyle=place.ground;ctx.fillRect(0,H-40,W,40);ctx.fillStyle='rgba(255,255,255,.15)';for(let i=0;i<14;i++)ctx.fillRect(((i*40-S.dist)%W+W)%W,H-40,20,6);
   S.parts.forEach(p=>{ctx.globalAlpha=Math.max(0,p.l*2);ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,4,4);});ctx.globalAlpha=1;
   ctx.save();ctx.translate(70,S.y);ctx.rotate(S.alive?S.rot:1.4);ctx.font='34px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';

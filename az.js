@@ -371,7 +371,7 @@ const Az = window.Az = {
     const m = Az.modal('<div id="azmailbox"></div>');
     const draw = () => {
       const list = db().mail.slice().reverse();
-      const rows = list.length ? list.map((v,j) => { const i=db().mail.length-1-j; return `<div class="azitem"><b>🎁 ${v.title || 'Gift from Ari Game Zone'}</b><small>Ⓐ ${v.coins||0} coins · 💎 ${v.diamonds||0} diamonds</small>${v.claimed?'<span class="azpill">✅ Claimed</span>':`<button class="azbtn sm" data-claim="${i}">Claim reward</button>`}</div>`; }).join('') : '<p class="sub">No messages yet. Gifts from the developer will appear here.</p>';
+      const rows = list.length ? list.map((v,j) => { const i=db().mail.length-1-j; return `<div class="azitem"><b>🎁 ${v.title || 'Gift from Ari Game Zone'}</b><small><img class="az-coin-icon" src="assets/coin-a.png" alt="A gold coin"> ${v.coins||0} coins · 💎 ${v.diamonds||0} diamonds</small>${v.claimed?'<span class="azpill">✅ Claimed</span>':`<button class="azbtn sm" data-claim="${i}">Claim reward</button>`}</div>`; }).join('') : '<p class="sub">No messages yet. Gifts from the developer will appear here.</p>';
       document.getElementById('azmailbox').innerHTML = `<h2>✉️ Mail</h2><p class="sub">Claim gifts sent to your Player ID.</p><div class="azshopgrid">${rows}</div><div class="azrow c"><button class="azbtn ghost" id="mailclose">Close</button></div>`;
     };
     m.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.claim!==undefined){Az.claimMail(+b.dataset.claim);draw();}if(b.id==='mailclose')m.close();});
@@ -414,7 +414,7 @@ const Az = window.Az = {
   },
   setBadge(text) { const b = $('#azlv'); if (b) b.textContent = text; },
   refresh() {
-    const c = $('#azcoins'); if (c) c.textContent = 'Ⓐ ' + Az.coins() + '  💎 ' + Az.diamonds();
+    const c = $('#azcoins'); if (c) c.textContent = '<img class="az-coin-icon" src="assets/coin-a.png" alt="A gold coin"> ' + Az.coins() + '  💎 ' + Az.diamonds();
     document.querySelectorAll('[data-az=coins]').forEach(e => e.textContent = Az.coins());
     document.querySelectorAll('[data-az=diamonds]').forEach(e => e.textContent = Az.diamonds());
     document.querySelectorAll('[data-az=plvl]').forEach(e => e.textContent = Az.plvl());
@@ -500,10 +500,10 @@ Az.shop = function (slots, startSlot) {
     const items = SHOP[cur].items.map(it => {
       const own = Az.owned(it.id), eq = Az.eq(cur).id === it.id;
       const pv = `<div class="pv">${figure(it)}</div>`;
-      const dp = Math.max(1, Math.ceil((it.price || 100) / 100)); const btn = eq ? '<button class="azbtn sm ghost" disabled>✔ Equipped</button>' : own ? `<button class="azbtn sm" data-eq="${it.id}">Equip</button>` : `<div class="azrow c"><button class="azbtn sm" data-buy="${it.id}" data-currency="coin" ${Az.coins() < it.price ? 'disabled' : ''}>Ⓐ ${it.price}</button><button class="azbtn sm ghost" data-buy="${it.id}" data-currency="diamond" ${Az.diamonds() < dp ? 'disabled' : ''}>💎 ${dp}</button></div>`;
+      const dp = Math.max(1, Math.ceil((it.price || 100) / 100)); const btn = eq ? '<button class="azbtn sm ghost" disabled>✔ Equipped</button>' : own ? `<button class="azbtn sm" data-eq="${it.id}">Equip</button>` : `<div class="azrow c"><button class="azbtn sm" data-buy="${it.id}" data-currency="coin" ${Az.coins() < it.price ? 'disabled' : ''}><img class="az-coin-icon" src="assets/coin-a.png" alt="A gold coin"> ${it.price}</button><button class="azbtn sm ghost" data-buy="${it.id}" data-currency="diamond" ${Az.diamonds() < dp ? 'disabled' : ''}>💎 ${dp}</button></div>`;
       return `<div class="azitem ${eq ? 'eq' : ''}">${pv}<b>${it.name}</b><small>${it.desc || ''}</small>${btn}</div>`;
     }).join('');
-    $('#shopin', m).innerHTML = `<h2>🛒 Shop</h2><p class="sub">You have <b style="color:var(--a4)">Ⓐ ${Az.coins()}</b> coins and <b>💎 ${Az.diamonds()}</b> diamonds. Buy with either currency!</p><div class="azrow">${tabs}</div><div class="azshopgrid">${items}</div><div class="azrow c" style="margin-top:14px"><button class="azbtn ghost" id="shopx">Close</button></div>`;
+    $('#shopin', m).innerHTML = `<h2>🛒 Shop</h2><p class="sub">You have <b style="color:var(--a4)"><img class="az-coin-icon" src="assets/coin-a.png" alt="A gold coin"> ${Az.coins()}</b> coins and <b>💎 ${Az.diamonds()}</b> diamonds. Buy with either currency!</p><div class="azrow">${tabs}</div><div class="azshopgrid">${items}</div><div class="azrow c" style="margin-top:14px"><button class="azbtn ghost" id="shopx">Close</button></div>`;
    } catch (err) { $('#shopin', m).innerHTML = '<h2>🛒 Shop</h2><p class="sub">Could not load the shop: ' + String(err && err.message || err).replace(/[<>&]/g, '') + '</p><div class="azrow c"><button class="azbtn ghost" id="shopx">Close</button></div>'; }
   }
   m.addEventListener('click', e => {
@@ -814,7 +814,7 @@ Az.login = function () {
     const tag = act ? '<span class="azpill" style="color:var(--a3)">✔ Playing</span>' : '';
     const b = (a, t, ghost) => '<button class="azbtn sm' + (ghost ? ' ghost' : '') + '" data-' + a + '="' + esc(g.id) + '">' + t + '</button>';
     return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 10px;margin:6px 0;border:1px solid ' + (act ? 'var(--a3)' : 'var(--line)') + ';border-radius:14px;background:var(--panel)">' +
-      '<div style="flex:1;min-width:120px"><b>' + esc(g.name) + '</b><br><small style="color:var(--muted)">🆔 ' + esc(g.uid) + ' · Ⓐ ' + g.coins + ' · Lv ' + lvOfXp(g.xp) + '</small></div>' +
+      '<div style="flex:1;min-width:120px"><b>' + esc(g.name) + '</b><br><small style="color:var(--muted)">🆔 ' + esc(g.uid) + ' · <img class="az-coin-icon" src="assets/coin-a.png" alt="A gold coin"> ' + g.coins + ' · Lv ' + lvOfXp(g.xp) + '</small></div>' +
       tag + (act ? '' : b('gsw', '▶ Use')) + b('gdel', '🗑', 1) + '</div>';
   };
   const drawGuests = () => { const c = m.querySelector('#glist'); if (c) c.innerHTML = listGuests().map(gRow).join('') || '<p class="sub" style="text-align:center">No saved guests.</p>'; };
@@ -831,7 +831,7 @@ Az.login = function () {
   }
   const me = db();
   box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login / Guest</h2>' +
-    '<p class="sub" style="text-align:center">You are currently a <b>Guest</b>: ' + esc(Az.name()) + ' · 🆔 ' + esc(me.uid) + ' · Ⓐ ' + me.coins + '</p>' +
+    '<p class="sub" style="text-align:center">You are currently a <b>Guest</b>: ' + esc(Az.name()) + ' · 🆔 ' + esc(me.uid) + ' · <img class="az-coin-icon" src="assets/coin-a.png" alt="A gold coin"> ' + me.coins + '</p>' +
     '<p class="sub" style="text-align:center">Every Gmail has its own separate progress. A new Gmail = a brand-new account. An old Gmail = its old progress.</p>' +
     '<div class="azrow c" style="flex-direction:column;align-items:center"><button class="azbtn" id="gg">🔵 Log in with Google (Gmail)</button><button class="azbtn ghost" id="gl">🔗 Link this guest to a NEW Gmail</button></div><p class="sub" style="text-align:center;font-size:11px">Link sirf aise Gmail se ho sakta hai jo pehle kisi ID se linked nahi hai. Ek ID = ek Gmail.</p>' +
     '<p class="sub" style="text-align:center;margin-top:12px">ya phone OTP se:</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>' + guestBlock;
@@ -950,7 +950,7 @@ Az.finish = function (r) {
   if (r.won && lvl >= g.max && r.progress !== false) note = '<p style="text-align:center;color:var(--a4)">👑 MAX LEVEL! You are a legend!</p>';
   Az.sfx(r.won ? 'win' : 'lose');
   const m = Az.modal(`<div class="azbig">${r.won ? '🏆' : '💥'}</div><h2 style="text-align:center">${r.title || (r.won ? 'You Win!' : 'Game Over')}</h2><p class="sub" style="text-align:center">${r.sub || ''}</p>
-    <div class="azstat"><div><b>+${coins}</b><small>Ⓐ coins</small></div><div><b>+${xp}</b><small>⭐ XP</small></div>${r.score != null ? `<div><b>${r.score}</b><small>${newBest ? '🎉 New best!' : 'score'}</small></div>` : ''}</div>${note}
+    <div class="azstat"><div><b>+${coins}</b><small><img class="az-coin-icon" src="assets/coin-a.png" alt="A gold coin"> coins</small></div><div><b>+${xp}</b><small>⭐ XP</small></div>${r.score != null ? `<div><b>${r.score}</b><small>${newBest ? '🎉 New best!' : 'score'}</small></div>` : ''}</div>${note}
     <div class="azrow c">${(r.won && r.next && lvl < g.max && r.progress !== false) ? '<button class="azbtn" id="fn">Next level ▶</button>' : ''}<button class="azbtn ${r.won ? 'ghost' : ''}" id="fr">🔄 ${r.won ? 'Play again' : 'Try again'}</button></div>
     <div class="azrow c"><button class="azbtn ghost sm" id="fm">⚙️ Change mode</button><button class="azbtn ghost sm" id="fs">🛒 Shop</button><a class="azbtn ghost sm" href="${BASE}index.html">🏠 Home</a></div>`, { sticky: true });
   m.addEventListener('click', e => {
@@ -973,7 +973,7 @@ function init() {
   document.body.prepend(bg);
   const gid = document.body.dataset.game, g = gid && Az.game(gid);
   if (g || document.body.dataset.bar) {
-    const bar = el('div', 'azbar', `<a class="azhome" href="${BASE}index.html" title="Home">🏠</a><div class="aztitle">${g ? g.emoji + ' ' + g.name : 'Ari Game Zone'}</div><div class="azbadges"><span class="azpill" id="azlv">${g ? 'Lv ' + Az.level(gid) : ''}</span><span class="azpill coin" id="azcoins">Ⓐ ${Az.coins()}</span>${g ? '<button class="azbtn-i" id="azshopb" title="Shop">🛒</button>' : ''}<button class="azbtn-i" id="azsnd" title="Sound">${db().sound ? '🔊' : '🔇'}</button><button class="azbtn-i" id="azprof" title="Profile">🆔</button><button class="azbtn-i" id="azthm" title="Theme">🎨</button></div>`);
+    const bar = el('div', 'azbar', `<a class="azhome" href="${BASE}index.html" title="Home">🏠</a><div class="aztitle">${g ? g.emoji + ' ' + g.name : 'Ari Game Zone'}</div><div class="azbadges"><span class="azpill" id="azlv">${g ? 'Lv ' + Az.level(gid) : ''}</span><span class="azpill coin" id="azcoins"><img class="az-coin-icon" src="assets/coin-a.png" alt="A gold coin"> ${Az.coins()}</span>${g ? '<button class="azbtn-i" id="azshopb" title="Shop">🛒</button>' : ''}<button class="azbtn-i" id="azsnd" title="Sound">${db().sound ? '🔊' : '🔇'}</button><button class="azbtn-i" id="azprof" title="Profile">🆔</button><button class="azbtn-i" id="azthm" title="Theme">🎨</button></div>`);
     document.body.insertBefore(bar, bg.nextSibling);
     bar.addEventListener('click', e => {
       const t = e.target.closest('button'); if (!t) return;
