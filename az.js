@@ -496,22 +496,21 @@ function startGrants(u) {
     });
   }, () => {});
 }
+const OWNER_EMAIL = 'kumararihant625@gmail.com';
+const isOwnerAcct = u => !!(u && u.email && String(u.email).toLowerCase() === OWNER_EMAIL && u.emailVerified !== false);
 function postLogin(u, seq) {
   if (!fbDb) return;
   const alive = () => seq === loadSeq && fbUser && fbUser.uid === u.uid;
-  let denied = false;
-  fbDb.ref('admin/ping').once('value')                       // allowed by the rules ONLY for the owner's Firebase account
-    .then(() => {
-      if (!alive()) return; Az.ownerOK = true;
-      if (String(db().uid) !== OWNER_UID) { db().uid = OWNER_UID; save(); accountChanged(); }
-      return fbDb.ref('uidIndex/' + OWNER_UID).set(u.uid);
-    })
-    .catch(e => { if (alive() && !Az.ownerOK) { Az.ownerOK = false; denied = /permission_denied|permission denied/i.test(String((e && (e.code || e.message)) || e)); } })
+  const owner = isOwnerAcct(u);
+  /* The OWNER ID is decided by the Gmail address itself (client side), so it never depends on whether the Firebase rules
+     were published yet. The Firebase RULES still decide the real powers (coins to other players, admin nodes). */
+  if (owner && String(db().uid) !== OWNER_UID) { db().uid = OWNER_UID; save(); accountChanged(); }
+  else if (!owner && String(db().uid) === OWNER_UID) { db().uid = genUid(); save(); accountChanged(); Az.toast && Az.toast('🆔 Ye ID sirf owner ki hai — tumhe nayi Player ID mili: ' + db().uid, 4000); }
+  (owner ? fbDb.ref('admin/ping').once('value').then(() => { if (alive()) Az.ownerOK = true; }) : Promise.resolve())
+    .catch(() => { if (alive()) { Az.ownerOK = false; Az.toast && Az.toast('⚠️ Owner ID mili, par Developer coins ke liye Firebase me naya database.rules.json Publish karo.', 5000); } })
+    .then(() => (alive() && owner) ? fbDb.ref('uidIndex/' + OWNER_UID).set(u.uid).catch(() => {}) : null)
     .then(() => {
       if (!alive()) return;
-      // one ID = one Gmail: the owner ID belongs to the verified owner ONLY. Another Gmail that carries it gets a fresh ID.
-      // (only when the server clearly said "permission denied" - a flaky network must never demote the real owner)
-      if (denied && !Az.ownerOK && String(db().uid) === OWNER_UID) { db().uid = genUid(); save(); accountChanged(); Az.toast && Az.toast('🆔 Ye ID sirf owner ki hai — tumhe nayi Player ID mili: ' + db().uid, 4000); }
       if (String(db().uid) !== OWNER_UID) fbDb.ref('uidIndex/' + db().uid).set(u.uid).catch(() => {});
       startGrants(u);
       try { Az.ownerBtn && Az.ownerBtn(); document.dispatchEvent(new Event('az-owner')); } catch (e) {}

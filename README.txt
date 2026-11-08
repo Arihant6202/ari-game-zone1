@@ -88,4 +88,4 @@ UPDATE v4 (guest profiles, link-to-Gmail, premium guns, Level Devil controls)
 - LEVEL DEVIL: naya move pad (anguthe ko ◀ aur ▶ ke beech bina uthaye slide karo), bada JUMP, "↔️ Swap hands"
   (lefty), aur "🔄 Rotate mode": poori landscape screen, controls side me (player/door ko nahi dhakte).
   Phone portrait me ho tab bhi game 90° ghoom jata hai - bas phone ko tilt karo. Choice account ke saath save hoti hai.
-- Saari HTML ab az.js?v=5 load karti hain (cache refresh ke liye). GitHub me poora folder dobara upload karo.
+- Saari HTML ab az.js?v=6 load karti hain (cache refresh ke liye). GitHub me poora folder dobara upload karo.
