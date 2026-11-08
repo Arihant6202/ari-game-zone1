@@ -121,7 +121,7 @@ a{color:inherit}
   <p class="azmsg" style="color:var(--muted);font-size:12px;font-weight:400">⌨️ Arrow keys / A D move · Space / W / ↑ jump · R restart</p>
 </main>
 <style>.ldpad .azbtn{min-width:84px;font-size:18px;padding:14px 18px;touch-action:none;user-select:none;-webkit-user-select:none}.ldpad .azbtn.sm{min-width:0;font-size:13px;padding:10px 14px}</style>
-<script src="az.js"></script>
+<script src="az.js?v=3"></script>
 <script>
 (function(){
 'use strict';
@@ -266,24 +266,53 @@ function draw(S,pl){
   for(const f of S.fake)drawDoor(f,true,t);
   drawDoor(S.door,false,t);
   const p=S.p;
-  if(!S.dead){ctx.fillStyle='#1d2433';rr(p.x,p.y,PW,PH,7);ctx.fill();ctx.fillStyle=pl.accent;ctx.fillRect(p.x+3,p.y+PH-5,PW-6,3);
-    const ex=p.face>0?7:1;ctx.fillStyle='#fff';ctx.fillRect(p.x+4+ex,p.y+8,6,7);ctx.fillRect(p.x+13+ex-4,p.y+8,6,7);ctx.fillStyle='#111';ctx.fillRect(p.x+7+ex+(p.face>0?2:0),p.y+10,3,4);ctx.fillRect(p.x+16+ex-4+(p.face>0?2:0),p.y+10,3,4);}
+  if(!S.dead){ctx.fillStyle=HERO.color;rr(p.x,p.y,PW,PH,7);ctx.fill();ctx.fillStyle=pl.accent;ctx.fillRect(p.x+3,p.y+PH-5,PW-6,3);
+    const ex=p.face>0?7:1;ctx.fillStyle='#fff';ctx.fillRect(p.x+4+ex,p.y+8,6,7);ctx.fillRect(p.x+13+ex-4,p.y+8,6,7);ctx.fillStyle='#111';ctx.fillRect(p.x+7+ex+(p.face>0?2:0),p.y+10,3,4);ctx.fillRect(p.x+16+ex-4+(p.face>0?2:0),p.y+10,3,4);
+    if(HERO.hat){ctx.font='20px serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillText(HERO.hat,p.x+PW/2,p.y+3);}}
+}
+function drawGhost(){
+  if(!ghost||!net)return;
+  ghost.x+=(ghost.tx-ghost.x)*.35;ghost.y+=(ghost.ty-ghost.y)*.35;
+  ctx.save();ctx.globalAlpha=ghost.d?.2:.6;ctx.fillStyle='#4cc9f0';rr(ghost.x,ghost.y,PW,PH,7);ctx.fill();
+  ctx.globalAlpha=.95;ctx.fillStyle='#fff';ctx.font='bold 11px Poppins,sans-serif';ctx.textAlign='center';ctx.fillText(ghostName.slice(0,12),ghost.x+PW/2,ghost.y-6);ctx.restore();
 }
 const parts=[];
 function burst(x,y){for(let i=0;i<22;i++)parts.push({x,y,vx:(Math.random()-.5)*8,vy:-Math.random()*8,l:1});}
 function drawParts(){for(let i=parts.length-1;i>=0;i--){const q=parts[i];q.x+=q.vx;q.y+=q.vy;q.vy+=.4;q.l-=.03;if(q.l<=0){parts.splice(i,1);continue;}ctx.globalAlpha=q.l;ctx.fillStyle='#e63946';ctx.fillRect(q.x,q.y,6,6);ctx.globalAlpha=1;}}
 
 /* ============================ game flow ============================ */
-let O=null,level=1,S=null,place=null,deaths=0,totalDeaths=0,held={l:0,r:0,j:0},acc=0,last=0,raf=0,paused=false,over=false,dieT=0;
+let HERO={color:'#1d2433',hat:''},net=null,ghost=null,ghostName='Friend',tick=0,O=null,level=1,S=null,place=null,deaths=0,totalDeaths=0,held={l:0,r:0,j:0},acc=0,last=0,raf=0,paused=false,over=false,dieT=0;
 const TAUNT=['Hehe, phir se! 😈','Ye to trap tha!','Dhyaan se dekho...','Aise nahi, waise!','Shaitan jeet gaya 😂','Ek aur koshish!','Mere paas aur bhi traps hain 😈'];
 function hud(){$('hLv').textContent='Level '+level+' / '+LEVELS.length;$('hDeath').textContent='💀 '+deaths;$('hName').textContent=S?LEVELS[level-1]().name:'—';}
-function begin(n){level=Math.max(1,Math.min(LEVELS.length,n|0));place=Az.place(level);S=build(level);deaths=0;over=false;dieT=0;parts.length=0;acc=0;last=performance.now();held={l:0,r:0,j:0};hud();$('msg').textContent=LEVELS[level-1]().taunt;if(!raf)raf=requestAnimationFrame(loop);}
+function begin(n){HERO=Az.eq('hero');ghost=null;tick=0;level=Math.max(1,Math.min(LEVELS.length,n|0));place=Az.place(level);S=build(level);deaths=0;over=false;dieT=0;parts.length=0;acc=0;last=performance.now();held={l:0,r:0,j:0};hud();$('msg').textContent=LEVELS[level-1]().taunt;if(!raf)raf=requestAnimationFrame(loop);}
 function respawn(){S=build(level);dieT=0;parts.length=0;$('msg').textContent=TAUNT[(Math.max(1,deaths)-1)%TAUNT.length];hud();}
 function win(){over=true;Az.sfx('win');
+  if(net){
+    net.send({t:'win'});
+    Az.finish({game:'leveldevil',level,diff:'medium',won:true,base:30,score:Math.max(0,1000-deaths*50),progress:false,
+      title:'🏁 Tum pehle pahunche!',sub:deaths?('Deaths: '+deaths+' — '+ghostName+' ko peeche chhod diya!'):'Ek bhi death nahi! 😈',retry:()=>rematch()});
+    return;
+  }
   Az.finish({game:'leveldevil',level,diff:'medium',won:true,base:Math.max(10,26-deaths),score:Math.max(0,1000-deaths*50),
     title:'😈 Level '+level+' clear!',sub:deaths?('Deaths: '+deaths+' — shaitan ne khoob troll kiya.'):'Ek bhi death nahi! Bhagwan ho kya?',
     next:lv=>begin(lv),retry:lv=>begin(lv)});}
+/* ---- online race: both players get the SAME level (from the shared seed); first to the real door wins ---- */
+const lvOf=seed=>1+((seed>>>0)%LEVELS.length);
+function rematch(){
+  if(!net)return;
+  if(O.host){const seed=Math.floor(Math.random()*1e9);net.send({t:'again',seed});begin(lvOf(seed));}
+  else{net.send({t:'ask'});Az.toast('Host ka wait… ⏳',2500);}
+}
+function onNet(m){
+  if(!m)return;
+  if(m.t==='p'){ if(!ghost)ghost={x:m.x,y:m.y,tx:m.x,ty:m.y,d:0};ghost.tx=m.x;ghost.ty=m.y;ghost.d=m.d; }
+  else if(m.t==='win'){ if(over)return; over=true;Az.sfx('lose');
+    Az.finish({game:'leveldevil',level,diff:'medium',won:false,base:30,progress:false,title:'😔 '+ghostName+' pehle pahuncha',sub:'Rematch khelo aur badla lo!',retry:()=>rematch()}); }
+  else if(m.t==='again'&&!O.host){begin(lvOf(m.seed));}
+  else if(m.t==='ask'&&O.host){rematch();}
+}
 function frame(){
+  if(net&&S&&++tick%3===0)net.send({t:'p',x:Math.round(S.p.x),y:Math.round(S.p.y),d:S.dead?1:0,dt:deaths});
   const inp={l:held.l,r:held.r,j:held.j};
   if(!S.dead&&!S.won)step(S,inp);
   for(const e of S.ev){ if(e==='jump')Az.sfx('jump'); else if(e==='pop'||e==='boom'||e==='reveal'||e==='hop')Az.sfx('pop'); else if(e==='die'){Az.sfx('hit');burst(S.p.x+PW/2,S.p.y+PH/2);deaths++;totalDeaths++;hud();} }
@@ -296,7 +325,7 @@ function loop(t){
   if(!S||paused){last=t;return;}
   acc+=Math.min(100,t-last);last=t;
   while(acc>=1000/60){acc-=1000/60;if(!over)frame();}
-  draw(S,place);drawParts();
+  draw(S,place);drawGhost();drawParts();
 }
 document.addEventListener('visibilitychange',()=>{paused=document.hidden;last=performance.now();});
 
@@ -311,7 +340,17 @@ addEventListener('blur',()=>{held={l:0,r:0,j:0};});
 $('rst').onclick=()=>{if(S&&!over)respawn();};
 
 window.__LD={LEVELS,build,step,hit,PW,PH,W,H,get S(){return S;},begin:n=>{O=O||{};begin(n);},over:()=>over};
-Az.start({game:'leveldevil',noDiff:true,onStart:o=>{O=o;begin(o.level);}});
+Az.start({game:'leveldevil',noDiff:true,onStart:o=>{
+  O=o;net=o.mode==='online'?o.net:null;
+  if(net){
+    ghostName=(net.peer&&net.peer.name)||'Friend';
+    net.on(onNet);
+    setInterval(()=>{if(net&&net.peer&&net.peer.name)ghostName=net.peer.name;},800);
+    net.onclose(()=>{if(!over){over=true;Az.finish({game:'leveldevil',level,diff:'medium',won:true,base:15,progress:false,title:'Friend left',sub:'Dost game chhod gaya.',retry:()=>location.reload()});}});
+    $('rst').hidden=false;begin(lvOf(o.seed));
+    $('msg').textContent='🏁 Race! Pehle door tak pahunchne wala jeetega — '+'saamne wala 🔵 ghost hai.';
+  }else begin(o.level);
+}});
 })();
 </script>
 </body>

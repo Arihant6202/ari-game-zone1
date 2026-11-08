@@ -62,13 +62,13 @@ const GAMES = [
   { id: 'chess', file: 'chess.html', name: 'Royal Chess', emoji: '♟️', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: ['piece'], desc: 'Full chess with a smart computer (50 levels), 2 players, or play online.' },
   { id: 'ttt', file: 'tic-tac-toe.html', name: 'Tic Tac Toe', emoji: '⭕', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: [], desc: 'Classic X and O. Beat the AI, play a friend or go online.' },
   { id: 'c4', file: 'connect-four.html', name: 'Connect Four', emoji: '🔴', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: [], desc: 'Drop discs and connect four. AI levels, 2 players or online.' },
-  { id: 'ludo', file: 'ludo.html', name: 'Ludo', emoji: '🎲', cat: 'Board', max: 1, modes: ['single', 'local', 'online'], shop: [], desc: 'Classic Ludo for 2-4 players: vs computer, on one phone, or online with a friend.' },
+  { id: 'ludo', file: 'ludo.html', name: 'Ludo', emoji: '🎲', cat: 'Board', max: 1, modes: ['single', 'local', 'online'], shop: ['dice', 'token'], desc: 'Classic Ludo for 2-4 players: vs computer, on one phone, or online with a friend. Shop: dice & token skins.' },
   { id: 'flyer', file: 'sky-flyer.html', name: 'Sky Flyer', emoji: '🐤', cat: 'Arcade', max: 100, modes: ['single'], shop: ['bird'], desc: 'Tap to fly through the gaps. Pick a cool bird skin.' },
   { id: 'snake', file: 'snake-evolution.html', name: 'Snake Evolution', emoji: '🐍', cat: 'Arcade', max: 100, modes: ['single'], shop: ['snake'], desc: 'Eat, grow and avoid walls. Obstacles and speed grow each level.' },
   { id: 'brick', file: 'brick-breaker.html', name: 'Brick Breaker', emoji: '🧱', cat: 'Arcade', max: 100, modes: ['single'], shop: ['ball'], desc: 'Break all bricks, catch power-ups. 100 different layouts.' },
   { id: 'mole', file: 'whack-a-mole.html', name: 'Whack-a-Mole', emoji: '🐹', cat: 'Fun', max: 100, modes: ['single'], shop: [], desc: 'Tap the moles fast, avoid bombs and grab golden moles.' },
-  { id: 'leveldevil', file: 'level-devil.html', name: 'Level Devil', emoji: '😈', cat: 'Platformer', max: 20, modes: ['single'], shop: [], desc: 'A tricky platform challenge with hidden surprises and 20 stages.' },
-  { id: 'uno', file: 'uno.html', name: 'UNO', emoji: '🃏', cat: 'Cards', max: 1, modes: ['single', 'local'], shop: [], desc: 'Classic colour-and-number card game: play vs computer bots or pass-and-play with friends.' },
+  { id: 'leveldevil', file: 'level-devil.html', name: 'Level Devil', emoji: '😈', cat: 'Platformer', max: 20, modes: ['single', 'online'], shop: ['hero'], desc: 'A tricky platform challenge with hidden surprises and 20 stages. Race a friend online to the door!' },
+  { id: 'uno', file: 'uno.html', name: 'UNO', emoji: '🃏', cat: 'Cards', max: 1, modes: ['single', 'local', 'online'], shop: ['cardback'], desc: 'Classic colour-and-number card game: vs computer bots, pass-and-play, or online 1v1 with a friend.' },
 ];
 
 /* ------------------------------ places (change as levels go up) ------------------------------ */
@@ -159,6 +159,38 @@ const SHOP = {
     { id: 'l_ice', name: 'Ice Ball', price: 300, color: '#9be7ff', desc: 'Frozen.' },
     { id: 'l_rainbow', name: 'Rainbow', price: 900, color: 'rainbow', desc: 'Colours cycle.' },
     { id: 'l_gold', name: 'Gold', price: 2000, color: '#ffd700', desc: 'Pure gold.' },
+  ] },
+  dice: { title: 'Ludo dice', emoji: '🎲', items: [
+    { id: 'd_classic', name: 'Classic', price: 0, bg: 'linear-gradient(135deg,#00e5ff,#ff3d9a)', fg: '#10061f', glow: '', desc: 'Starter dice.' },
+    { id: 'd_gold', name: 'Gold Dice', price: 300, bg: '#ffd700', fg: '#5a3b00', glow: '', desc: 'Shiny gold.' },
+    { id: 'd_ruby', name: 'Ruby Dice', price: 600, bg: '#e63946', fg: '#ffffff', glow: '', desc: 'Deep red ruby.' },
+    { id: 'd_neon', name: 'Neon Dice', price: 900, bg: '#10002b', fg: '#00e5ff', glow: '#00e5ff', desc: 'Glowing neon.' },
+    { id: 'd_galaxy', name: 'Galaxy Dice', price: 1500, bg: '#3a0ca3', fg: '#ffd6ff', glow: '#b5179e', desc: 'Purple galaxy glow.' },
+    { id: 'd_diamond', name: 'Diamond Dice', price: 2500, bg: '#bff3ff', fg: '#0077b6', glow: '#7ee8ff', desc: 'Legendary diamond.' },
+  ] },
+  token: { title: 'Ludo tokens', emoji: '♟', items: [
+    { id: 'k_classic', name: 'Classic', price: 0, ring: '#ffffff', dot: '#ffffff', desc: 'Starter tokens.' },
+    { id: 'k_gold', name: 'Gold Ring', price: 400, ring: '#ffd700', dot: '#ffd700', desc: 'Golden outline.' },
+    { id: 'k_black', name: 'Shadow', price: 700, ring: '#0b0b0f', dot: '#8d99ae', desc: 'Dark outline.' },
+    { id: 'k_neon', name: 'Neon', price: 1000, ring: '#00e5ff', dot: '#ff3d9a', desc: 'Neon glow ring.' },
+    { id: 'k_royal', name: 'Royal', price: 1800, ring: '#ffd700', dot: '#6a1b9a', desc: 'Gold ring, purple jewel.' },
+  ] },
+  cardback: { title: 'UNO card backs', emoji: '🃏', items: [
+    { id: 'u_classic', name: 'Classic', price: 0, c1: '#e53935', c2: '#111111', desc: 'Starter back.' },
+    { id: 'u_ocean', name: 'Ocean', price: 300, c1: '#2dd4ff', c2: '#03324f', desc: 'Cool blue.' },
+    { id: 'u_neon', name: 'Neon Pink', price: 600, c1: '#ff3d9a', c2: '#1a0033', desc: 'Pink neon.' },
+    { id: 'u_forest', name: 'Forest', price: 900, c1: '#80ed99', c2: '#0b3d20', desc: 'Green woods.' },
+    { id: 'u_galaxy', name: 'Galaxy', price: 1500, c1: '#b794f4', c2: '#0a0020', desc: 'Purple space.' },
+    { id: 'u_gold', name: 'Royal Gold', price: 2500, c1: '#ffd700', c2: '#4a2c00', desc: 'Legendary gold.' },
+  ] },
+  hero: { title: 'Devil heroes', emoji: '😈', items: [
+    { id: 'h_shadow', name: 'Shadow', price: 0, color: '#1d2433', hat: '', desc: 'Starter hero.' },
+    { id: 'h_red', name: 'Red Rascal', price: 250, color: '#c1121f', hat: '', desc: 'Bold red.' },
+    { id: 'h_robot', name: 'Robo', price: 700, color: '#8d99ae', hat: '🤖', desc: 'Metal hero.' },
+    { id: 'h_ninja', name: 'Ninja', price: 1000, color: '#0b0b0f', hat: '🥷', desc: 'Silent & deadly.' },
+    { id: 'h_pumpkin', name: 'Pumpkin', price: 1500, color: '#ff7f11', hat: '🎃', desc: 'Spooky orange.' },
+    { id: 'h_ghost', name: 'Ghost', price: 2000, color: '#f1faee', hat: '👻', desc: 'Boo!' },
+    { id: 'h_king', name: 'King', price: 3000, color: '#ffb703', hat: '👑', desc: 'Royal hero.' },
   ] },
 };
 const ALL_ITEMS = {};
@@ -276,6 +308,7 @@ Az.profile = function (first) {
     const r2 = document.createElement('div'); r2.className = 'azrow c'; r2.append(bt, rm); row.append(av, r2, fi); m.querySelector('#pfuid').parentNode.before(row); }
   const inp = m.querySelector('#pfname'); inp.value = db().nameSet ? db().name : (fbUser && fbUser.displayName ? Az.cleanName(fbUser.displayName) : '');
   if (fbUser) { const ac = document.createElement('p'); ac.className = 'sub'; ac.style.textAlign = 'center'; ac.textContent = '☁️ ' + (fbUser.email || fbUser.phoneNumber || 'Logged in'); m.querySelector('#pfuid').parentNode.after(ac); }
+  if (Az.isOwner()) { const dv = document.createElement('div'); dv.className = 'azrow c'; const db2 = document.createElement('button'); db2.className = 'azbtn sm'; db2.textContent = '👑 Developer Mode'; db2.onclick = () => { location.href = BASE + 'owner-admin.html'; }; dv.appendChild(db2); m.querySelector('#pferr').after(dv); }
   setTimeout(() => { try { inp.focus(); } catch (e) {} }, 50);
   const doSave = () => { if (Az.setName(inp.value)) { m.close(); Az.toast('✅ Naam save: ' + Az.name()); } else m.querySelector('#pferr').textContent = 'Naam kam se kam 2 characters ka ho.'; };
   m.addEventListener('click', e => {
@@ -289,18 +322,21 @@ Az.profile = function (first) {
 
 /* ------------------------------ shop modal ------------------------------ */
 Az.shop = function (slots, startSlot) {
-  slots = (slots && slots.length) ? slots : Object.keys(SHOP);
+  slots = ((slots && slots.length) ? slots : Object.keys(SHOP)).filter(k => SHOP[k]);
+  if (!slots.length) slots = Object.keys(SHOP);
   let cur = startSlot && slots.includes(startSlot) ? startSlot : slots[0];
   const m = Az.modal('<div id="shopin"></div>');
   function draw() {
+   try {
     const tabs = slots.map(s => `<button class="azchip ${s === cur ? 'on' : ''}" data-s="${s}">${SHOP[s].emoji} ${SHOP[s].title}</button>`).join('');
     const items = SHOP[cur].items.map(it => {
       const own = Az.owned(it.id), eq = Az.eq(cur).id === it.id;
-      const pv = it.emoji ? `<div class="pv">${it.emoji}</div>` : (it.c1 ? `<div class="pv"><div class="sw" style="background:${it.c1 === 'rainbow' ? 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)' : `linear-gradient(135deg,${it.c1},${it.c2})`}"></div></div>` : (it.w ? `<div class="pv"><div class="sw" style="background:linear-gradient(90deg,${it.w} 50%,${it.b} 50%)"></div></div>` : `<div class="pv"><div class="sw" style="background:${it.color === 'rainbow' ? 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)' : it.color}">${it.hat || ''}</div></div>`));
+      const pv = it.bg ? `<div class="pv"><div class="sw" style="background:${it.bg};color:${it.fg};display:grid;place-items:center;font-size:20px;border-radius:10px;${it.glow ? 'box-shadow:0 0 14px ' + it.glow : ''}">⚄</div></div>` : it.ring ? `<div class="pv"><div class="sw" style="background:${it.dot};border-color:${it.ring}"></div></div>` : it.emoji ? `<div class="pv">${it.emoji}</div>` : (it.c1 ? `<div class="pv"><div class="sw" style="background:${it.c1 === 'rainbow' ? 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)' : `linear-gradient(135deg,${it.c1},${it.c2})`}"></div></div>` : (it.w ? `<div class="pv"><div class="sw" style="background:linear-gradient(90deg,${it.w} 50%,${it.b} 50%)"></div></div>` : `<div class="pv"><div class="sw" style="background:${it.color === 'rainbow' ? 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)' : it.color}">${it.hat || ''}</div></div>`));
       const btn = eq ? '<button class="azbtn sm ghost" disabled>✔ Equipped</button>' : own ? `<button class="azbtn sm" data-eq="${it.id}">Equip</button>` : `<button class="azbtn sm" data-buy="${it.id}" ${Az.coins() < it.price ? 'style="filter:grayscale(.7)"' : ''}>🪙 ${it.price}</button>`;
       return `<div class="azitem ${eq ? 'eq' : ''}">${pv}<b>${it.name}</b><small>${it.desc || ''}</small>${btn}</div>`;
     }).join('');
     $('#shopin', m).innerHTML = `<h2>🛒 Shop</h2><p class="sub">You have <b style="color:var(--a4)">🪙 ${Az.coins()}</b> coins. Earn more by winning levels!</p><div class="azrow">${tabs}</div><div class="azshopgrid">${items}</div><div class="azrow c" style="margin-top:14px"><button class="azbtn ghost" id="shopx">Close</button></div>`;
+   } catch (err) { $('#shopin', m).innerHTML = '<h2>🛒 Shop</h2><p class="sub">Shop load nahi hua: ' + String(err && err.message || err).replace(/[<>&]/g, '') + '</p><div class="azrow c"><button class="azbtn ghost" id="shopx">Close</button></div>'; }
   }
   m.addEventListener('click', e => {
     const t = e.target.closest('button'); if (!t) return;
@@ -349,7 +385,9 @@ const code4 = () => { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; 
    - Different Gmail  -> different uid -> different local record + different cloud record.
    - Same Gmail       -> same record on every device.
    - Logout           -> a brand-new guest id (fresh coins, fresh progress, fresh player ID).            */
-let fbUser = null, fbDb = null, pushT = null, fbP = null, loadSeq = 0, cloudUid = null, nameTimer = null;
+let fbUser = null, fbDb = null, pushT = null, fbP = null, loadSeq = 0, cloudUid = null, nameTimer = null, grantRef = null;
+const OWNER_UID = '97835276', MAXC = 999999999, seenGrants = {};
+Az.OWNER_UID = OWNER_UID; Az.ownerOK = false;
 const FBV = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-';
 const gdPath = uid => 'users/' + uid + '/gameData';
 
@@ -357,6 +395,7 @@ function accountChanged() {            // tell the page (home screen) to repaint
   try { Az.applyTheme(db().theme); } catch (e) {}
   Az.refresh && Az.refresh();
   if (typeof drawTop === 'function') { try { drawTop(); } catch (e) {} }
+  try { Az.ownerBtn && Az.ownerBtn(); } catch (e) {}
   try { document.dispatchEvent(new Event('az-account')); } catch (e) {}
 }
 function setLoginBtn() {
@@ -404,10 +443,75 @@ function loadFb() {
   return fbP;
 }
 
+/* ---- Owner / Developer mode + player gifts (Spark-plan safe: enforced by Firebase Database RULES, not by this file) ----
+   admin/ping          : readable ONLY by the owner's Firebase account (rules)  -> proves "this is the owner"
+   uidIndex/<gameUid>  : maps a player's 8-digit ID -> Firebase uid (written by that player)
+   adminGrants/<uid>   : owner writes coin gifts here; the receiving player applies + deletes them                 */
+function stopGrants() { if (grantRef) { try { grantRef.off(); } catch (e) {} grantRef = null; } }
+function applyGrant(g) {
+  const n = Math.round(+g.coins); if (!isFinite(n)) return;
+  const was = db().coins;
+  db().coins = Math.max(0, Math.min(MAXC, g.mode === 'set' ? n : was + n)); save(); Az.refresh();
+  const d = db().coins - was; Az.toast && Az.toast(g.mode === 'set' ? '🎁 Owner ne tumhare coins ' + db().coins + ' kar diye!' : (d >= 0 ? '🎁 Owner ne +' + d + ' coins bheje!' : '⚠️ Owner ne ' + (-d) + ' coins kam kiye'), 3500);
+  try { Az.sfx('coin'); } catch (e) {}
+}
+function startGrants(u) {
+  stopGrants(); if (!fbDb) return;
+  const ref = grantRef = fbDb.ref('adminGrants/' + u.uid);
+  ref.on('value', snap => {
+    if (!fbUser || fbUser.uid !== u.uid || cloudUid !== u.uid) return;
+    const v = snap.val(); if (!v || typeof v !== 'object') return;
+    Object.keys(v).forEach(id => {
+      if (seenGrants[id]) return; seenGrants[id] = 1; const g = v[id];
+      ref.child(id).remove().then(() => { if (g && typeof g.coins === 'number' && fbUser && fbUser.uid === u.uid) applyGrant(g); }).catch(() => { delete seenGrants[id]; });
+    });
+  }, () => {});
+}
+function postLogin(u, seq) {
+  if (!fbDb) return;
+  const alive = () => seq === loadSeq && fbUser && fbUser.uid === u.uid;
+  fbDb.ref('admin/ping').once('value')                       // allowed by the rules ONLY for the owner's Firebase account
+    .then(() => {
+      if (!alive()) return; Az.ownerOK = true;
+      if (String(db().uid) !== OWNER_UID) { db().uid = OWNER_UID; save(); accountChanged(); }
+      return fbDb.ref('uidIndex/' + OWNER_UID).set(u.uid);
+    })
+    .catch(() => { if (alive() && !Az.ownerOK) Az.ownerOK = false; })
+    .then(() => {
+      if (!alive()) return;
+      if (String(db().uid) !== OWNER_UID) fbDb.ref('uidIndex/' + db().uid).set(u.uid).catch(() => {});
+      startGrants(u);
+      try { Az.ownerBtn && Az.ownerBtn(); document.dispatchEvent(new Event('az-owner')); } catch (e) {}
+    });
+}
+Az.isOwner = () => String(db().uid) === OWNER_UID;
+Az.devSetCoins = function (n) { if (!Az.isOwner()) return false; n = Math.round(+n); if (!isFinite(n)) return false; db().coins = Math.max(0, Math.min(MAXC, n)); save(); Az.refresh(); return true; };
+Az.devAddCoins = function (n) { n = Math.round(+n); return isFinite(n) && Az.devSetCoins(db().coins + n); };
+Az.devGive = function (gid, amount, mode) {
+  return Promise.resolve().then(() => {
+    if (!Az.isOwner()) throw new Error('Ye sirf owner ID ' + OWNER_UID + ' ke liye hai.');
+    if (!fbUser || !fbDb) throw new Error('Pehle Google/Phone se login karo.');
+    if (!Az.ownerOK) throw new Error('Owner verify nahi hua. database.rules.json me apna Firebase Auth UID daalo (ADMIN-SETUP.txt) aur Publish karo.');
+    gid = String(gid || '').replace(/\D/g, ''); amount = Math.round(+amount);
+    if (!/^\d{8}$/.test(gid)) throw new Error('Player ID 8 digit ki honi chahiye.');
+    if (!isFinite(amount) || Math.abs(amount) > 1e9) throw new Error('Coins sahi number me daalo.');
+    return fbDb.ref('uidIndex/' + gid).once('value').then(s => {
+      const t = s.val(); if (!t) throw new Error('Is Player ID ka account nahi mila. Us player ko ek baar login karke game kholna hoga.');
+      return fbDb.ref('adminGrants/' + t).push({ coins: amount, mode: mode === 'set' ? 'set' : 'add', ts: firebase.database.ServerValue.TIMESTAMP }).then(() => gid);
+    });
+  });
+};
+Az.ownerBtn = function () {       // home-page button: visible ONLY on the owner ID
+  const cb = document.getElementById('admincoins'); if (!cb) return;
+  if (!Az.isOwner()) { cb.style.display = 'none'; cb.onclick = null; return; }
+  cb.style.display = ''; cb.textContent = '👑 Developer Mode'; cb.onclick = () => { location.href = BASE + 'owner-admin.html'; };
+};
+Az.whenAuth = () => { if (!LS.get('az_login')) return Promise.resolve(null); return loadFb().then(() => null).catch(() => null); };
+
 function afterLogout() {
   // 'az_login' is the cross-tab "a session is still open" flag: whoever sees it first does the cleanup once.
   const hadSession = !!fbUser || !!LS.get('az_login');
-  fbUser = null; cloudUid = null; loadSeq++; clearTimeout(pushT); pushT = null;
+  fbUser = null; cloudUid = null; loadSeq++; clearTimeout(pushT); pushT = null; stopGrants(); Az.ownerOK = false;
   if (hadSession && LS.get('az_login')) rotateGuest();      // NEW guest identity after a real logout
   LS.del('az_login'); LS.del('az_active_key');
   ACTIVE_KEY = guestKey(); D = null; db();
@@ -419,6 +523,7 @@ function afterLogin(u) {
   if (fbUser && fbUser.uid === u.uid && cloudUid === u.uid && ACTIVE_KEY === 'az2:user:' + u.uid) return;
   if (fbUser && fbUser.uid !== u.uid) flushPush();           // save the previous account first, to ITS own node
   const key = 'az2:user:' + u.uid, hadLocal = !!LS.get(key);
+  stopGrants(); Az.ownerOK = false;
   fbUser = u; cloudUid = null; clearTimeout(pushT); pushT = null;
   ACTIVE_KEY = key; D = null;
   LS.set('az_login', '1'); LS.set('az_active_key', key);
@@ -442,7 +547,7 @@ function afterLogin(u) {
     } else {
       cloudUid = u.uid; D = db(); doPush(); Az.toast && Az.toast('☁️ New account created');
     }
-    accountChanged(); askNameIfNeeded();
+    accountChanged(); askNameIfNeeded(); postLogin(u, seq);
   }).catch(e => {
     if (seq !== loadSeq) return;
     Az.toast && Az.toast('Cloud load failed: ' + (e.message || 'check database rules') + ' — cloud save paused');
@@ -461,7 +566,8 @@ Az.login = function () {
   const box = () => m.querySelector('#lgin');
   if (fbUser) {
     const who = String(fbUser.email || fbUser.phoneNumber || fbUser.displayName || '').replace(/[<>&"]/g, '');
-    box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + who + '<br>Player ID: <b>' + Az.uid() + '</b><br>Profile cloud me saved hai ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div><p class="sub" style="text-align:center;font-size:11px">Logout ke baad naya guest ID banega (naya progress).</p>';
+    box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + who + '<br>Player ID: <b>' + Az.uid() + '</b><br>Profile cloud me saved hai ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div><p class="sub" style="text-align:center;font-size:11px">Logout ke baad naya guest ID banega (naya progress).</p><p class="sub" style="text-align:center;font-size:10px;word-break:break-all;opacity:.7">Firebase UID (tap to copy):<br><span id="fbuid" style="cursor:pointer"></span></p>';
+    const fu = box().querySelector('#fbuid'); fu.textContent = fbUser.uid; fu.onclick = () => { try { navigator.clipboard.writeText(fbUser.uid); Az.toast('📋 Firebase UID copied'); } catch (x) {} };
     m.addEventListener('click', e => { if (e.target.id === 'lo') { e.target.disabled = true; e.target.textContent = 'Logging out…'; Az.logout().then(() => { m.close(); Az.toast && Az.toast('👋 Logout ho gaya — naya guest ID'); }); } });
     return m;
   }
@@ -509,7 +615,7 @@ Az.start = function (cfg) {
     let play;
     if (st.mode === 'online') play = `<div class="azlbl">Online room</div><div class="azrow c"><button class="azbtn" id="mk">➕ Create room</button><span style="align-self:center;color:var(--muted)">or</span><input class="azinput" id="jc" maxlength="4" placeholder="CODE"><button class="azbtn ghost" id="jn">Join</button></div><div class="azerr" id="neterr"></div><div id="netinfo"></div>`;
     else play = `<div class="azrow c" style="margin-top:18px"><button class="azbtn" id="go" style="font-size:17px;padding:13px 34px">▶ Play</button></div>`;
-    $('#stin', m).innerHTML = `<div class="azbig">${g.emoji}</div><h2 style="text-align:center">${g.name}</h2><p class="sub" style="text-align:center">${g.desc}</p>${modes}${diff}${lvl}${extra}${play}<div class="azrow c" style="margin-top:14px"><a class="azbtn ghost sm" href="${BASE}index.html">🏠 Home</a>${g.shop.length ? '<button class="azbtn ghost sm" id="sh">🛒 Shop</button>' : ''}</div>`;
+    $('#stin', m).innerHTML = `<div class="azbig">${g.emoji}</div><h2 style="text-align:center">${g.name}</h2><p class="sub" style="text-align:center">${g.desc}</p>${modes}${diff}${lvl}${extra}${play}<div class="azrow c" style="margin-top:14px"><a class="azbtn ghost sm" href="${BASE}index.html">🏠 Home</a><button class="azbtn ghost sm" id="sh">🛒 Shop</button></div>`;
   }
   function online(kind, jcode) {
     const err = t => { const e = $('#neterr', m); if (e) e.textContent = t; };
@@ -548,7 +654,7 @@ Az.start = function (cfg) {
     else if (t.dataset.lv) { st.level = Math.max(1, Math.min(Az.level(g.id), st.level + (+t.dataset.lv))); draw(); }
     else if (t.dataset.ex) { st.extra[t.dataset.ex] = t.dataset.v; draw(); }
     else if (t.id === 'go') begin({ mode: st.mode, diff: st.diff, level: st.mode === 'single' ? st.level : 1, extra: st.extra, net: null, seed: Math.floor(Math.random() * 1e9), host: true });
-    else if (t.id === 'sh') Az.shop(g.shop);
+    else if (t.id === 'sh') Az.shop(g.shop.length ? g.shop : null);
     else if (t.id === 'mk') online('host');
     else if (t.id === 'jn') online('join', $('#jc', m).value);
   });
@@ -575,13 +681,13 @@ Az.finish = function (r) {
   const m = Az.modal(`<div class="azbig">${r.won ? '🏆' : '💥'}</div><h2 style="text-align:center">${r.title || (r.won ? 'You Win!' : 'Game Over')}</h2><p class="sub" style="text-align:center">${r.sub || ''}</p>
     <div class="azstat"><div><b>+${coins}</b><small>🪙 coins</small></div><div><b>+${xp}</b><small>⭐ XP</small></div>${r.score != null ? `<div><b>${r.score}</b><small>${newBest ? '🎉 New best!' : 'score'}</small></div>` : ''}</div>${note}
     <div class="azrow c">${(r.won && r.next && lvl < g.max && r.progress !== false) ? '<button class="azbtn" id="fn">Next level ▶</button>' : ''}<button class="azbtn ${r.won ? 'ghost' : ''}" id="fr">🔄 ${r.won ? 'Play again' : 'Try again'}</button></div>
-    <div class="azrow c"><button class="azbtn ghost sm" id="fm">⚙️ Change mode</button>${g.shop.length ? '<button class="azbtn ghost sm" id="fs">🛒 Shop</button>' : ''}<a class="azbtn ghost sm" href="${BASE}index.html">🏠 Home</a></div>`, { sticky: true });
+    <div class="azrow c"><button class="azbtn ghost sm" id="fm">⚙️ Change mode</button><button class="azbtn ghost sm" id="fs">🛒 Shop</button><a class="azbtn ghost sm" href="${BASE}index.html">🏠 Home</a></div>`, { sticky: true });
   m.addEventListener('click', e => {
     const t = e.target.closest('button'); if (!t) return;
     if (t.id === 'fn') { m.close(); Az.setBadge('Lv ' + (lvl + 1)); r.next(lvl + 1); }
     else if (t.id === 'fr') { m.close(); r.retry ? r.retry(lvl) : location.reload(); }
     else if (t.id === 'fm') location.reload();
-    else if (t.id === 'fs') Az.shop(g.shop);
+    else if (t.id === 'fs') Az.shop(g.shop.length ? g.shop : null);
   });
   return m;
 };
@@ -596,11 +702,11 @@ function init() {
   document.body.prepend(bg);
   const gid = document.body.dataset.game, g = gid && Az.game(gid);
   if (g || document.body.dataset.bar) {
-    const bar = el('div', 'azbar', `<a class="azhome" href="${BASE}index.html" title="Home">🏠</a><div class="aztitle">${g ? g.emoji + ' ' + g.name : 'Ari Game Zone'}</div><div class="azbadges"><span class="azpill" id="azlv">${g ? 'Lv ' + Az.level(gid) : ''}</span><span class="azpill coin" id="azcoins">🪙 ${Az.coins()}</span>${g && g.shop.length ? '<button class="azbtn-i" id="azshopb" title="Shop">🛒</button>' : ''}<button class="azbtn-i" id="azsnd" title="Sound">${db().sound ? '🔊' : '🔇'}</button><button class="azbtn-i" id="azprof" title="Profile">🆔</button><button class="azbtn-i" id="azthm" title="Theme">🎨</button></div>`);
+    const bar = el('div', 'azbar', `<a class="azhome" href="${BASE}index.html" title="Home">🏠</a><div class="aztitle">${g ? g.emoji + ' ' + g.name : 'Ari Game Zone'}</div><div class="azbadges"><span class="azpill" id="azlv">${g ? 'Lv ' + Az.level(gid) : ''}</span><span class="azpill coin" id="azcoins">🪙 ${Az.coins()}</span>${g ? '<button class="azbtn-i" id="azshopb" title="Shop">🛒</button>' : ''}<button class="azbtn-i" id="azsnd" title="Sound">${db().sound ? '🔊' : '🔇'}</button><button class="azbtn-i" id="azprof" title="Profile">🆔</button><button class="azbtn-i" id="azthm" title="Theme">🎨</button></div>`);
     document.body.insertBefore(bar, bg.nextSibling);
     bar.addEventListener('click', e => {
       const t = e.target.closest('button'); if (!t) return;
-      if (t.id === 'azshopb') Az.shop(g.shop);
+      if (t.id === 'azshopb') Az.shop(g.shop.length ? g.shop : null);
       else if (t.id === 'azsnd') { db().sound = !db().sound; save(); t.textContent = db().sound ? '🔊' : '🔇'; }
       else if (t.id === 'azthm') Az.cycleTheme();
       else if (t.id === 'azprof') Az.profile();
@@ -609,21 +715,7 @@ function init() {
   { const dly = document.getElementById('daily'); if (dly && !document.getElementById('azlogin')) { const b = el('button', 'azbtn sm ghost', '👤 Login'); b.id = 'azlogin'; dly.parentNode.insertBefore(b, dly); b.onclick = () => Az.login(); } }
   if (LS.get('az_login')) authInit();
   { const pb = document.getElementById('profb'); if (pb) pb.onclick = () => Az.profile(); }
-  {
-    // Owner-only entry point. Actual admin authorization is enforced by Firebase callable functions.
-    const OWNER_GAME_UID = '97835276';
-    const cb = document.getElementById('admincoins');
-    if (cb) {
-      if (String(Az.uid()) !== OWNER_GAME_UID) {
-        cb.style.display = 'none';
-        cb.onclick = null;
-      } else {
-        cb.style.display = '';
-        cb.textContent = '👑 Owner Admin';
-        cb.onclick = () => { location.href = BASE + 'owner-admin.html'; };
-      }
-    }
-  }
+  Az.ownerBtn();
 
   Az.refresh();
   if (!LS.get('az_login')) askNameIfNeeded();   // logged-in accounts: asked only after their cloud data is loaded

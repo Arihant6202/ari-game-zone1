@@ -1,93 +1,35 @@
-ARI GAME ZONE — FIREBASE + OWNER ADMIN SETUP
-============================================
-Firebase project: ari-game-zone
-Owner in-game UID: 97835276
-Realtime Database URL:
-https://ari-game-zone-default-rtdb.asia-southeast1.firebasedatabase.app
+ARI GAME ZONE — DEVELOPER MODE (OWNER) SETUP  (v3)
+===================================================
+Owner Player ID: 97835276
+Cloud Functions / Blaze plan ki ZARURAT NAHI — sab kuch free Spark plan par chalta hai.
 
-WHAT IS INCLUDED
-----------------
-- Main game site and game pages (including Ludo and Shinobu 3D model)
-- Firebase Web configuration in firebase-config.js
-- Google and phone OTP login UI on the game site
-- Owner admin page (owner-admin.html)
-- Realtime Database rules starter file (database.rules.json)
-- Callable Cloud Functions source for owner coin actions and ban checks
+DEVELOPER MODE KYA KARTA HAI
+- Apne coins set / add / remove (0 se 999,999,999) + quick buttons (+1K, +10K, +100K, +1M, MAX)
+- Kisi bhi player ki 8-digit ID daalke uske coins badhana / ghatana / set karna
+- Sirf Player ID 97835276 wale account par dikhta hai (home par "👑 Developer Mode" button,
+  Profile me bhi button). Baaki sabko "Access denied" milta hai.
 
-IMPORTANT: NOT A ONE-CLICK DEPLOY
----------------------------------
-The Firebase web config and database URL are filled in. Google and Phone providers
-must also be enabled in Firebase Authentication, and arihant620.github.io must be
-listed under Authentication > Settings > Authorized domains.
+SECURITY KAISE HAI
+Asli check Firebase Database RULES karte hain (server par), game ka JS nahi. Rules me sirf tumhara
+Firebase Auth UID "owner" hai. Isliye koi dusra console se ID badal kar bhi dusron ko coins nahi
+bhej sakta, aur ID 97835276 koi aur claim nahi kar sakta.
+(Apne khud ke coins ka edit local hai — wo waise bhi har player apne device par tamper kar sakta hai.)
 
-The secure owner actions will NOT work until Cloud Functions are deployed and the
-owner Firebase Authentication UID is configured. The 8-digit game UID 97835276 is
-NOT the same as the Firebase Authentication UID.
+SETUP (sirf ek baar, 3 minute)
+1. Website par apne Google account se login karo (Gmail jisse owner banna hai).
+2. Login box kholo (👤 button) -> neeche "Firebase UID (tap to copy)" — ye lambi string copy karo.
+   (Ya Firebase Console > Authentication > Users > User UID.)
+3. Firebase Console > Realtime Database > Rules. database.rules.json ka poora content paste karo.
+   File me PASTE_OWNER_FIREBASE_AUTH_UID_HERE jitni baar aaya hai (5 jagah), sab ko apne copy kiye
+   hue UID se replace karo (Find & Replace). Publish dabao.
+4. Website reload karo, dobara login (ya bas reload). Tumhara account apne aap ID 97835276 ban jayega
+   aur "👑 Developer Mode" button aa jayega. Page par "🔑 Owner verified" dikhna chahiye.
+5. Kisi player ko coins bhejne ke liye: us player ne kam se kam ek baar Google/Phone login karke game
+   kholi ho (tabhi uski ID rules me register hoti hai). Phir Developer Mode me uski ID + coins daalo.
+   Coins turant (agar wo online hai) ya uske agle login par mil jate hain.
 
-STEP A — FIREBASE AUTHENTICATION
---------------------------------
-1. Firebase Console > Authentication > Sign-in method.
-2. Enable Google and Phone providers (you have already done this).
-3. Authentication > Settings > Authorized domains must include:
-   arihant620.github.io
-4. Open the website and sign in using the Google account you want as owner.
-   Phone OTP can be used for players; use one consistent owner account.
-
-STEP B — FIND OWNER FIREBASE AUTH UID
--------------------------------------
-1. Firebase Console > Authentication > Users.
-2. Find the owner account that just signed in.
-3. Copy its Firebase UID (long string). This is NOT 97835276.
-4. Do not publish this UID in frontend code. It is used only in the Functions env file.
-
-STEP C — DEPLOY CLOUD FUNCTIONS (COMPUTER OR CLOUD SHELL REQUIRED)
--------------------------------------------------------------------
-1. Install Node.js 20 and Firebase CLI, then open this project folder in a terminal.
-2. Run: firebase login
-3. This folder already contains firebase.json and .firebaserc for project ari-game-zone.
-4. Copy functions/.env.example to functions/.env.
-5. Edit functions/.env and replace the placeholder with the owner's Firebase Auth UID:
-   ADMIN_AUTH_UID=THE_LONG_FIREBASE_AUTH_UID
-6. Run: cd functions && npm install && cd ..
-7. Run: firebase deploy --only functions
-
-Cloud Functions deployment may require the Blaze billing plan and Google Cloud billing
-account. Check current Firebase pricing before enabling billing. Do not expose private
-service-account keys or admin credentials.
-
-STEP D — DATABASE RULES
------------------------
-The included database.rules.json is a starter rule set matching the current game's
-cloud profile writes. It allows each signed-in user to write their own profile record.
-IMPORTANT: because the current game stores coins/XP in that same client-writable record,
-these rules do NOT make the game economy cheat-proof. Do not claim coin balances are
-fully secure until the game is migrated to server-authoritative reward/coin functions
-and client writes to coin/XP fields are removed. Keep the database in locked mode until
-you understand and intentionally deploy the required rules.
-
-STEP E — GITHUB PAGES
----------------------
-Upload the contents of the ari-game-zone folder to the repository root (not the outer
-folder). Keep index.html at the repository root. Commit changes and wait for Pages.
-Then open:
-https://arihant620.github.io/ari-game-zone1/
-Owner panel:
-https://arihant620.github.io/ari-game-zone1/owner-admin.html
-
-CURRENT OWNER PANEL ACTIONS
----------------------------
-The panel provides add/remove/set-max coin controls and permanent/24-hour ban/unban
-controls. The supplied backend looks up a target by its 8-digit game UID in
-users/{firebaseAuthUid}. A player must sign in and have a cloud profile first.
-Coin transfer between players (debit one account and credit another atomically) is not
-implemented in this build; Add Coins is coin generation, not a transfer.
-
-SMS NOTES
----------
-Firebase Phone Auth may require reCAPTCHA and has SMS quotas/region restrictions. The
-Firebase console currently showed a 10-SMS/day quota for this project. Test carefully.
-
-SECURITY
---------
-Never share OTPs, passwords, service-account private keys, or admin credentials.
-The public Firebase web config is not a secret; security comes from Auth and Rules.
+NOTES
+- Guest (bina login) players ko coins nahi bheje ja sakte — unka koi account nahi hota.
+- Pehle wale "Cloud Functions / ADMIN_AUTH_UID / functions/.env" steps ab zaroori nahi.
+- Firebase Authentication me Google enable ho, aur Authorized domains me arihant620.github.io ho.
+- GitHub par saari files upload karo (az.js, az.css, owner-admin.html, database.rules.json bhi).

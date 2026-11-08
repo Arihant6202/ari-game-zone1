@@ -54,3 +54,17 @@ NEW GAMES
 
 Live Firebase (real Google login) ko deploy karke ek baar test zaroor karo. Local tests me Firebase
 ko mock karke account isolation verify kiya gaya hai.
+
+
+UPDATE v3 (shop + online + developer mode)
+- SHOP: ab har game me 🛒 button hai (jin games ke apne items nahi hain unme poori shop khulti hai).
+  Naye items + prices: Ludo dice (0-2500 coins) & tokens (0-1800), UNO card backs (0-2500),
+  Level Devil heroes (0-3000). Kharide hue items game me turant dikhte hain.
+  az.js ab "az.js?v=3" se load hota hai taaki browser/GitHub Pages purani cached file na chalaye
+  (isi se kabhi-kabhi shop/naye features na dikhne ki problem hoti hai).
+- ONLINE: UNO ab 1v1 online (room code), Level Devil online race (dono ko same level, jo pehle door
+  tak pahunche wo jeete, saamne wale ka ghost dikhta hai, rematch). Ludo online pehle se tha.
+- DEVELOPER MODE: ADMIN-SETUP.txt padho. owner-admin.html naye sire se bana hai.
+- database.rules.json badla hai: ab admin/uidIndex/adminGrants rules bhi hain. PASTE_OWNER_...
+  placeholder ko apne Firebase UID se badalna zaroori hai, warna Developer Mode ka "dusre ko coins"
+  hissa kaam nahi karega (apne coins wala hissa kaam karega).

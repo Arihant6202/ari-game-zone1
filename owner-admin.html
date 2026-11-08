@@ -1,1 +1,113 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ari Game Zone — Owner Panel</title><style>body{margin:0;padding:24px;background:#101426;color:#f4f6ff;font:16px system-ui;max-width:760px;margin:auto}section{background:#1b2340;border:1px solid #344064;border-radius:16px;padding:20px;margin:18px 0}a{color:#c9c2ff}code{overflow-wrap:anywhere}</style></head><body><p><a href="index.html">← Back to Game Zone</a></p><h1>👑 Owner Panel</h1><section><h2>Free Spark plan status</h2><p>Gmail login and private profile cloud-save can work on the Firebase Spark plan.</p><p><b>Coin generation/removal, player-to-player transfers, secure bans, and server-side reward validation are disabled.</b></p><p>These actions need a trusted backend. Do not enable public database writes to coins or moderation data to imitate admin controls; players could exploit them.</p></section><section><h2>Current limitations</h2><ul><li>Game coins, XP and levels remain on the player's device; they are not securely synchronized to cloud.</li><li>Profile name/photo are stored privately under that player's Firebase Auth UID.</li><li>Phone OTP is subject to Firebase SMS quota, region and billing restrictions.</li><li>Admin coin controls and UID bans require a trusted backend; this free-only build does not provide them.</li></ul></section></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<script src="firebase-config.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0a0614">
+<title>Ari Game Zone — Developer Mode</title>
+<style>
+main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-index:1}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin:14px 0}
+.box h2{margin:0 0 6px;font-size:17px}
+.box p.sub{margin:0 0 10px;color:var(--muted);font-size:13px}
+.big{font-family:Orbitron,system-ui,sans-serif;font-size:30px;color:var(--a4);text-align:center;margin:6px 0}
+.stat{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:6px 0}
+.ok{color:var(--a3)}.no{color:var(--bad)}
+#log{font-size:13px;color:var(--muted);min-height:20px;text-align:center;white-space:pre-line}
+.azinput{width:100%;max-width:260px}
+</style>
+</head>
+<body>
+<main>
+  <p><a class="azbtn ghost sm" href="index.html">← Back to Game Zone</a></p>
+  <h1 style="text-align:center">👑 Developer Mode</h1>
+  <div id="deny" class="box" hidden>
+    <h2>🔒 Access denied</h2>
+    <p class="sub">Ye page sirf owner Player ID <b>97835276</b> ke liye hai. Is account ki ID: <b id="myid">—</b></p>
+    <p class="sub">Agar tum owner ho: Google se login karo, aur <b>database.rules.json</b> me apna Firebase Auth UID daalke Publish karo (ADMIN-SETUP.txt me steps hain). Uske baad ye account apne aap ID 97835276 ban jayega.</p>
+    <div class="azrow c"><button class="azbtn" id="dologin">👤 Login</button></div>
+  </div>
+
+  <div id="panel" hidden>
+    <div class="box">
+      <div class="stat">
+        <span class="azpill">🆔 <span id="pid"></span></span>
+        <span class="azpill" id="stLogin">☁️ …</span>
+        <span class="azpill" id="stOwner">🔑 …</span>
+      </div>
+      <p class="sub" id="stHelp" style="text-align:center"></p>
+    </div>
+
+    <div class="box">
+      <h2>🪙 Apne coins</h2>
+      <div class="big">🪙 <span id="mycoins">0</span></div>
+      <p class="sub" style="text-align:center">Sirf tumhare apne account ke coins (0 se 999,999,999).</p>
+      <div class="azrow c"><input class="azinput" id="selfAmt" type="number" inputmode="numeric" placeholder="Coins (number)"></div>
+      <div class="azrow c">
+        <button class="azbtn sm" id="selfSet">= Set</button>
+        <button class="azbtn sm" id="selfAdd">＋ Add</button>
+        <button class="azbtn sm ghost" id="selfSub">－ Remove</button>
+      </div>
+      <div class="azrow c">
+        <button class="azbtn sm ghost" data-q="1000">+1K</button>
+        <button class="azbtn sm ghost" data-q="10000">+10K</button>
+        <button class="azbtn sm ghost" data-q="100000">+100K</button>
+        <button class="azbtn sm ghost" data-q="1000000">+1M</button>
+        <button class="azbtn sm ghost" id="selfMax">MAX</button>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>🎁 Dusre player ko coins</h2>
+      <p class="sub">Player ki 8 digit ID daalo. Coins us player ke account me tab pahunchte hain jab wo online aata hai (turant, agar abhi online hai).</p>
+      <div class="azrow c"><input class="azinput" id="gid" inputmode="numeric" maxlength="8" placeholder="Player ID (8 digit)"></div>
+      <div class="azrow c"><input class="azinput" id="gAmt" type="number" inputmode="numeric" placeholder="Coins (number)"></div>
+      <div class="azrow c">
+        <button class="azbtn sm" id="gAdd">🎁 Bhejo (+)</button>
+        <button class="azbtn sm ghost" id="gSub">⛔ Kam karo (−)</button>
+        <button class="azbtn sm ghost" id="gSet">= Set karo</button>
+      </div>
+    </div>
+    <div id="log"></div>
+  </div>
+</main>
+<script src="az.js?v=3"></script>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const log=(t,bad)=>{const l=$('log');l.textContent=t;l.style.color=bad?'var(--bad)':'var(--a3)';};
+  function paint(){
+    const owner=Az.isOwner();
+    $('deny').hidden=owner;$('panel').hidden=!owner;
+    $('myid').textContent=Az.uid();
+    if(!owner)return;
+    $('pid').textContent=Az.uid();
+    $('mycoins').textContent=Az.coins();
+    const acc=Az.account();
+    $('stLogin').textContent=acc?'☁️ Logged in':'☁️ Not logged in';
+    $('stLogin').className='azpill '+(acc?'ok':'no');
+    $('stOwner').textContent=Az.ownerOK?'🔑 Owner verified':'🔑 Not verified';
+    $('stOwner').className='azpill '+(Az.ownerOK?'ok':'no');
+    $('stHelp').textContent=Az.ownerOK?'Sab ready hai: dusre players ko coins bhej sakte ho.':(acc?'Dusre players ko coins bhejne ke liye database.rules.json me apna Firebase UID daalo (login box me UID dikhta hai).':'Dusre players ko coins bhejne ke liye pehle Google se login karo. Apne coins abhi bhi badal sakte ho.');
+  }
+  const num=id=>{const v=Math.round(+$(id).value);return isFinite(v)&&$(id).value!==''?v:null;};
+  $('dologin').onclick=()=>Az.login();
+  $('selfSet').onclick=()=>{const n=num('selfAmt');if(n==null||n<0)return log('Sahi coins number daalo (0 ya zyada).',1);Az.devSetCoins(n);paint();log('✅ Coins set: '+Az.coins());};
+  $('selfAdd').onclick=()=>{const n=num('selfAmt');if(n==null||n<0)return log('Sahi coins number daalo.',1);Az.devAddCoins(n);paint();log('✅ +'+n+' → ab '+Az.coins());};
+  $('selfSub').onclick=()=>{const n=num('selfAmt');if(n==null||n<0)return log('Sahi coins number daalo.',1);Az.devAddCoins(-n);paint();log('✅ −'+n+' → ab '+Az.coins());};
+  $('selfMax').onclick=()=>{Az.devSetCoins(999999999);paint();log('✅ MAX coins set.');};
+  document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{Az.devAddCoins(+b.dataset.q);paint();log('✅ Ab '+Az.coins()+' coins.');});
+  function give(sign,mode){
+    const n=num('gAmt');if(n==null||n<0)return log('Sahi coins number daalo (0 ya zyada).',1);
+    const gid=$('gid').value.replace(/\D/g,'');
+    log('Bhej raha hoon…');
+    Az.devGive(gid,mode==='set'?n:sign*n,mode).then(g=>log('✅ Player '+g+' ke liye '+(mode==='set'?'set ':(sign>0?'+':'−'))+n+' coins bhej diye.\nJab wo online hoga tab apply honge.')).catch(e=>log('❌ '+(e&&e.message||'Error: rules check karo'),1));
+  }
+  $('gAdd').onclick=()=>give(1,'add');$('gSub').onclick=()=>give(-1,'add');$('gSet').onclick=()=>give(1,'set');
+  document.addEventListener('az-ready',()=>{paint();Az.whenAuth().then(paint);});
+  document.addEventListener('az-account',paint);document.addEventListener('az-owner',paint);
+  setInterval(()=>{if(Az.isOwner())$('mycoins').textContent=Az.coins();},1500);
+})();
+</script>
+</body>
+</html>

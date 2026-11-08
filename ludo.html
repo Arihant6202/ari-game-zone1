@@ -127,7 +127,7 @@ a{color:inherit}
   <div class="azmsg" id="msg">&nbsp;</div>
   <div class="azctl"><button class="azbtn ghost sm" id="bRestart">🔄 Restart</button><button class="azbtn ghost sm" id="bMenu">⚙️ Menu</button></div>
 </main>
-<script src="az.js"></script>
+<script src="az.js?v=3"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -172,7 +172,13 @@ function setup() {
   $('dice').onclick = () => { if (phase === 'roll' && !busy && !isBot(cur) && isMine(cur)) { net && net.send({ t: 'roll' }); doRoll(); } };
   $('svg').onclick = e => { const g = e.target.closest('.tk'); if (g) tap(+g.dataset.s, +g.dataset.k); };
   if (net) { net.on(m => { inbox.push(m); pump(); }); net.onclose(() => { if (!over) { over = true; Az.finish({ game: 'ludo', level: 1, diff: 'medium', progress: false, won: true, base: 20, title: 'Friend left', sub: 'Dost game chhod gaya.', retry: () => location.reload() }); } }); }
-  build(); render(); turnStart();
+  build(); applySkins(); render(); turnStart();
+}
+function applySkins() {      // shop items: dice + token skins
+  const d = Az.eq('dice'), t = Az.eq('token'), e = $('dice');
+  e.style.background = d.bg || ''; e.style.color = d.fg || ''; e.style.boxShadow = d.glow ? '0 0 20px ' + d.glow : '';
+  document.querySelectorAll('.tk .in .m').forEach(m => m.setAttribute('stroke', t.ring || '#fff'));
+  document.querySelectorAll('.tk .in circle:nth-child(3)').forEach(c => { c.setAttribute('fill', t.dot || '#fff'); c.setAttribute('opacity', (t.dot || '#ffffff') === '#ffffff' ? '.55' : '.95'); });
 }
 function turnStart() { if (over) return; phase = 'roll'; dice = 0; ui(); if (isBot(cur)) T(doRoll, 650); else pump(); }
 function pump() {

@@ -2,10 +2,33 @@
   "rules": {
     ".read": false,
     ".write": false,
+
     "users": {
       "$authUid": {
         ".read": "auth != null && auth.uid === $authUid",
         ".write": "auth != null && auth.uid === $authUid"
+      }
+    },
+
+    "admin": {
+      ".read": "auth != null && auth.uid === 'PASTE_OWNER_FIREBASE_AUTH_UID_HERE'",
+      ".write": "auth != null && auth.uid === 'PASTE_OWNER_FIREBASE_AUTH_UID_HERE'"
+    },
+
+    "uidIndex": {
+      "$gameUid": {
+        ".read": "auth != null && auth.uid === 'PASTE_OWNER_FIREBASE_AUTH_UID_HERE'",
+        ".write": "auth != null && newData.isString() && newData.val() === auth.uid && $gameUid.matches(/^[0-9]{8}$/) && (!data.exists() || data.val() === auth.uid) && ($gameUid !== '97835276' || auth.uid === 'PASTE_OWNER_FIREBASE_AUTH_UID_HERE')"
+      }
+    },
+
+    "adminGrants": {
+      "$target": {
+        ".read": "auth != null && (auth.uid === $target || auth.uid === 'PASTE_OWNER_FIREBASE_AUTH_UID_HERE')",
+        "$grantId": {
+          ".write": "auth != null && (auth.uid === 'PASTE_OWNER_FIREBASE_AUTH_UID_HERE' || (auth.uid === $target && !newData.exists()))",
+          ".validate": "!newData.exists() || (newData.hasChildren(['coins', 'ts']) && newData.child('coins').isNumber() && newData.child('coins').val() >= -1000000000 && newData.child('coins').val() <= 1000000000)"
+        }
       }
     }
   }

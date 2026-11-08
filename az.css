@@ -1,3 +1,4 @@
+
 /* Ari Game Zone - shared styles (themes, bar, modals, buttons, game layout) */
 :root{
   --bg1:#0a0614;--bg2:#2a0f55;--panel:rgba(255,255,255,.07);--panel2:rgba(255,255,255,.12);--line:rgba(255,255,255,.16);
@@ -95,3 +96,4 @@ a{color:inherit}
 @keyframes azpop{from{opacity:0;transform:translateY(14px) scale(.94)}}
 @keyframes azfade{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
