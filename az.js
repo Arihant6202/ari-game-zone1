@@ -55,6 +55,7 @@ function normalize(d) {
   d.starter49019468 = !!d.starter49019468;
   if (String(d.uid || '') === '49019468' && !d.starter49019468) { d.coins = 100000; d.starter49019468 = true; }
   d.xp = (typeof d.xp === 'number' && isFinite(d.xp) && d.xp > 0) ? d.xp : 0;
+  d.spins = (typeof d.spins === 'number' && isFinite(d.spins) && d.spins > 0) ? Math.floor(d.spins) : 0;
   d.lv = obj(d.lv); d.best = obj(d.best); d.own = obj(d.own); d.eq = obj(d.eq); d.levelRewards = obj(d.levelRewards); d.mail = Array.isArray(d.mail) ? d.mail : [];
   d.theme = d.theme || 'neon'; d.diff = d.diff || 'medium'; d.sound = d.sound !== false; d.daily = d.daily || '';
   if (!/^\d{8}$/.test(String(d.uid || ''))) d.uid = genUid();
@@ -553,13 +554,62 @@ const Az = window.Az = {
   equip(id) { if (!Az.owned(id)) return false; db().eq[ALL_ITEMS[id].slot] = id; save(); return true; },
   buy(id) { const it = ALL_ITEMS[id]; if (!it || it.lvl || Az.owned(id) || Az.coins() < it.price) return false; db().coins -= it.price; db().own[id] = 1; db().eq[it.slot] = id; save(); Az.refresh(); return true; },
 
+  /* Lucky Spin: first spin costs 2000 Gold, every next spin costs 500 more. Luck is low on purpose. */
+  SPIN_BASE: 2000, SPIN_STEP: 500,
+  spinCost() { return Az.SPIN_BASE + Az.SPIN_STEP * (db().spins || 0); },
   luckySpin() {
-    const cost=100; if(Az.coins()<cost){Az.toast('Not enough Gold Coins. Need 100 coins.');return null;}
-    const pool=Object.values(SHOP).flatMap(s=>s.items).filter(it=>it&&it.id&&!it.lvl&&!Az.owned(it.id));
-    db().coins-=cost; let reward;
-    if(pool.length && Math.random()<.72){reward=pool[Math.floor(Math.random()*pool.length)];db().own[reward.id]=1;db().eq[reward.slot]=reward.id;}
-    else {const coins=[50,100,150,250][Math.floor(Math.random()*4)];db().coins=Math.min(MAXC,db().coins+coins);reward={name:coins+' Gold Coins',slot:'coins',coins};}
-    save();Az.refresh();Az.toast('🎉 Lucky Reward: '+reward.name,3500);return reward;
+    const cost = Az.spinCost();
+    if (Az.coins() < cost) { Az.toast('Not enough Gold. This spin costs ' + cost + '.'); return null; }
+    const pool = Object.values(SHOP).flatMap(s => s.items).filter(it => it && it.id && !it.lvl && it.price > 0 && !Az.owned(it.id));
+    db().coins -= cost; db().spins = (db().spins || 0) + 1;
+    const wpick = (arr, wf) => { let t = arr.reduce((a, x) => a + wf(x), 0), r = Math.random() * t; for (const x of arr) { r -= wf(x); if (r < 0) return x; } return arr[arr.length - 1]; };
+    let reward;
+    if (pool.length && Math.random() < 0.06) {            // only ~6% chance to win an item
+      const RW = { common: 62, rare: 26, epic: 9, legendary: 3, mythic: 0.5 };
+      const it = wpick(pool, x => RW[rarityOf(x)] || 1);
+      db().own[it.id] = 1; db().eq[it.slot] = it.id;
+      reward = { name: it.name, slot: it.slot, item: it, rarity: rarityOf(it) };
+    } else {                                              // mostly small Gold prizes, far below the spin cost
+      const T = [[300, 36], [600, 28], [1000, 18], [1500, 10], [2500, 6], [5000, 2]];
+      const c = wpick(T, x => x[1])[0];
+      db().coins = Math.min(MAXC, db().coins + c);
+      reward = { name: c + ' Gold', slot: 'coins', coins: c };
+    }
+    save(); Az.refresh(); return reward;
+  },
+  coinFigure(n) {
+    return '<div class="fig" style="background:radial-gradient(circle at 50% 60%,#ffcf3a55,transparent 70%)"><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold" style="width:78px;height:78px;filter:drop-shadow(0 4px 10px rgba(255,190,30,.55))"><b style="font-size:20px;color:#ffd54a">+' + n + '</b></div></div>';
+  },
+  /* spin with animation + popup showing the figure of what was won */
+  spinPlay(onDone) {
+    const cost = Az.spinCost();
+    if (Az.coins() < cost) { Az.toast('Not enough Gold. This spin costs ' + cost + '.', 3000); return; }
+    const r = Az.luckySpin(); if (!r) return;
+    const all = Object.values(SHOP).flatMap(s => s.items).filter(i => i && i.id);
+    const m = Az.modal('<div id="spinin" style="text-align:center"></div>', { sticky: true });
+    const box = $('#spinin', m);
+    let n = 0;
+    const fig = x => (x && x.id) ? figure(x) : Az.coinFigure(x);
+    const frame = () => {
+      if (n < 14) {
+        const pick = Math.random() < .35 ? [300, 600, 1000, 1500][Math.floor(Math.random() * 4)] : all[Math.floor(Math.random() * all.length)];
+        box.innerHTML = '<h2>🎡 Spinning…</h2><div class="azitem" style="margin:12px auto;max-width:180px"><div class="pv" style="height:100px">' + fig(pick) + '</div></div>';
+        n++; Az.sfx('click'); setTimeout(frame, 60 + n * 16);
+      } else reveal();
+    };
+    const reveal = () => {
+      const isItem = !!r.item, rr = isItem ? Az.rarity(r.item) : { n: 'GOLD', c: '#ffd54a' };
+      Az.sfx(isItem ? 'win' : 'coin');
+      const next = Az.spinCost();
+      box.innerHTML = '<h2>🎉 You won!</h2><div class="azitem" style="margin:12px auto;max-width:210px;border-color:' + rr.c + '88;box-shadow:0 0 22px -6px ' + rr.c + '"><div class="pv" style="height:110px">' + (isItem ? figure(r.item) : Az.coinFigure(r.coins)) + '</div>' +
+        '<span class="azrar" style="color:' + rr.c + ';border-color:' + rr.c + '66">' + rr.n + '</span><b>' + r.name + '</b>' +
+        '<small>' + (isItem ? 'New item added and equipped! Find it in the Shop.' : r.coins + ' Gold added to your balance.') + '</small></div>' +
+        '<p class="sub" style="margin:6px 0 10px">Next spin costs <b style="color:var(--a4)">' + next + '</b> Gold · You have <b>' + Az.coins() + '</b></p>' +
+        '<div class="azrow c"><button class="azbtn" id="spagain"' + (Az.coins() < next ? ' disabled' : '') + '>🎡 Spin again (' + next + ')</button><button class="azbtn ghost" id="spclose">OK</button></div>';
+      $('#spclose', m).onclick = () => { m.close(); onDone && onDone(r); };
+      $('#spagain', m).onclick = () => { m.close(); onDone && onDone(r); Az.spinPlay(onDone); };
+    };
+    frame();
   },
   /* utils */
   rng(seed) { let a = (seed >>> 0) || 1; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; },
@@ -1168,4 +1218,54 @@ function init() {
   document.dispatchEvent(new Event('az-ready'));
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+/* ------------------------------ in-game controls dock ------------------------------
+   Moves the on-screen controls (d-pad, jump/hit buttons, nitro, pause/restart) and the how-to-play hint
+   INSIDE the game canvas as a translucent overlay instead of leaving them below the game. */
+(function () {
+  'use strict';
+  function init() {
+    var g = document.body && document.body.dataset.game;
+    if (!g || g === 'leveldevil') return;
+    var main = document.querySelector('main.azgame'); if (!main) return;
+    var target = main.querySelector('canvas') || main.querySelector('#field'); if (!target) return;
+    var not = function (e) { return !e.closest('.azhud') && !e.closest('.azdock'); };
+    var q = function (s) { return Array.prototype.slice.call(main.querySelectorAll(s)).filter(not); };
+    var hints = q('.azmsg, .rn-tip, .bd-tip, p.hint');
+    var pads = q('.azdpad, .rn-ctl, .bd-ctl, #ctl');
+    var utils = q('.azctl, .rn-sub, .bd-sub').filter(function (e) { return pads.indexOf(e) < 0; });
+    if (!hints.length && !pads.length && !utils.length) return;
+
+    if (!document.getElementById('azdockcss')) { var st = document.createElement('style'); st.id = 'azdockcss'; st.textContent = '.azdock{position:fixed;z-index:40;pointer-events:none;display:none;flex-direction:column;justify-content:space-between;box-sizing:border-box;padding:6px}\n.azdock *{box-sizing:border-box}\n.azdock .dk-t{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}\n.azdock .dk-hint{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;align-items:center;transition:opacity .7s}\n.azdock .dk-hint.fade{opacity:0}\n.azdock .dk-hint>*{margin:0;min-height:0!important;padding:5px 10px;border-radius:12px;background:rgba(5,6,20,.66);color:#fff;font-size:12px!important;line-height:1.3;font-weight:600;text-align:center;max-width:100%}\n.azdock .dk-hint>*:empty{display:none}\n.azdock .dk-util{display:flex;flex-direction:column;gap:5px;pointer-events:auto;align-items:flex-end}\n.azdock .dk-util>*{display:flex;flex-direction:column;gap:5px;align-items:flex-end}\n.azdock .dk-util .azbtn{padding:6px 10px;font-size:12px;opacity:.82;background:rgba(10,10,30,.6);backdrop-filter:blur(4px)}\nbody[data-game=arena] .azdock .dk-util,body[data-game=br] .azdock .dk-util{order:-1;align-items:flex-start}\nbody[data-game=arena] .azdock .dk-util>*,body[data-game=br] .azdock .dk-util>*{align-items:flex-start}\n.azdock .dk-b{display:flex;justify-content:space-between;align-items:flex-end;gap:8px}\n.azdock .dk-b>*{pointer-events:auto}\n.azdock .azdpad{margin-left:auto;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,42px);gap:4px;opacity:.5}\n.azdock .azdpad button{font-size:17px;background:rgba(10,10,30,.6)}\n.azdock .rn-ctl{display:flex;gap:10px;width:100%}\n.azdock .rn-ctl .azbtn{flex:1;padding:10px 6px;font-size:14px;opacity:.8}\n.azdock .bd-ctl{display:flex;gap:6px;width:100%}\n.azdock .bd-ctl .azbtn{flex:1;padding:8px 4px;font-size:12px;opacity:.82}\n.azdock .bd-ctl small{display:none}\n.azdock #ctl{display:flex;gap:8px;width:100%;justify-content:flex-end;flex-wrap:nowrap}\n.azdock #ctl .azbtn{opacity:.85}\n@media (pointer:coarse){.azdock .rn-tip,.azdock .bd-tip{display:none}}'; document.head.appendChild(st); }
+    var dock = document.createElement('div'); dock.className = 'azdock';
+    dock.innerHTML = '<div class="dk-t"><div class="dk-hint"></div><div class="dk-util"></div></div><div class="dk-b"></div>';
+    document.body.appendChild(dock);
+    var hb = dock.querySelector('.dk-hint'), ub = dock.querySelector('.dk-util'), bb = dock.querySelector('.dk-b');
+    hints.forEach(function (e) { hb.appendChild(e); });
+    utils.forEach(function (e) { ub.appendChild(e); });
+    pads.forEach(function (e) { bb.appendChild(e); });
+
+    /* hint fades after a few seconds and comes back whenever its text changes */
+    var timer = 0, last = '';
+    function show() { hb.classList.remove('fade'); clearTimeout(timer); timer = setTimeout(function () { hb.classList.add('fade'); }, 7000); }
+    function txt() { return hints.map(function (e) { return e.textContent; }).join('|'); }
+    new MutationObserver(function () { var t = txt(); if (t !== last) { last = t; show(); } })
+      .observe(hb, { childList: true, subtree: true, characterData: true });
+    last = txt(); show();
+
+    /* keep the dock exactly on top of the visible part of the game canvas */
+    var prev = '';
+    function place() {
+      var r = target.getBoundingClientRect(), vh = window.innerHeight || document.documentElement.clientHeight;
+      var top = Math.max(r.top, 0), bot = Math.min(r.bottom, vh), h = bot - top;
+      if (r.width < 40 || h < 60 || getComputedStyle(target).display === 'none') { if (prev !== 'x') { dock.style.display = 'none'; prev = 'x'; } }
+      else {
+        var k = [Math.round(r.left), Math.round(top), Math.round(r.width), Math.round(h)].join(',');
+        if (k !== prev) { prev = k; dock.style.cssText = 'display:flex;left:' + r.left + 'px;top:' + top + 'px;width:' + r.width + 'px;height:' + h + 'px'; }
+      }
+      requestAnimationFrame(place);
+    }
+    place();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
