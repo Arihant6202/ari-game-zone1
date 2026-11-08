@@ -76,13 +76,16 @@ UPDATE v4 (guest profiles, link-to-Gmail, premium guns, Level Devil controls)
   coins/XP/levels/items/Player ID. Box me list se kisi bhi guest par "Use" dabao ya 🗑 se delete karo.
   Purane (v2/v3 me "kho gaye") guest bhi isi browser me saved the - ab wo list me dikhenge.
 - NAYA GMAIL = bilkul naya account (150 coins). Purana Gmail = uska apna cloud progress.
-- LINK: guest se "🔗 Is guest progress ko Gmail se link karo" dabao ya Gmail login ke baad guest ke saamne
-  "🔗 Link" dabao. Naya Gmail ho to guest ka poora progress seedha us Gmail me chala jata hai. Agar Gmail me pehle se
-  progress hai to poochta hai: Dono ka best milao / Guest se replace / Gmail waisa hi rakho.
+- LINK (ek ID = ek Gmail): guest se "🔗 Is guest ko NAYE Gmail se link karo" dabao. Link sirf aise Gmail se hota hai jo
+  pehle kisi ID se linked nahi hai (kabhi login/use nahi hua). Jo Gmail pehle se kisi ID se linked hai usse link
+  refuse hota hai, wo Gmail turant logout ho jata hai aur guest wapas khul jata hai (guest ko kuch nahi hota).
+  Gmail me login hone par guest list / Link option dikhta hi nahi; bas Logout, aur logout par guest khul jata hai.
+- OWNER ID 97835276 sirf kumararihant625@gmail.com ki hai (database.rules.json Gmail se check karta hai; UID paste
+  nahi karna). Kisi aur Gmail par ye ID aa jaye to login par use nayi ID mil jati hai. Rules dobara Publish karo!
 - GUNS: 8 nayi premium guns (Twin Fang 9,000 ... Divine Cannon 150,000). Purani 6 guns jaisi thi waisi hi hain.
 - COINS: har win/loss ke coins ab aadhe (Az.COIN_RATE = 0.5 az.js me), daily bonus 100 -> 50.
   Aur kam/zyada karna ho to az.js me COIN_RATE badlo.
 - LEVEL DEVIL: naya move pad (anguthe ko ◀ aur ▶ ke beech bina uthaye slide karo), bada JUMP, "↔️ Swap hands"
   (lefty), aur "🔄 Rotate mode": poori landscape screen, controls side me (player/door ko nahi dhakte).
   Phone portrait me ho tab bhi game 90° ghoom jata hai - bas phone ko tilt karo. Choice account ke saath save hoti hai.
-- Saari HTML ab az.js?v=4 load karti hain (cache refresh ke liye). GitHub me poora folder dobara upload karo.
+- Saari HTML ab az.js?v=5 load karti hain (cache refresh ke liye). GitHub me poora folder dobara upload karo.

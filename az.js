@@ -3,6 +3,7 @@
 const SRC = document.currentScript ? document.currentScript.src : '';
 const BASE = SRC.replace(/az\.js.*$/, '');
 const KEY = 'az2';
+const OWNER_ID = '97835276';   // reserved: only the verified owner Gmail may ever hold this Player ID
 // Global reward multiplier. Lower = slower coin earning = items feel more valuable (was 1.0 before).
 const COIN_RATE = 0.5;
 const DAILY_BONUS = 50;
@@ -44,7 +45,7 @@ function genUid() {
   let s = '';
   try { const r = new Uint8Array(8); crypto.getRandomValues(r); r.forEach((b, i) => s += i === 0 ? 1 + (b % 9) : b % 10); }
   catch (e) { s = String(10000000 + Math.floor(Math.random() * 89999999)); }
-  return s;
+  return s === OWNER_ID ? genUid() : s;
 }
 // Firebase Realtime DB drops empty objects ({}), so cloud data must be re-filled before use.
 function normalize(d) {
@@ -414,7 +415,7 @@ const code4 = () => { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; 
    - Same Gmail       -> same record on every device.
    - Logout           -> a brand-new guest id (fresh coins, fresh progress, fresh player ID).            */
 let linkG = null, fbUser = null, fbDb = null, pushT = null, fbP = null, loadSeq = 0, cloudUid = null, nameTimer = null, grantRef = null;
-const OWNER_UID = '97835276', MAXC = 999999999, seenGrants = {};
+const OWNER_UID = OWNER_ID, MAXC = 999999999, seenGrants = {};
 Az.OWNER_UID = OWNER_UID; Az.ownerOK = false;
 const FBV = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-';
 const gdPath = uid => 'users/' + uid + '/gameData';
@@ -498,15 +499,19 @@ function startGrants(u) {
 function postLogin(u, seq) {
   if (!fbDb) return;
   const alive = () => seq === loadSeq && fbUser && fbUser.uid === u.uid;
+  let denied = false;
   fbDb.ref('admin/ping').once('value')                       // allowed by the rules ONLY for the owner's Firebase account
     .then(() => {
       if (!alive()) return; Az.ownerOK = true;
       if (String(db().uid) !== OWNER_UID) { db().uid = OWNER_UID; save(); accountChanged(); }
       return fbDb.ref('uidIndex/' + OWNER_UID).set(u.uid);
     })
-    .catch(() => { if (alive() && !Az.ownerOK) Az.ownerOK = false; })
+    .catch(e => { if (alive() && !Az.ownerOK) { Az.ownerOK = false; denied = /permission_denied|permission denied/i.test(String((e && (e.code || e.message)) || e)); } })
     .then(() => {
       if (!alive()) return;
+      // one ID = one Gmail: the owner ID belongs to the verified owner ONLY. Another Gmail that carries it gets a fresh ID.
+      // (only when the server clearly said "permission denied" - a flaky network must never demote the real owner)
+      if (denied && !Az.ownerOK && String(db().uid) === OWNER_UID) { db().uid = genUid(); save(); accountChanged(); Az.toast && Az.toast('🆔 Ye ID sirf owner ki hai — tumhe nayi Player ID mili: ' + db().uid, 4000); }
       if (String(db().uid) !== OWNER_UID) fbDb.ref('uidIndex/' + db().uid).set(u.uid).catch(() => {});
       startGrants(u);
       try { Az.ownerBtn && Az.ownerBtn(); document.dispatchEvent(new Event('az-owner')); } catch (e) {}
@@ -519,7 +524,7 @@ Az.devGive = function (gid, amount, mode) {
   return Promise.resolve().then(() => {
     if (!Az.isOwner()) throw new Error('Ye sirf owner ID ' + OWNER_UID + ' ke liye hai.');
     if (!fbUser || !fbDb) throw new Error('Pehle Google/Phone se login karo.');
-    if (!Az.ownerOK) throw new Error('Owner verify nahi hua. database.rules.json me apna Firebase Auth UID daalo (ADMIN-SETUP.txt) aur Publish karo.');
+    if (!Az.ownerOK) throw new Error('Owner verify nahi hua. Naya database.rules.json Publish karo aur owner Gmail se login karo (ADMIN-SETUP.txt).');
     gid = String(gid || '').replace(/\D/g, ''); amount = Math.round(+amount);
     if (!/^\d{8}$/.test(gid)) throw new Error('Player ID 8 digit ki honi chahiye.');
     if (!isFinite(amount) || Math.abs(amount) > 1e9) throw new Error('Coins sahi number me daalo.');
@@ -569,6 +574,7 @@ function afterLogin(u) {
     });
   }).then(cloud => {
     if (seq !== loadSeq || !fbUser || fbUser.uid !== u.uid) return;   // a newer login/logout happened meanwhile: ignore this answer
+    const existed = !!cloud;                                          // did this Gmail already have an account (an ID)?
     if (cloud) {
       cloud = normalize(cloud);
       if (hadLocal && localD.rev > cloud.rev) { cloudUid = u.uid; doPush(); Az.toast && Az.toast('☁️ Latest progress uploaded'); }   // this device is ahead (cloud write was lost)
@@ -576,7 +582,7 @@ function afterLogin(u) {
     } else {
       cloudUid = u.uid; D = db(); doPush(); Az.toast && Az.toast('☁️ New account created');
     }
-    if (lg) linkInto(u, lg);
+    if (lg) linkInto(u, lg, existed);
     accountChanged(); askNameIfNeeded(); postLogin(u, seq);
   }).catch(e => {
     if (seq !== loadSeq) return;
@@ -607,15 +613,7 @@ Az.deleteGuest = function (id) {
   const wasCur = id === guestId(); LS.del(GPFX + id);
   if (wasCur) { rotateGuest(); signOutAll().then(reloadSoon); }
 };
-function mergeData(a, g) {                   // keep the BEST of both records
-  const r = normalize(JSON.parse(JSON.stringify(a)));
-  r.coins = Math.max(a.coins, g.coins); r.xp = Math.max(a.xp, g.xp);
-  Object.keys(g.lv).forEach(k => { r.lv[k] = Math.max(r.lv[k] || 1, g.lv[k] || 1); });
-  Object.keys(g.best).forEach(k => { r.best[k] = Math.max(r.best[k] || 0, g.best[k] || 0); });
-  r.own = Object.assign({}, g.own, a.own);
-  return r;
-}
-function adoptGuest(u, lg, data) {           // make `data` (a guest's progress) THE progress of this signed-in account
+function adoptGuest(u, lg, data) {           // move a guest's progress into this (brand-new) Gmail account
   if (!fbUser || fbUser.uid !== u.uid) return;
   data.rev = Math.max(data.rev, db().rev) + 1; data.ts = Date.now();
   D = data; LS.set(ACTIVE_KEY, JSON.stringify(D)); cloudUid = u.uid;
@@ -628,20 +626,14 @@ function adoptGuest(u, lg, data) {           // make `data` (a guest's progress)
   });
   postLogin(u, loadSeq);
 }
-function linkInto(u, lg) {                   // called right after login (or from the Link button) with the account's data already loaded
+/* RULE: one ID <-> one Gmail. A guest can only be linked to a Gmail that has NO ID yet (a brand-new / never-played one).
+   A Gmail that already owns an ID is refused, signed out again, and you are back on your guest (guest is never touched). */
+function linkInto(u, lg, existed) {
   const g = readGuest(lg); if (!g) { Az.toast && Az.toast('Guest progress nahi mila.'); return; }
-  const acc = db();
-  if (acc.rev === 0) return adoptGuest(u, lg, g);         // brand-new Gmail: nothing to lose, just move the guest in
-  const row = (t, d) => '<div class="azstat" style="margin:4px 0"><div><b style="font-size:14px">' + esc(t) + '</b><small>' + esc(d.name || ('Player-' + String(d.uid).slice(-4))) + '</small></div><div><b>🪙 ' + d.coins + '</b><small>coins</small></div><div><b>Lv ' + lvOfXp(d.xp) + '</b><small>player</small></div></div>';
-  const m = Az.modal('<div class="azbig">🔗</div><h2 style="text-align:center">Is Gmail me pehle se progress hai</h2><p class="sub" style="text-align:center">' + esc(u.email || u.phoneNumber || '') + '</p>' + row('☁️ Gmail', acc) + row('👤 Guest', g) +
-    '<div class="azrow c" style="flex-direction:column;align-items:stretch"><button class="azbtn" id="lk_mg">🧮 Dono ka best milao (recommended)</button><button class="azbtn ghost" id="lk_rp">⬆️ Guest se Gmail replace karo</button><button class="azbtn ghost" id="lk_kp">☁️ Gmail waisa hi rakho (guest alag rahe)</button></div>', { sticky: true });
-  m.addEventListener('click', e => {
-    const id = e.target.id; if (!/^lk_/.test(id)) return; m.close();
-    if (!fbUser || fbUser.uid !== u.uid) return;
-    if (id === 'lk_mg') adoptGuest(u, lg, mergeData(db(), g));
-    else if (id === 'lk_rp') adoptGuest(u, lg, g);
-    else Az.toast && Az.toast('Gmail ka progress waisa hi hai. Guest progress alag safe hai.', 3000);
-  });
+  if (!existed || db().rev === 0) return adoptGuest(u, lg, g);
+  const mine = String(db().uid), who = esc(u.email || u.phoneNumber || 'Ye Gmail');
+  Az.modal('<div class="azbig">🚫</div><h2 style="text-align:center">Link nahi ho sakta</h2><p class="sub" style="text-align:center"><b>' + who + '</b> pehle se Player ID <b>' + esc(mine) + '</b> se linked hai.<br>Ek ID ke saath sirf ek Gmail aur ek Gmail ke saath sirf ek ID jud sakti hai.<br><br>Guest ko link karne ke liye <b>naya Gmail</b> use karo (jo kabhi login na hua ho).<br>Tumhara guest progress bilkul safe hai.</p><div class="azrow c"><button class="azbtn" onclick="this.closest(\'.azmodal\').remove()">OK</button></div>', {});
+  Az.logout();                                // straight back to the guest
 }
 
 Az.logout = function () {
@@ -655,26 +647,21 @@ Az.login = function () {
   const box = () => m.querySelector('#lgin');
   const gRow = g => {
     const act = !fbUser && g.cur;
-    const tag = act ? '<span class="azpill" style="color:var(--a3)">✔ Playing</span>' : (fbUser && g.cur ? '<span class="azpill">Logout ke baad</span>' : '');
+    const tag = act ? '<span class="azpill" style="color:var(--a3)">✔ Playing</span>' : '';
     const b = (a, t, ghost) => '<button class="azbtn sm' + (ghost ? ' ghost' : '') + '" data-' + a + '="' + esc(g.id) + '">' + t + '</button>';
     return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 10px;margin:6px 0;border:1px solid ' + (act ? 'var(--a3)' : 'var(--line)') + ';border-radius:14px;background:var(--panel)">' +
       '<div style="flex:1;min-width:120px"><b>' + esc(g.name) + '</b><br><small style="color:var(--muted)">🆔 ' + esc(g.uid) + ' · 🪙 ' + g.coins + ' · Lv ' + lvOfXp(g.xp) + '</small></div>' +
-      tag + (act ? '' : (!g.cur || !fbUser ? b('gsw', fbUser ? 'Switch' : '▶ Use') : '')) + (fbUser ? b('glk', '🔗 Link', 1) : '') + b('gdel', '🗑', 1) + '</div>';
+      tag + (act ? '' : b('gsw', '▶ Use')) + b('gdel', '🗑', 1) + '</div>';
   };
   const drawGuests = () => { const c = m.querySelector('#glist'); if (c) c.innerHTML = listGuests().map(gRow).join('') || '<p class="sub" style="text-align:center">Koi saved guest nahi.</p>'; };
   const guestBlock = '<div class="azlbl">👥 Is device ke saved guests</div><div id="glist"></div><div class="azrow c"><button class="azbtn ghost sm" id="gnew">➕ Naya guest banao</button></div>';
   if (fbUser) {
     const who = esc(fbUser.email || fbUser.phoneNumber || fbUser.displayName || '');
-    box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + who + '<br>Player ID: <b>' + esc(Az.uid()) + '</b><br>Profile cloud me saved hai ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div><p class="sub" style="text-align:center;font-size:11px">Logout ke baad tum wapas apne guest progress par aaoge — guest ka progress kabhi delete nahi hota.</p>' + guestBlock + '<p class="sub" style="text-align:center;font-size:10px;word-break:break-all;opacity:.7">Firebase UID (tap to copy):<br><span id="fbuid" style="cursor:pointer"></span></p>';
+    box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + who + '<br>Player ID: <b>' + esc(Az.uid()) + '</b><br>Profile cloud me saved hai ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div><p class="sub" style="text-align:center;font-size:11px">Logout karte hi tumhara guest progress khul jayega (guest ka progress kabhi delete nahi hota).</p><p class="sub" style="text-align:center;font-size:10px;word-break:break-all;opacity:.7">Firebase UID (tap to copy):<br><span id="fbuid" style="cursor:pointer"></span></p>';
     const fu = box().querySelector('#fbuid'); fu.textContent = fbUser.uid; fu.onclick = () => { try { navigator.clipboard.writeText(fbUser.uid); Az.toast('📋 Firebase UID copied'); } catch (x) {} };
-    drawGuests();
     m.addEventListener('click', e => {
-      const t = e.target.closest('button'); if (!t) return;
-      if (t.id === 'lo') { t.disabled = true; t.textContent = 'Logging out…'; Az.logout().then(() => { m.close(); Az.toast && Az.toast('👋 Logout ho gaya — guest progress wapas'); }); }
-      else if (t.dataset.gsw) Az.switchGuest(t.dataset.gsw);
-      else if (t.dataset.glk) { if (cloudUid !== fbUser.uid) { Az.toast('Cloud load ho raha hai, thoda ruko…'); return; } m.close(); linkInto(fbUser, t.dataset.glk); }
-      else if (t.dataset.gdel) { if (confirm('Ye guest aur uska progress hamesha ke liye delete ho jayega. Pakka?')) { Az.deleteGuest(t.dataset.gdel); drawGuests(); } }
-      else if (t.id === 'gnew') Az.newGuest();
+      const t = e.target.closest('button'); if (!t || t.id !== 'lo') return;
+      t.disabled = true; t.textContent = 'Logging out…'; Az.logout().then(() => { m.close(); Az.toast && Az.toast('👋 Logout ho gaya — guest progress wapas'); });
     });
     return m;
   }
@@ -682,7 +669,7 @@ Az.login = function () {
   box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login / Guest</h2>' +
     '<p class="sub" style="text-align:center">Abhi tum <b>Guest</b> ho: ' + esc(Az.name()) + ' · 🆔 ' + esc(me.uid) + ' · 🪙 ' + me.coins + '</p>' +
     '<p class="sub" style="text-align:center">Har Gmail ka apna alag progress hota hai. Naya Gmail = bilkul naya account. Purana Gmail = uska purana progress.</p>' +
-    '<div class="azrow c" style="flex-direction:column;align-items:center"><button class="azbtn" id="gg">🔵 Google (Gmail) se login</button><button class="azbtn ghost" id="gl">🔗 Is guest progress ko Gmail se link karo</button></div>' +
+    '<div class="azrow c" style="flex-direction:column;align-items:center"><button class="azbtn" id="gg">🔵 Google (Gmail) se login</button><button class="azbtn ghost" id="gl">🔗 Is guest ko NAYE Gmail se link karo</button></div><p class="sub" style="text-align:center;font-size:11px">Link sirf aise Gmail se ho sakta hai jo pehle kisi ID se linked nahi hai. Ek ID = ek Gmail.</p>' +
     '<p class="sub" style="text-align:center;margin-top:12px">ya phone OTP se:</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>' + guestBlock;
   drawGuests();
   const err = t => { const e = box() && box().querySelector('#lerr'); if (e) e.textContent = t; }; let conf = null, ver = null;
@@ -692,7 +679,7 @@ Az.login = function () {
       const p = new firebase.auth.GoogleAuthProvider();
       p.setCustomParameters({ prompt: 'select_account' });   // always show the Gmail chooser, so a 2nd Gmail can really be picked
       return firebase.auth().signInWithPopup(p);
-    }).then(() => { m.close(); Az.toast && Az.toast('✅ Login ho gaya!'); })
+    }).then(() => { m.close(); if (!link) Az.toast && Az.toast('✅ Login ho gaya!'); })
       .catch(x => { linkG = null; err(x.code === 'auth/popup-closed-by-user' ? 'Login cancel hua.' : (x.code === 'auth/popup-blocked' ? 'Popup block hua — browser me popup allow karo.' : (x.message || 'Google login fail hua.'))); });
   };
   m.addEventListener('click', e => {

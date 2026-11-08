@@ -15,18 +15,15 @@ Firebase Auth UID "owner" hai. Isliye koi dusra console se ID badal kar bhi dusr
 bhej sakta, aur ID 97835276 koi aur claim nahi kar sakta.
 (Apne khud ke coins ka edit local hai — wo waise bhi har player apne device par tamper kar sakta hai.)
 
-SETUP (sirf ek baar, 3 minute)
-1. Website par apne Google account se login karo (Gmail jisse owner banna hai).
-2. Login box kholo (👤 button) -> neeche "Firebase UID (tap to copy)" — ye lambi string copy karo.
-   (Ya Firebase Console > Authentication > Users > User UID.)
-3. Firebase Console > Realtime Database > Rules. database.rules.json ka poora content paste karo.
-   File me PASTE_OWNER_FIREBASE_AUTH_UID_HERE jitni baar aaya hai (5 jagah), sab ko apne copy kiye
-   hue UID se replace karo (Find & Replace). Publish dabao.
-4. Website reload karo, dobara login (ya bas reload). Tumhara account apne aap ID 97835276 ban jayega
-   aur "👑 Developer Mode" button aa jayega. Page par "🔑 Owner verified" dikhna chahiye.
-5. Kisi player ko coins bhejne ke liye: us player ne kam se kam ek baar Google/Phone login karke game
-   kholi ho (tabhi uski ID rules me register hoti hai). Phir Developer Mode me uski ID + coins daalo.
-   Coins turant (agar wo online hai) ya uske agle login par mil jate hain.
+SETUP (sirf ek baar, 2 minute)  — v4: ab UID paste karne ki zarurat NAHI
+1. Firebase Console > Realtime Database > Rules. database.rules.json ka poora content paste karo aur Publish dabao.
+   Owner ab Gmail se pehchana jata hai: kumararihant625@gmail.com (file me 'kumararihant625@gmail.com' badal sakte ho).
+   Sirf yahi Gmail ID 97835276 + Developer Mode paa sakta hai. mr5605682@gmail.com (ya koi bhi dusra Gmail) nahi.
+2. Website reload karo aur kumararihant625@gmail.com se login karo. "🔑 Owner verified" dikhna chahiye.
+3. Jis dusre Gmail par galti se 97835276 aa gayi thi, wo agli baar login karte hi apne aap nayi Player ID le leta hai.
+   (Optional safai: Firebase Console > Realtime Database > Data me uidIndex/97835276 ko kholo; owner login par wo
+   khud sahi ho jata hai.)
+4. Kisi player ko coins bhejne ke liye: us player ne kam se kam ek baar Google login karke game kholi ho.
 
 NOTES
 - Guest (bina login) players ko coins nahi bheje ja sakte — unka koi account nahi hota.
