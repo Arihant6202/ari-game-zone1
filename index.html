@@ -495,7 +495,7 @@ function loadFb() {
   fbP = new Promise((res, rej) => {
     const c = window.AZ_FIREBASE;
     if (!c || !c.apiKey || /PASTE/.test(c.apiKey)) return rej(new Error('Firebase keys missing. firebase-config.js me apni keys daalo.'));
-    const L = ['app', 'auth', 'database', 'functions'];
+    const L = ['app', 'auth', 'database'];
     const next = i => { if (i === L.length) { try { firebase.initializeApp(c); fbDb = firebase.database(); firebase.auth().onAuthStateChanged(u => { if (u) afterLogin(u); }); res(); } catch (e) { rej(e); } return; }
       const s = document.createElement('script'); s.src = FBV + L[i] + '-compat.js'; s.onload = () => next(i + 1); s.onerror = () => rej(new Error('Login service load nahi hua. Internet check karo.')); document.head.appendChild(s); };
     next(0);
@@ -503,15 +503,14 @@ function loadFb() {
   fbP.catch(() => { fbP = null; });
   return fbP;
 }
-window.__azPush = () => { if (!fbUser || !fbDb) return; clearTimeout(pushT); pushT = setTimeout(() => { try { fbDb.ref('users/' + fbUser.uid).set(JSON.parse(JSON.stringify(db()))); } catch (e) {} }, 1500); };
+window.__azPush = () => { if (!fbUser || !fbDb) return; clearTimeout(pushT); pushT = setTimeout(() => { try { const d = db(); fbDb.ref('users/' + fbUser.uid + '/profile').update({ name: Az.cleanName(d.name) || 'Player', photo: (typeof d.photo === 'string' && d.photo.indexOf('data:image/') === 0 && d.photo.length < 30000) ? d.photo : '' }); } catch (e) {} }, 1500); };
 function afterLogin(u) {
   fbUser = u; try { localStorage.setItem('az_login', '1'); } catch (e) {}
-  // Server-enforced moderation check. Requires deployed Firebase callable functions.
-  try { firebase.functions().httpsCallable('checkMyBan')({}).then(r => { if (r.data && r.data.banned) { Az.toast('This account is currently suspended.'); firebase.auth().signOut(); fbUser = null; } }).catch(() => {}); } catch (e) {}
+  // Free Spark mode: no callable Cloud Functions; moderation checks are unavailable.
   const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 ' + String(u.displayName || u.phoneNumber || 'Me').split(' ')[0].slice(0, 8);
-  fbDb.ref('users/' + u.uid).once('value').then(s => {
+  fbDb.ref('users/' + u.uid + '/profile').once('value').then(s => {
     const c = s.val();
-    if (c && typeof c === 'object') { const L = db(); if (!c.uid) c.uid = L.uid; if (!c.name && L.name) { c.name = L.name; c.nameSet = true; } try { localStorage.setItem(KEY, JSON.stringify(c)); } catch (e) {} D = null; db(); Az.refresh && Az.refresh(); Az.toast && Az.toast('☁️ Progress loaded'); }
+    if (c && typeof c === 'object') { const L = db(); if (typeof c.name === 'string' && c.name) L.name = Az.cleanName(c.name); if (typeof c.photo === 'string') L.photo = c.photo; save(); Az.refresh && Az.refresh(); Az.toast && Az.toast('☁️ Profile loaded'); }
     else window.__azPush();
   }).catch(() => {});
 }
@@ -519,9 +518,9 @@ function authInit() { loadFb().catch(() => {}); }
 Az.login = function () {
   const m = Az.modal('<div id="lgin"></div>', {});
   const box = () => m.querySelector('#lgin');
-  if (fbUser) { box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + (fbUser.email || fbUser.phoneNumber) + '<br>Coins & levels cloud me save ho rahe hain ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div>';
+  if (fbUser) { box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + (fbUser.email || fbUser.phoneNumber) + '<br>Profile cloud me saved hai ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div>';
     m.addEventListener('click', e => { if (e.target.id === 'lo') { firebase.auth().signOut(); fbUser = null; try { localStorage.removeItem('az_login'); } catch (x) {} const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 Login'; m.close(); } }); return m; }
-  box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login</h2><p class="sub" style="text-align:center">Account banao, coins aur levels save rahenge.</p><div class="azrow c"><button class="azbtn" id="gg">🔵 Google (Gmail) se login</button></div><p class="sub" style="text-align:center;margin-top:12px">ya phone OTP se:</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>';
+  box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login</h2><p class="sub" style="text-align:center">Account banao; profile cloud me save hoga. Game progress is device par rahega.</p><div class="azrow c"><button class="azbtn" id="gg">🔵 Google (Gmail) se login</button></div><p class="sub" style="text-align:center;margin-top:12px">ya phone OTP se:</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>';
   const err = t => { box().querySelector('#lerr').textContent = t; }; let conf = null, ver = null;
   m.addEventListener('click', e => {
     if (e.target.id === 'gg') {
