@@ -1,0 +1,53 @@
+/* Ari Game Zone v17 — navy + neon purple skin (layered over inline styles) */
+:root{--bg1:#070a1f;--bg2:#1c1259;--panel:rgba(30,26,84,.55);--panel2:rgba(84,60,190,.28);--line:rgba(140,120,255,.28);--a1:#5fd7ff;--a2:#a24dff;--a3:#5dffb0;--a4:#ffc83d;--v:#8b5cff}
+body{background:radial-gradient(900px 520px at 12% -8%,#2a1a7a,transparent 62%),radial-gradient(800px 520px at 100% 100%,#3a0f6a,transparent 60%),#070a1f}
+.azbg::after{opacity:.12}
+header{display:none}
+.v17{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px;max-width:1280px;margin:0 auto;padding:14px}
+.side{position:sticky;top:14px;align-self:start;display:flex;flex-direction:column;gap:6px;padding:14px;border:1px solid var(--line);border-radius:20px;background:var(--panel);backdrop-filter:blur(14px)}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:10px;font:900 15px/1.05 Orbitron,sans-serif}
+.brand img{width:46px;height:46px;border-radius:13px}
+.side a,.side button{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:0;background:none;color:var(--text);font:600 14px Poppins,sans-serif;text-decoration:none;cursor:pointer;text-align:left}
+.side a:hover,.side button:hover{background:var(--panel2)}
+.side a.on{background:linear-gradient(135deg,#7c3aed,#a24dff);box-shadow:0 8px 22px -10px #a24dff}
+.content{min-width:0}
+.hero17{position:relative;overflow:hidden;min-height:260px;display:flex;align-items:center;padding:30px;border-radius:24px;border:1px solid var(--line);background:linear-gradient(120deg,rgba(23,16,92,.95),rgba(97,40,190,.75) 55%,rgba(24,12,70,.9))}
+.hero17 .txt{position:relative;z-index:2;max-width:56%}
+.hero17 small{color:var(--muted);font-size:13px}
+.hero17 h1{margin:6px 0 8px;font-size:clamp(28px,5vw,52px);line-height:1.02;font-style:italic;text-shadow:0 0 28px #a24dff}
+.hero17 p{margin:0 0 16px;color:#d9d2ff;font-size:14px}
+.hero17 .azbtn{background:linear-gradient(135deg,#8b5cff,#d04dff);color:#fff;padding:12px 26px;border-radius:14px;box-shadow:0 10px 26px -8px #b44dff;text-decoration:none;display:inline-block}
+.hero17 svg{position:absolute;right:2%;bottom:0;height:112%;max-width:46%}
+.feat{margin:20px 0 6px;display:flex;justify-content:space-between;align-items:center}
+.feat h2{margin:0;font-size:18px}
+.frow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.ft{display:block;aspect-ratio:1;border-radius:16px;border:1px solid var(--line);text-decoration:none;color:#fff;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:9px;font:700 12px Poppins,sans-serif;transition:transform .2s,box-shadow .2s}
+.ft:hover{transform:translateY(-4px);box-shadow:0 14px 28px -12px #a24dff}
+.ft b{position:absolute;top:10%;left:0;right:0;text-align:center;font-size:clamp(34px,6vw,54px);filter:drop-shadow(0 6px 10px #0008)}
+.ft span{position:relative;text-align:center;text-shadow:0 2px 6px #000}
+.g-Sports{background:linear-gradient(150deg,#0d7a4d,#0b2d5c)}.g-Puzzle{background:linear-gradient(150deg,#ff8a2a,#c2185b)}.g-Arcade{background:linear-gradient(150deg,#4c1d95,#1d4ed8)}.g-Shooter{background:linear-gradient(150deg,#7f1d1d,#4c1d95)}.g-Racing{background:linear-gradient(150deg,#b91c1c,#1e3a8a)}.g-Board{background:linear-gradient(150deg,#78350f,#312e81)}.g-Cards{background:linear-gradient(150deg,#be123c,#581c87)}.g-Fun{background:linear-gradient(150deg,#0e7490,#7e22ce)}.g-Platformer{background:linear-gradient(150deg,#7c2d12,#581c87)}
+.sectionhead h2{font-size:20px}
+.cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}.cats::-webkit-scrollbar{display:none}
+.cats .azchip{white-space:nowrap;border-radius:999px}
+.cats .azchip.on{background:linear-gradient(135deg,#7c3aed,#c04dff);color:#fff}
+.games{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))!important;gap:12px!important}
+.games .card{padding:0!important;overflow:hidden;border-radius:18px!important;border:1px solid var(--line)!important;background:var(--panel)!important;display:flex;flex-direction:column}
+.games .card .emoji{height:96px;display:grid;place-items:center;font-size:48px;margin:0!important}
+.games .card[data-cat=Sports] .emoji{background:linear-gradient(150deg,#0d7a4d,#0b2d5c)}.games .card[data-cat=Puzzle] .emoji{background:linear-gradient(150deg,#ff8a2a,#c2185b)}.games .card[data-cat=Arcade] .emoji{background:linear-gradient(150deg,#4c1d95,#1d4ed8)}.games .card[data-cat=Shooter] .emoji{background:linear-gradient(150deg,#7f1d1d,#4c1d95)}.games .card[data-cat=Racing] .emoji{background:linear-gradient(150deg,#b91c1c,#1e3a8a)}.games .card[data-cat=Board] .emoji{background:linear-gradient(150deg,#78350f,#312e81)}.games .card[data-cat=Cards] .emoji{background:linear-gradient(150deg,#be123c,#581c87)}.games .card[data-cat=Fun] .emoji{background:linear-gradient(150deg,#0e7490,#7e22ce)}.games .card[data-cat=Platformer] .emoji{background:linear-gradient(150deg,#7c2d12,#581c87)}
+.games .card h2{font-size:13px!important;margin:8px 10px 2px!important}
+.games .card>p,.games .card .tag{display:none!important}
+.games .card .modes,.games .card .prog,.games .card .bar{margin-left:10px!important;margin-right:10px!important}
+.games .card .bar{margin-bottom:10px!important}
+.bnav{display:none}
+@media(max-width:820px){
+ .v17{grid-template-columns:1fr;padding:10px 10px 84px}
+ .side{display:none}
+ .hero17{min-height:300px;padding:20px;align-items:flex-start}
+ .hero17 .txt{max-width:62%}.hero17 svg{height:78%;max-width:52%}
+ .frow{grid-template-columns:repeat(3,minmax(0,1fr))}.frow .ft:nth-child(n+4){display:none}
+ .games{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .bnav{display:flex;position:fixed;left:8px;right:8px;bottom:8px;z-index:60;justify-content:space-around;align-items:center;padding:8px 6px;border-radius:22px;background:rgba(14,12,48,.92);border:1px solid var(--line);backdrop-filter:blur(14px)}
+ .bnav a,.bnav button{display:flex;flex-direction:column;align-items:center;gap:2px;border:0;background:none;color:var(--muted);font:600 10px Poppins,sans-serif;text-decoration:none;cursor:pointer;min-width:52px}
+ .bnav .mid{width:54px;height:54px;margin-top:-26px;border-radius:50%;justify-content:center;background:linear-gradient(135deg,#8b5cff,#d04dff);color:#fff;font-size:22px;box-shadow:0 0 22px #a24dff}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
