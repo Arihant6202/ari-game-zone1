@@ -1,1 +1,66 @@
-<!doctype html><html lang="en"><head><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="./icon-64.png" type="image/png" sizes="64x64"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="shortcut icon" href="favicon.ico"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Ari Games"><script src="firebase-config.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Space Dodge · Ari Game Zone</title><link rel="stylesheet" href="az.css?v=18"></head><body data-game="spacedodge"><main class="azgame"><section class="azpanel" style="width:100%;max-width:620px;text-align:center"><div class="azbig">🚀</div><h1>Space Dodge</h1><p class="sub">Dodge incoming asteroids.</p><div id="gamearea"></div><p id="status" class="azmsg">Choose Play to begin.</p><div class="azrow c"><button id="start" class="azbtn">▶ Play</button><a class="azbtn ghost" href="index.html">🏠 Home</a></div></section></main><script src="az.js?v=18"></script><script>(()=>{const $=id=>document.getElementById(id);let level=1,diff='medium',score=0,done=false;function finish(won,sub){if(done)return;done=true;Az.finish({game:'spacedodge',level,diff,won,base:35,score,sub,progress:true,retry:()=>location.reload()})}function start(){Az.start({game:'spacedodge',onStart:o=>{level=o.level;diff=o.diff;score=0;done=false;run()}})}$('start').onclick=start;let ship=1,rocks=[],tick=0,loop;function run(){ship=1;rocks=[];tick=0;score=0;$('gamearea').innerHTML='<div id="space" style="height:260px;background:#05091d;border:1px solid #5366ff;border-radius:16px;display:grid;place-items:center;font-size:34px">🚀</div><div class="azrow c"><button class="azbtn ghost" id="left">⬅</button><button class="azbtn ghost" id="right">➡</button></div>';const area=$('space');function paint(){if(done)return;tick++;if(tick%9===0)rocks.push(Math.floor(Math.random()*3));if(rocks.includes(ship)){clearInterval(loop);finish(false,'Asteroid collision. Score: '+score);return}score++;area.innerHTML='<div style="font-size:24px;line-height:1.5">'+rocks.map((r,i)=>'<span style="display:inline-block;width:30%">'+(r===0?'☄️':'　')+'</span>').join('')+'<br>'+[0,1,2].map(i=>'<span style="display:inline-block;width:30%">'+(ship===i?'🚀':'　')+'</span>').join('')+'</div><small>Score '+score+'</small>';rocks=rocks.slice(-3)}$('left').onclick=()=>ship=Math.max(0,ship-1);$('right').onclick=()=>ship=Math.min(2,ship+1);loop=setInterval(paint,500)}})();</script></body></html>
+<!doctype html><html lang="en"><head><link rel="manifest" href="manifest.webmanifest?v=19"><link rel="icon" href="./icon-64.png?v=19" type="image/png" sizes="64x64"><link rel="apple-touch-icon" href="apple-touch-icon.png?v=19"><link rel="shortcut icon" href="favicon.ico?v=19"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Ari Games"><script src="firebase-config.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Space Dodge · Ari Game Zone</title><link rel="stylesheet" href="az.css?v=19"></head><body data-game="spacedodge"><main class="azgame"><section class="azpanel" style="width:100%;max-width:620px;text-align:center"><div class="azbig">🚀</div><h1>Space Dodge</h1><p class="sub">Drag your ship (or use ⬅ ➡) and dodge the asteroids. Survive to win!</p><div id="gamearea"></div><p id="status" class="azmsg">Choose Play to begin.</p><div class="azrow c"><button id="start" class="azbtn">▶ Play</button><a class="azbtn ghost" href="index.html">🏠 Home</a></div></section></main><script src="az.js?v=19"></script><script>(()=>{
+const $=id=>document.getElementById(id);
+let level=1,diff='medium',score=0,done=false,raf=0;
+function finish(won,sub){if(done)return;done=true;cancelAnimationFrame(raf);Az.finish({game:'spacedodge',level,diff,won,base:35,score,sub,progress:true,retry:()=>location.reload()})}
+function start(){Az.start({game:'spacedodge',onStart:o=>{level=o.level;diff=o.diff;score=0;done=false;run()}})}
+$('start').onclick=start;
+function run(){
+ cancelAnimationFrame(raf);
+ const W=320,H=440;
+ $('gamearea').innerHTML='<canvas id="cv" width="'+W+'" height="'+H+'" style="width:100%;max-width:340px;touch-action:none;background:#05091d;border:1px solid #5366ff;border-radius:16px;display:block;margin:0 auto"></canvas><div class="azrow c" style="margin-top:8px"><button class="azbtn ghost" id="left">⬅</button><button class="azbtn ghost" id="right">➡</button></div>';
+ const cv=$('cv'),ctx=cv.getContext('2d');
+ const dm={easy:.8,medium:1,hard:1.25}[diff]||1;
+ const speed=dm*(1+Math.min(level,60)*.015);
+ const goal=Math.min(60,20+Math.floor(level/2)+(diff==='hard'?8:diff==='easy'?-4:0)); // seconds to survive
+ const ship={x:W/2,y:H-50,r:14,vx:0,tx:W/2};
+ let rocks=[],stars=[],t0=performance.now(),last=t0,spawn=0,hold=0;
+ for(let i=0;i<40;i++)stars.push({x:Math.random()*W,y:Math.random()*H,s:.5+Math.random()*1.5});
+ const press=d=>{hold=d},rel=()=>{hold=0};
+ [['left',-1],['right',1]].forEach(([id,d])=>{const b=$(id);b.onpointerdown=e=>{e.preventDefault();press(d)};b.onpointerup=b.onpointerleave=b.onpointercancel=rel});
+ const pos=e=>{const r=cv.getBoundingClientRect();return (e.clientX-r.left)/r.width*W};
+ cv.onpointerdown=e=>{ship.tx=pos(e);cv.setPointerCapture&&cv.setPointerCapture(e.pointerId)};
+ cv.onpointermove=e=>{if(e.buttons||e.pointerType==='touch')ship.tx=pos(e)};
+ window.onkeydown=e=>{if(e.key==='ArrowLeft'||e.key==='a')hold=-1;if(e.key==='ArrowRight'||e.key==='d')hold=1};
+ window.onkeyup=e=>{if(['ArrowLeft','ArrowRight','a','d'].includes(e.key))hold=0};
+ function drawShip(){
+  const {x,y}=ship;ctx.save();ctx.translate(x,y);
+  ctx.fillStyle='#ff9a3c';ctx.beginPath();ctx.moveTo(-6,14);ctx.lineTo(0,14+8+Math.random()*8);ctx.lineTo(6,14);ctx.fill();
+  ctx.fillStyle='#dfe6ff';ctx.beginPath();ctx.moveTo(0,-20);ctx.lineTo(11,10);ctx.lineTo(0,5);ctx.lineTo(-11,10);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#5fd7ff';ctx.beginPath();ctx.ellipse(0,-3,3.5,6,0,0,7);ctx.fill();
+  ctx.fillStyle='#a24dff';ctx.beginPath();ctx.moveTo(-11,10);ctx.lineTo(-19,16);ctx.lineTo(-8,12);ctx.fill();ctx.beginPath();ctx.moveTo(11,10);ctx.lineTo(19,16);ctx.lineTo(8,12);ctx.fill();
+  ctx.restore();
+ }
+ function drawRock(a){
+  ctx.save();ctx.translate(a.x,a.y);ctx.rotate(a.rot);ctx.fillStyle='#8b6b4a';ctx.strokeStyle='#d2b48c';ctx.lineWidth=2;ctx.beginPath();
+  a.pts.forEach((p,i)=>{const px=Math.cos(p[0])*a.r*p[1],py=Math.sin(p[0])*a.r*p[1];i?ctx.lineTo(px,py):ctx.moveTo(px,py)});
+  ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#6b4f35';ctx.beginPath();ctx.arc(-a.r*.25,-a.r*.2,a.r*.22,0,7);ctx.fill();ctx.restore();
+ }
+ function frame(now){
+  if(done)return;
+  const dt=Math.min(40,now-last)/16.67;last=now;
+  const el=(now-t0)/1000;score=Math.floor(el*10);
+  // move ship
+  if(hold)ship.tx=Math.max(16,Math.min(W-16,ship.tx+hold*7*dt));
+  ship.tx=Math.max(16,Math.min(W-16,ship.tx));
+  ship.x+=(ship.tx-ship.x)*Math.min(1,.3*dt);
+  // spawn
+  spawn-=dt;
+  if(spawn<=0){const r=12+Math.random()*16;rocks.push({x:r+Math.random()*(W-2*r),y:-r,r,vy:(2+Math.random()*1.6)*speed*(1+el*.012),rot:0,vr:(Math.random()-.5)*.1,pts:Array.from({length:9},(_,i)=>[i/9*6.283,.75+Math.random()*.35])});spawn=Math.max(12,34/(speed*(1+el*.015)))*(.6+Math.random()*.8)}
+  // update
+  stars.forEach(s=>{s.y+=s.s*dt*1.2;if(s.y>H){s.y=0;s.x=Math.random()*W}});
+  rocks.forEach(a=>{a.y+=a.vy*dt;a.rot+=a.vr*dt});
+  rocks=rocks.filter(a=>a.y<H+40);
+  // draw
+  ctx.fillStyle='#05091d';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#fff';stars.forEach(s=>ctx.fillRect(s.x,s.y,s.s,s.s));
+  rocks.forEach(drawRock);drawShip();
+  ctx.fillStyle='#fff';ctx.font='bold 14px sans-serif';ctx.textAlign='left';ctx.fillText('Score '+score,10,22);
+  ctx.textAlign='right';ctx.fillText(Math.max(0,Math.ceil(goal-el))+'s left',W-10,22);
+  // collision
+  for(const a of rocks){const dx=a.x-ship.x,dy=a.y-ship.y;if(Math.hypot(dx,dy)<a.r*.85+ship.r*.55){Az.sfx&&Az.sfx('boom');finish(false,'Asteroid collision! Score: '+score);return}}
+  if(el>=goal){finish(true,'You survived '+goal+' seconds! Score: '+score);return}
+  raf=requestAnimationFrame(frame);
+ }
+ raf=requestAnimationFrame(frame);
+}
+})();</script></body></html>
