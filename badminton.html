@@ -13,10 +13,10 @@
 </div>
 <div class="azstage">
   <canvas id="cv" width="420" height="600" style="width:min(100%,420px)"></canvas>
-  <p class="azmsg" id="msg">Drag on the court to move. Get under the shuttle, then HIT!</p>
+  <p class="azmsg" id="msg">Tap HIT to serve. Then drag your player to the shuttle's green ring — it hits automatically.</p>
 </div>
 <div class="bd-ctl"><button class="azbtn" id="hit">🏸 HIT<br><small>default shot</small></button><button class="azbtn ghost" id="drop">🎯 DROP<br><small>short, at the net</small></button><button class="azbtn" id="smash" style="background:linear-gradient(135deg,#ff9f1c,#ff3d5a)">💥 SMASH<br><small>hit it high & early</small></button></div>
-<div class="bd-sub"><button class="azbtn ghost sm" id="restart">↻ Restart</button><button class="azbtn ghost sm" id="emoji">👏 React</button></div>
+<div class="bd-sub"><button class="azbtn ghost sm" id="help">❓ How to play</button><button class="azbtn ghost sm" id="restart">↻ Restart</button><button class="azbtn ghost sm" id="emoji">👏 React</button></div>
 <p class="bd-tip">Move: drag on the court / arrow keys / WASD · HIT = Space · DROP = Z · SMASH = X. Hold a direction while hitting to aim. Serve with HIT/Space. After the serve the shuttle is hit ONLY when your character moves into it (green ring). HIT / DROP / SMASH choose which shot you play on contact.</p>
 </main>
 <script src="az.js?v=15"></script>
@@ -108,7 +108,7 @@ function playerHit(type) {
   if (phase === 'serve') {
     if (server !== 'p') return;
     if (type === 'smash') type = 'clear';
-    doSwing(); Az.sfx('hit'); makeShot('p', type, P.x, P.y, 60, playerAim(), 8); phase = 'rally'; setHint('Rally!'); $('msg').textContent = 'Rally! Watch the CPU\'s return.'; return;
+    doSwing(); Az.sfx('hit'); makeShot('p', type, P.x, P.y, 60, playerAim(), 8); phase = 'rally'; setHint('Rally!'); $('msg').textContent = 'Rally! Move your player to the shuttle when the CPU returns it.'; return;
   }
   if (phase !== 'rally') return;
   armed = { type, t: .9 };                       // buttons only CHOOSE the shot; contact happens by moving the character
@@ -196,7 +196,7 @@ function update(dt) {
   if (phase === 'serve') {
     phaseT += dt;
     if (server === 'p') S = { x: P.x, y: P.y, z: 60 + Math.sin(t * 5) * 4 };
-    else { S = { x: A.x, y: A.y, z: 60 }; if (phaseT > 1) { A.sw = .26; Az.sfx('hit'); makeShot('a', Math.random() < .7 ? 'clear' : 'drop', A.x, A.y, 60, rnd(90, 330), 10); phase = 'rally'; setHint('Rally!'); $('msg').textContent = 'Move under the shuttle and hit it!'; } }
+    else { S = { x: A.x, y: A.y, z: 60 }; if (phaseT > 1) { A.sw = .26; Az.sfx('hit'); makeShot('a', Math.random() < .7 ? 'clear' : 'drop', A.x, A.y, 60, rnd(90, 330), 10); phase = 'rally'; setHint('Rally!'); $('msg').textContent = 'Move your player into the green ring — it hits automatically!'; } }
   } else if (phase === 'rally' && shot) {
     shot.age += dt;
     const q = pos(); S = { x: q.x, y: q.y, z: q.z };
@@ -312,6 +312,12 @@ c.addEventListener('pointerdown', e => { e.preventDefault(); drag = cpos(e); try
 c.addEventListener('pointermove', e => { if (drag) drag = cpos(e); });
 const endDrag = () => { drag = null; };
 c.addEventListener('pointerup', endDrag); c.addEventListener('pointercancel', endDrag); c.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') endDrag(); });
+function showHelp() {
+  const m = Az.modal('<div class="azbig">🏸</div><h2 style="text-align:center">How to play Badminton</h2><ol style="line-height:1.6;padding-left:20px;font-size:14px"><li><b>Serve:</b> tap <b>🏸 HIT</b> (or press Space). The shuttle flies to the CPU.</li><li><b>Move:</b> drag your finger on the court (or use arrow keys / WASD) to move <b>your player</b> at the bottom.</li><li><b>Return:</b> when the CPU hits back, a <b>green ring</b> shows near your player. Move your player so the shuttle lands inside the ring. <b>Your player hits it automatically</b> — there is no hit without moving to it.</li><li><b>Pick your shot</b> just before contact: <b>🎯 DROP</b> = short at the net, <b>💥 SMASH</b> = fast, only when the shuttle is high. If you pick nothing, you play a safe clear.</li><li><b>Score:</b> you get a point when the CPU misses or hits out/net. Miss the shuttle and the CPU scores. First to the target wins.</li></ol><div class="azrow c"><button class="azbtn" id="hgo">Got it</button></div>');
+  m.querySelector('#hgo').onclick = () => m.close();
+}
+$('help').onclick = showHelp;
+try { if (!localStorage.getItem('az_bd_help')) { localStorage.setItem('az_bd_help', '1'); setTimeout(showHelp, 400); } } catch (e) {}
 $('restart').onclick = () => reset(L);
 $('emoji').onclick = () => { if (net) net.sendEmoji('👏'); Az.toast('👏'); };
 addEventListener('keydown', e => {
