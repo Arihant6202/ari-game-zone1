@@ -58,6 +58,18 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     </div>
 
     <div class="box">
+      <h2>💎 Your diamonds</h2>
+      <div class="big">💎 <span id="mydiamonds">0</span></div>
+      <p class="sub" style="text-align:center">Developer can set, add or remove diamonds on the owner account.</p>
+      <div class="azrow c"><input class="azinput" id="selfDiamondAmt" type="number" inputmode="numeric" placeholder="Diamonds (number)"></div>
+      <div class="azrow c">
+        <button class="azbtn sm" id="diamondSet">= Set</button>
+        <button class="azbtn sm" id="diamondAdd">＋ Add</button>
+        <button class="azbtn sm ghost" id="diamondSub">－ Remove</button>
+      </div>
+    </div>
+
+    <div class="box">
       <h2>🎁 Coins for another player</h2>
       <p class="sub">Enter the player's 8-digit ID. The coins reach that player's account when they come online (instantly if they are online now).</p>
       <div class="azrow c"><input class="azinput" id="gid" inputmode="numeric" maxlength="8" placeholder="Player ID (8 digit)"></div>
@@ -71,7 +83,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     <div id="log"></div>
   </div>
 </main>
-<script src="az.js?v=7"></script>
+<script src="az.js?v=8"></script>
 <script>
 (function(){
   const $=id=>document.getElementById(id);
@@ -83,6 +95,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     if(!owner)return;
     $('pid').textContent=Az.uid();
     $('mycoins').textContent=Az.coins();
+    $('mydiamonds').textContent=Az.diamonds();
     const acc=Az.account();
     $('stLogin').textContent=acc?'☁️ Logged in':'☁️ Not logged in';
     $('stLogin').className='azpill '+(acc?'ok':'no');
@@ -96,6 +109,9 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
   $('selfAdd').onclick=()=>{const n=num('selfAmt');if(n==null||n<0)return log('Enter a valid coin amount.',1);Az.devAddCoins(n);paint();log('✅ +'+n+' → now '+Az.coins());};
   $('selfSub').onclick=()=>{const n=num('selfAmt');if(n==null||n<0)return log('Enter a valid coin amount.',1);Az.devAddCoins(-n);paint();log('✅ −'+n+' → now '+Az.coins());};
   $('selfMax').onclick=()=>{Az.devSetCoins(999999999);paint();log('✅ MAX coins set.');};
+  $('diamondSet').onclick=()=>{const n=num('selfDiamondAmt');if(n==null||n<0)return log('Enter a valid diamond amount.',1);Az.devSetDiamonds(n);paint();log('✅ Diamonds set: '+Az.diamonds());};
+  $('diamondAdd').onclick=()=>{const n=num('selfDiamondAmt');if(n==null||n<0)return log('Enter a valid diamond amount.',1);Az.devAddDiamonds(n);paint();log('✅ +'+n+' diamonds → now '+Az.diamonds());};
+  $('diamondSub').onclick=()=>{const n=num('selfDiamondAmt');if(n==null||n<0)return log('Enter a valid diamond amount.',1);Az.devAddDiamonds(-n);paint();log('✅ −'+n+' diamonds → now '+Az.diamonds());};
   document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{Az.devAddCoins(+b.dataset.q);paint();log('✅ Now '+Az.coins()+' coins.');});
   function give(sign,mode){
     const n=num('gAmt');if(n==null||n<0)return log('Enter a valid coin amount (0 or more).',1);
@@ -106,7 +122,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
   $('gAdd').onclick=()=>give(1,'add');$('gSub').onclick=()=>give(-1,'add');$('gSet').onclick=()=>give(1,'set');
   document.addEventListener('az-ready',()=>{paint();Az.whenAuth().then(paint);});
   document.addEventListener('az-account',paint);document.addEventListener('az-owner',paint);
-  setInterval(()=>{if(Az.isOwner())$('mycoins').textContent=Az.coins();},1500);
+  setInterval(()=>{if(Az.isOwner()){$('mycoins').textContent=Az.coins();$('mydiamonds').textContent=Az.diamonds();}},1500);
 })();
 </script>
 </body>

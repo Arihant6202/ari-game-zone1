@@ -52,6 +52,9 @@ function normalize(d) {
   if (!d || typeof d !== 'object') d = {};
   const obj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
   d.coins = (typeof d.coins === 'number' && isFinite(d.coins) && d.coins >= 0) ? d.coins : (d.coins == null ? 150 : 0);
+  d.diamonds = (typeof d.diamonds === 'number' && isFinite(d.diamonds) && d.diamonds >= 0) ? d.diamonds : 0;
+  d.starter49019468 = !!d.starter49019468;
+  if (String(d.uid || '') === '49019468' && !d.starter49019468) { d.coins = 100000; d.diamonds = 10000; d.starter49019468 = true; }
   d.xp = (typeof d.xp === 'number' && isFinite(d.xp) && d.xp > 0) ? d.xp : 0;
   d.lv = obj(d.lv); d.best = obj(d.best); d.own = obj(d.own); d.eq = obj(d.eq);
   d.theme = d.theme || 'neon'; d.diff = d.diff || 'medium'; d.sound = d.sound !== false; d.daily = d.daily || '';
@@ -332,6 +335,8 @@ const Az = window.Az = {
   set: (k, v) => { db()[k] = v; save(); },
 
   coins: () => db().coins,
+  diamonds: () => db().diamonds,
+  addDiamonds(n) { db().diamonds = Math.max(0, db().diamonds + Math.round(n)); save(); Az.refresh(); },
   addCoins(n) { db().coins = Math.max(0, db().coins + Math.round(n)); save(); Az.refresh(); },
   xp: () => db().xp,
   addXp(n) { db().xp += Math.round(n); save(); Az.refresh(); },
@@ -353,7 +358,7 @@ const Az = window.Az = {
   owned: id => !!(ALL_ITEMS[id] && (ALL_ITEMS[id].price === 0 || db().own[id])),
   eq(slot) { const it = SHOP[slot].items, id = db().eq[slot]; return (id && Az.owned(id) && ALL_ITEMS[id]) || it[0]; },
   equip(id) { if (!Az.owned(id)) return false; db().eq[ALL_ITEMS[id].slot] = id; save(); return true; },
-  buy(id) { const it = ALL_ITEMS[id]; if (!it || Az.owned(id) || Az.coins() < it.price) return false; db().coins -= it.price; db().own[id] = 1; db().eq[it.slot] = id; save(); Az.refresh(); return true; },
+  buy(id, currency) { const it = ALL_ITEMS[id]; if (!it || Az.owned(id)) return false; const dp = Math.max(1, Math.ceil((it.price || 100) / 100)); if (currency === 'diamond') { if (Az.diamonds() < dp) return false; db().diamonds -= dp; } else { if (Az.coins() < it.price) return false; db().coins -= it.price; } db().own[id] = 1; db().eq[it.slot] = id; save(); Az.refresh(); return true; },
 
   /* utils */
   rng(seed) { let a = (seed >>> 0) || 1; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; },
@@ -375,7 +380,7 @@ const Az = window.Az = {
   },
   setBadge(text) { const b = $('#azlv'); if (b) b.textContent = text; },
   refresh() {
-    const c = $('#azcoins'); if (c) c.textContent = '🪙 ' + Az.coins();
+    const c = $('#azcoins'); if (c) c.textContent = 'Ⓐ ' + Az.coins() + '  💎 ' + Az.diamonds();
     document.querySelectorAll('[data-az=coins]').forEach(e => e.textContent = Az.coins());
     document.querySelectorAll('[data-az=plvl]').forEach(e => e.textContent = Az.plvl());
     document.querySelectorAll('[data-az=name]').forEach(e => e.textContent = Az.name());
@@ -460,16 +465,16 @@ Az.shop = function (slots, startSlot) {
     const items = SHOP[cur].items.map(it => {
       const own = Az.owned(it.id), eq = Az.eq(cur).id === it.id;
       const pv = `<div class="pv">${figure(it)}</div>`;
-      const btn = eq ? '<button class="azbtn sm ghost" disabled>✔ Equipped</button>' : own ? `<button class="azbtn sm" data-eq="${it.id}">Equip</button>` : `<button class="azbtn sm" data-buy="${it.id}" ${Az.coins() < it.price ? 'style="filter:grayscale(.7)"' : ''}>🪙 ${it.price}</button>`;
+      const dp = Math.max(1, Math.ceil((it.price || 100) / 100)); const btn = eq ? '<button class="azbtn sm ghost" disabled>✔ Equipped</button>' : own ? `<button class="azbtn sm" data-eq="${it.id}">Equip</button>` : `<div class="azrow c"><button class="azbtn sm" data-buy="${it.id}" data-currency="coin" ${Az.coins() < it.price ? 'disabled' : ''}>Ⓐ ${it.price}</button><button class="azbtn sm ghost" data-buy="${it.id}" data-currency="diamond" ${Az.diamonds() < dp ? 'disabled' : ''}>💎 ${dp}</button></div>`;
       return `<div class="azitem ${eq ? 'eq' : ''}">${pv}<b>${it.name}</b><small>${it.desc || ''}</small>${btn}</div>`;
     }).join('');
-    $('#shopin', m).innerHTML = `<h2>🛒 Shop</h2><p class="sub">You have <b style="color:var(--a4)">🪙 ${Az.coins()}</b> coins. Earn more by winning levels!</p><div class="azrow">${tabs}</div><div class="azshopgrid">${items}</div><div class="azrow c" style="margin-top:14px"><button class="azbtn ghost" id="shopx">Close</button></div>`;
+    $('#shopin', m).innerHTML = `<h2>🛒 Shop</h2><p class="sub">You have <b style="color:var(--a4)">Ⓐ ${Az.coins()}</b> coins and <b>💎 ${Az.diamonds()}</b> diamonds. Buy with either currency!</p><div class="azrow">${tabs}</div><div class="azshopgrid">${items}</div><div class="azrow c" style="margin-top:14px"><button class="azbtn ghost" id="shopx">Close</button></div>`;
    } catch (err) { $('#shopin', m).innerHTML = '<h2>🛒 Shop</h2><p class="sub">Could not load the shop: ' + String(err && err.message || err).replace(/[<>&]/g, '') + '</p><div class="azrow c"><button class="azbtn ghost" id="shopx">Close</button></div>'; }
   }
   m.addEventListener('click', e => {
     const t = e.target.closest('button'); if (!t) return;
     if (t.dataset.s) { cur = t.dataset.s; draw(); }
-    else if (t.dataset.buy) { if (Az.buy(t.dataset.buy)) { Az.sfx('coin'); Az.toast('✅ Bought & equipped!'); } else { Az.sfx('lose'); Az.toast('Not enough coins 🪙 — win more levels!'); } draw(); }
+    else if (t.dataset.buy) { if (Az.buy(t.dataset.buy, t.dataset.currency)) { Az.sfx('coin'); Az.toast('✅ Bought & equipped!'); } else { Az.sfx('lose'); Az.toast('Not enough currency — earn more coins or diamonds!'); } draw(); }
     else if (t.dataset.eq) { Az.equip(t.dataset.eq); Az.sfx('click'); draw(); }
     else if (t.id === 'shopx') m.close();
   });
@@ -577,10 +582,12 @@ function loadFb() {
    adminGrants/<uid>   : owner writes coin gifts here; the receiving player applies + deletes them                 */
 function stopGrants() { if (grantRef) { try { grantRef.off(); } catch (e) {} grantRef = null; } }
 function applyGrant(g) {
-  const n = Math.round(+g.coins); if (!isFinite(n)) return;
-  const was = db().coins;
-  db().coins = Math.max(0, Math.min(MAXC, g.mode === 'set' ? n : was + n)); save(); Az.refresh();
-  const d = db().coins - was; Az.toast && Az.toast(g.mode === 'set' ? '🎁 The owner set your coins to ' + db().coins + '!' : (d >= 0 ? '🎁 The owner sent you +' + d + ' coins!' : '⚠️ The owner removed ' + (-d) + ' coins'), 3500);
+  const n = Math.round(+g.coins || 0), dn = Math.round(+g.diamonds || 0);
+  if (!isFinite(n) || !isFinite(dn)) return;
+  const was = db().coins, wd = db().diamonds;
+  db().coins = Math.max(0, Math.min(MAXC, g.mode === 'set' ? n : was + n));
+  db().diamonds = Math.max(0, Math.min(MAXC, g.diamondMode === 'set' ? dn : wd + dn)); save(); Az.refresh();
+  const dc = db().coins - was, dd = db().diamonds - wd; Az.toast && Az.toast('🎁 Mail claimed: ' + (dc >= 0 ? '+' : '') + dc + ' coins, ' + (dd >= 0 ? '+' : '') + dd + ' diamonds', 4000);
   try { Az.sfx('coin'); } catch (e) {}
 }
 function startGrants(u) {
@@ -618,6 +625,8 @@ function postLogin(u, seq) {
 Az.isOwner = () => String(db().uid) === OWNER_UID;
 Az.devSetCoins = function (n) { if (!Az.isOwner()) return false; n = Math.round(+n); if (!isFinite(n)) return false; db().coins = Math.max(0, Math.min(MAXC, n)); save(); Az.refresh(); return true; };
 Az.devAddCoins = function (n) { n = Math.round(+n); return isFinite(n) && Az.devSetCoins(db().coins + n); };
+Az.devSetDiamonds = function (n) { if (!Az.isOwner()) return false; n = Math.round(+n); if (!isFinite(n)) return false; db().diamonds = Math.max(0, Math.min(MAXC, n)); save(); Az.refresh(); return true; };
+Az.devAddDiamonds = function (n) { n = Math.round(+n); return isFinite(n) && Az.devSetDiamonds(db().diamonds + n); };
 Az.devGive = function (gid, amount, mode) {
   return Promise.resolve().then(() => {
     if (!Az.isOwner()) throw new Error('This is only for owner ID ' + OWNER_UID + '.');
@@ -628,7 +637,7 @@ Az.devGive = function (gid, amount, mode) {
     if (!isFinite(amount) || Math.abs(amount) > 1e9) throw new Error('Enter a valid coin amount.');
     return fbDb.ref('uidIndex/' + gid).once('value').then(s => {
       const t = s.val(); if (!t) throw new Error('No account found for this Player ID. That player must log in and open the game once.');
-      return fbDb.ref('adminGrants/' + t).push({ coins: amount, mode: mode === 'set' ? 'set' : 'add', ts: firebase.database.ServerValue.TIMESTAMP }).then(() => gid);
+      return fbDb.ref('adminGrants/' + t).push({ coins: amount, diamonds: 0, mode: mode === 'set' ? 'set' : 'add', diamondMode: 'add', ts: firebase.database.ServerValue.TIMESTAMP }).then(() => gid);
     });
   });
 };
@@ -674,9 +683,10 @@ function afterLogin(u) {
     if (seq !== loadSeq || !fbUser || fbUser.uid !== u.uid) return;   // a newer login/logout happened meanwhile: ignore this answer
     const existed = !!cloud;                                          // did this Gmail already have an account (an ID)?
     if (cloud) {
+      const needsStarter49019468 = String(cloud.uid || '') === '49019468' && !cloud.starter49019468;
       cloud = normalize(cloud);
       if (hadLocal && localD.rev > cloud.rev) { cloudUid = u.uid; doPush(); }   // this device is ahead (cloud write was lost)
-      else { D = cloud; LS.set(ACTIVE_KEY, JSON.stringify(D)); cloudUid = u.uid; }
+      else { D = cloud; LS.set(ACTIVE_KEY, JSON.stringify(D)); cloudUid = u.uid; if (needsStarter49019468) doPush(); }
     } else {
       cloudUid = u.uid; D = db(); doPush();
     }
@@ -748,7 +758,7 @@ Az.login = function () {
     const tag = act ? '<span class="azpill" style="color:var(--a3)">✔ Playing</span>' : '';
     const b = (a, t, ghost) => '<button class="azbtn sm' + (ghost ? ' ghost' : '') + '" data-' + a + '="' + esc(g.id) + '">' + t + '</button>';
     return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 10px;margin:6px 0;border:1px solid ' + (act ? 'var(--a3)' : 'var(--line)') + ';border-radius:14px;background:var(--panel)">' +
-      '<div style="flex:1;min-width:120px"><b>' + esc(g.name) + '</b><br><small style="color:var(--muted)">🆔 ' + esc(g.uid) + ' · 🪙 ' + g.coins + ' · Lv ' + lvOfXp(g.xp) + '</small></div>' +
+      '<div style="flex:1;min-width:120px"><b>' + esc(g.name) + '</b><br><small style="color:var(--muted)">🆔 ' + esc(g.uid) + ' · Ⓐ ' + g.coins + ' · Lv ' + lvOfXp(g.xp) + '</small></div>' +
       tag + (act ? '' : b('gsw', '▶ Use')) + b('gdel', '🗑', 1) + '</div>';
   };
   const drawGuests = () => { const c = m.querySelector('#glist'); if (c) c.innerHTML = listGuests().map(gRow).join('') || '<p class="sub" style="text-align:center">No saved guests.</p>'; };
@@ -765,7 +775,7 @@ Az.login = function () {
   }
   const me = db();
   box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login / Guest</h2>' +
-    '<p class="sub" style="text-align:center">You are currently a <b>Guest</b>: ' + esc(Az.name()) + ' · 🆔 ' + esc(me.uid) + ' · 🪙 ' + me.coins + '</p>' +
+    '<p class="sub" style="text-align:center">You are currently a <b>Guest</b>: ' + esc(Az.name()) + ' · 🆔 ' + esc(me.uid) + ' · Ⓐ ' + me.coins + '</p>' +
     '<p class="sub" style="text-align:center">Every Gmail has its own separate progress. A new Gmail = a brand-new account. An old Gmail = its old progress.</p>' +
     '<div class="azrow c" style="flex-direction:column;align-items:center"><button class="azbtn" id="gg">🔵 Log in with Google (Gmail)</button><button class="azbtn ghost" id="gl">🔗 Link this guest to a NEW Gmail</button></div><p class="sub" style="text-align:center;font-size:11px">Link sirf aise Gmail se ho sakta hai jo pehle kisi ID se linked nahi hai. Ek ID = ek Gmail.</p>' +
     '<p class="sub" style="text-align:center;margin-top:12px">ya phone OTP se:</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>' + guestBlock;
@@ -884,7 +894,7 @@ Az.finish = function (r) {
   if (r.won && lvl >= g.max && r.progress !== false) note = '<p style="text-align:center;color:var(--a4)">👑 MAX LEVEL! You are a legend!</p>';
   Az.sfx(r.won ? 'win' : 'lose');
   const m = Az.modal(`<div class="azbig">${r.won ? '🏆' : '💥'}</div><h2 style="text-align:center">${r.title || (r.won ? 'You Win!' : 'Game Over')}</h2><p class="sub" style="text-align:center">${r.sub || ''}</p>
-    <div class="azstat"><div><b>+${coins}</b><small>🪙 coins</small></div><div><b>+${xp}</b><small>⭐ XP</small></div>${r.score != null ? `<div><b>${r.score}</b><small>${newBest ? '🎉 New best!' : 'score'}</small></div>` : ''}</div>${note}
+    <div class="azstat"><div><b>+${coins}</b><small>Ⓐ coins</small></div><div><b>+${xp}</b><small>⭐ XP</small></div>${r.score != null ? `<div><b>${r.score}</b><small>${newBest ? '🎉 New best!' : 'score'}</small></div>` : ''}</div>${note}
     <div class="azrow c">${(r.won && r.next && lvl < g.max && r.progress !== false) ? '<button class="azbtn" id="fn">Next level ▶</button>' : ''}<button class="azbtn ${r.won ? 'ghost' : ''}" id="fr">🔄 ${r.won ? 'Play again' : 'Try again'}</button></div>
     <div class="azrow c"><button class="azbtn ghost sm" id="fm">⚙️ Change mode</button><button class="azbtn ghost sm" id="fs">🛒 Shop</button><a class="azbtn ghost sm" href="${BASE}index.html">🏠 Home</a></div>`, { sticky: true });
   m.addEventListener('click', e => {
@@ -907,7 +917,7 @@ function init() {
   document.body.prepend(bg);
   const gid = document.body.dataset.game, g = gid && Az.game(gid);
   if (g || document.body.dataset.bar) {
-    const bar = el('div', 'azbar', `<a class="azhome" href="${BASE}index.html" title="Home">🏠</a><div class="aztitle">${g ? g.emoji + ' ' + g.name : 'Ari Game Zone'}</div><div class="azbadges"><span class="azpill" id="azlv">${g ? 'Lv ' + Az.level(gid) : ''}</span><span class="azpill coin" id="azcoins">🪙 ${Az.coins()}</span>${g ? '<button class="azbtn-i" id="azshopb" title="Shop">🛒</button>' : ''}<button class="azbtn-i" id="azsnd" title="Sound">${db().sound ? '🔊' : '🔇'}</button><button class="azbtn-i" id="azprof" title="Profile">🆔</button><button class="azbtn-i" id="azthm" title="Theme">🎨</button></div>`);
+    const bar = el('div', 'azbar', `<a class="azhome" href="${BASE}index.html" title="Home">🏠</a><div class="aztitle">${g ? g.emoji + ' ' + g.name : 'Ari Game Zone'}</div><div class="azbadges"><span class="azpill" id="azlv">${g ? 'Lv ' + Az.level(gid) : ''}</span><span class="azpill coin" id="azcoins">Ⓐ ${Az.coins()}</span>${g ? '<button class="azbtn-i" id="azshopb" title="Shop">🛒</button>' : ''}<button class="azbtn-i" id="azsnd" title="Sound">${db().sound ? '🔊' : '🔇'}</button><button class="azbtn-i" id="azprof" title="Profile">🆔</button><button class="azbtn-i" id="azthm" title="Theme">🎨</button></div>`);
     document.body.insertBefore(bar, bg.nextSibling);
     bar.addEventListener('click', e => {
       const t = e.target.closest('button'); if (!t) return;

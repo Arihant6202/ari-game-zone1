@@ -1,10 +1,11 @@
-ARI GAME ZONE — DEVELOPER MODE (OWNER) SETUP  (v7)
+ARI GAME ZONE — DEVELOPER MODE (OWNER) SETUP  (v8)
 ===================================================
 Owner Player ID: 97835276
 No Cloud Functions / Blaze plan needed — everything runs on the free Spark plan.
 
 WHAT DEVELOPER MODE DOES
 - Set / add / remove your own coins (0 to 999,999,999) + quick buttons (+1K, +10K, +100K, +1M, MAX)
+- Set / add / remove your own diamonds from the Developer page
 - Enter any player's 8-digit ID to add, remove or set their coins
 - Only visible on the account with Player ID 97835276 (a "👑 Developer Mode" button on Home and in
   Profile). Everyone else sees "Access denied".
@@ -30,3 +31,10 @@ NOTES
 - The old "Cloud Functions / ADMIN_AUTH_UID / functions/.env" steps are no longer needed.
 - In Firebase Authentication enable Google, and add arihant620.github.io to Authorized domains.
 - Upload ALL files to GitHub (az.js, az.css, owner-admin.html and database.rules.json too).
+
+
+V8 CURRENCY UPDATE
+- Developer Mode now has a separate Diamonds balance with Set / Add / Remove controls.
+- The normal shop supports either Ⓐ Coins or 💎 Diamonds. Diamond prices are shown on each item.
+- Player ID 49019468 is a normal player (no Developer Mode). On first load of that account, the starter balance is initialized to 100,000 Coins and 10,000 Diamonds.
+- Publish the updated database.rules.json in Firebase Realtime Database Rules and upload all updated HTML/JS/CSS/JSON files to GitHub.

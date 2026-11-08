@@ -100,3 +100,12 @@ UPDATE v7
 - All text is now in English.
 - UNO: optional +2/+4 stacking, stacked discard pile, card landing animation, big UNO! flash, hand fan for big hands, pulsing Draw button.
 - Upload ALL files again (az.js and az.css changed; pages now load az.js?v=7).
+
+
+UPDATE v8 (A coin mark + diamonds)
+- Coin display now uses the A coin symbol (Ⓐ).
+- Added a separate Diamonds balance.
+- Shop items can be bought using Coins or Diamonds (diamond cost shown beside each item).
+- Developer page supports setting, adding and removing Diamonds from the owner account.
+- Player ID 49019468 remains a normal player; on first load it receives 100,000 Coins and 10,000 Diamonds.
+- All pages now load az.js?v=8 to avoid stale browser cache.
