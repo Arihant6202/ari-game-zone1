@@ -65,3 +65,10 @@ TESTING PERFORMED:
 - Updated PWA app icons and browser icons using the supplied ARI gold-and-black logo.
 - Bumped site asset cache versions to v20 so installed PWA refreshes its branding and game files.
 - Online multiplayer requires both players to have internet access and PeerJS connectivity; test with two devices before announcing it as production-ready.
+
+
+--- VERSION 21 UPDATE NOTES ---
+- Consolidated the game catalogue on the home page; the old games.html address now redirects to the home page's All Games section.
+- Removed the account/profile dashboard from the home page. Profile details, daily bonus, mailbox, theme selector and account controls are now on Profile only.
+- Games navigation and Play Now jump to the home page's game catalogue.
+- Updated cache versions to v21.
