@@ -31,9 +31,16 @@ FREE SPARK CLOUD SAVE UPDATE
 
 ACCOUNT ISOLATION UPDATE
 - Local profiles are now namespaced per Firebase Auth UID.
-- Guest profile uses its own persistent guest ID; a real logout rotates to a fresh guest ID.
+- Guest profile uses one persistent device-bound guest ID; logging out returns to the same guest profile and preserves its local progress.
 - Google accounts load/save only users/{authUid}/gameData.
 - Existing legacy users/{authUid} profile data is imported once when gameData is absent.
-- Added Level Devil (20-stage platform challenge) and local pass-and-play UNO.
+- Added Level Devil (20-stage platform challenge with responsive keyboard/touch controls) and UNO with bot and 2-player pass-and-play modes.
 - JavaScript inline scripts passed Node syntax checks. Live Firebase behavior still requires testing
   on the deployed GitHub Pages domain with the published Firebase rules.
+
+
+GUEST + GAME UPDATE (2026-11-08)
+- Guest ID is generated only when the device has no guest ID. Logout no longer rotates it.
+- Guest progress remains in az2:guest:{deviceGuestId}; Google profiles remain in az2:user:{FirebaseAuthUID} and users/{FirebaseAuthUID}/gameData.
+- Level Devil controls were rebuilt for pointer/touch and keyboard input, with 20 progressively harder stages, restart, and best-stage tracking.
+- UNO now supports You vs Bot and local 2-player modes, three bot difficulty settings, wild colour selection, draw/pass, and round wins.

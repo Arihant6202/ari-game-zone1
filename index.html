@@ -4,7 +4,7 @@
 <script src="firebase-config.js"></script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0a0614">
-<meta name="description" content="Ari Game Zone - 10 free games: battle royale, racing, chess, online multiplayer and more.">
+<meta name="description" content="Ari Game Zone - 12 free games: battle royale, racing, chess, online multiplayer and more.">
 <title>Ari Game Zone</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎮</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -152,7 +152,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:22px}
 </style>
 </head>
 <body>
-<header><div class="logo">YOUR MINI GAMING WORLD</div><div class="hero"><h1>🎮 Ari Game Zone</h1><p>11 free games · up to 100 levels · Shop · Online rooms · Play on phone or computer</p></div></header>
+<header><div class="logo">YOUR MINI GAMING WORLD</div><div class="hero"><h1>🎮 Ari Game Zone</h1><p>12 free games · up to 100 levels · Shop · Online rooms · Play on phone or computer</p></div></header>
 <main>
   <div class="azpanel me">
     <div class="l"><div class="avatar" data-az="avatar">😎</div><div><b>Player Level <span data-az="plvl">1</span></b><div class="xp"><i id="xpbar" style="width:0%"></i></div><small id="xptxt" style="color:var(--muted)"></small><div style="margin-top:4px;font-size:12px;color:var(--muted)">👤 <b data-az="name" style="color:inherit"></b> · 🆔 <span data-az="uid"></span></div></div></div>
@@ -216,7 +216,7 @@ const GAMES = [
   { id: 'brick', file: 'brick-breaker.html', name: 'Brick Breaker', emoji: '🧱', cat: 'Arcade', max: 100, modes: ['single'], shop: ['ball'], desc: 'Break all bricks, catch power-ups. 100 different layouts.' },
   { id: 'mole', file: 'whack-a-mole.html', name: 'Whack-a-Mole', emoji: '🐹', cat: 'Fun', max: 100, modes: ['single'], shop: [], desc: 'Tap the moles fast, avoid bombs and grab golden moles.' },
   { id: 'leveldevil', file: 'level-devil.html', name: 'Level Devil', emoji: '😈', cat: 'Platformer', max: 20, modes: ['single'], shop: [], desc: 'A tricky platform challenge with hidden surprises and 20 stages.' },
-  { id: 'uno', file: 'uno.html', name: 'UNO', emoji: '🃏', cat: 'Board', max: 1, modes: ['local'], shop: [], desc: 'Classic colour-and-number card game for 2 players on one device.' },
+  { id: 'uno', file: 'uno.html', name: 'UNO', emoji: '🃏', cat: 'Board', max: 1, modes: ['single', 'local'], shop: [], desc: 'Play UNO against a bot or challenge a friend on one device.' },
 ];
 
 /* ------------------------------ places (change as levels go up) ------------------------------ */
@@ -502,10 +502,11 @@ function loadFb() {
     const next = i => { if (i === L.length) { try { firebase.initializeApp(c); fbDb = firebase.database(); firebase.auth().onAuthStateChanged(u => {
           if (u) afterLogin(u);
           else {
-            const wasSignedIn = !!fbUser;
             fbUser = null;
+            // Keep one device-bound guest identity forever. Logging out must
+            // return to the same guest profile, never mint a new one.
             let guestId = localStorage.getItem('az_guest_id');
-            if (wasSignedIn || !guestId) {
+            if (!guestId) {
               guestId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
               try { localStorage.setItem('az_guest_id', guestId); } catch (e) {}
             }

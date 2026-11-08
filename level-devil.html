@@ -1,23 +1,61 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Level Devil · Ari Game Zone</title><style>
-*{box-sizing:border-box}body{margin:0;background:#101426;color:#fff;font:16px system-ui;text-align:center}.wrap{max-width:760px;margin:auto;padding:18px}.panel{background:#202943;border-radius:18px;padding:16px;margin:12px 0}canvas{width:100%;max-width:640px;background:linear-gradient(#8bd5ff,#e9f6ff 70%,#537b47 70%);border-radius:14px;touch-action:none}.btn{border:0;border-radius:12px;padding:12px 18px;margin:5px;background:#ffca55;font-weight:700}.muted{color:#bac6dd}
-</style></head><body><div class="wrap"><h1>😈 Level Devil</h1><p class="muted">A tricky platform challenge — reach the glowing exit and watch for surprise traps.</p><div class="panel"><b id="stage">Level 1 / 20</b> · <span id="status">Reach the door!</span><br><canvas id="game" width="640" height="300"></canvas><p><button class="btn" id="left">◀</button><button class="btn" id="jump">JUMP ▲</button><button class="btn" id="right">▶</button><button class="btn" id="restart">Restart</button></p><small class="muted">Keyboard: ← → and Space. Touch buttons also work.</small></div><button class="btn" onclick="location.href='index.html'">Back to games</button></div>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Level Devil · Ari Game Zone</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#26365e,#0b1020 65%);color:#f7f8ff;font:15px system-ui;text-align:center}.wrap{max-width:900px;margin:auto;padding:16px}.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.pill,.panel{background:#18233c;border:1px solid #344568;border-radius:18px}.pill{padding:9px 14px}.panel{padding:14px;margin:12px 0;box-shadow:0 14px 35px #0005}h1{margin:8px 0;font-size:clamp(25px,5vw,38px)}.sub{color:#b8c5df;margin:4px 0 14px}canvas{display:block;width:100%;max-width:760px;height:auto;margin:auto;border-radius:14px;border:2px solid #49618b;background:#8edaff;touch-action:none}.controls{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap}.btn{border:0;border-radius:13px;padding:13px 19px;background:linear-gradient(180deg,#ffe08b,#ffb52e);color:#222;font-weight:900;font-size:16px;box-shadow:0 4px 0 #a96a12;touch-action:none;user-select:none}.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #a96a12}.btn.secondary{background:#34496e;color:#fff;box-shadow:0 4px 0 #1c2a45}.btn:disabled{opacity:.45}.stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;color:#d5def1}.hint{min-height:24px;color:#ffd77a;font-weight:650}.mobile{display:flex;justify-content:center;gap:12px;flex:1}.mobile .btn{min-width:66px}.foot{font-size:12px;color:#91a2c3}
+</style></head><body><main class="wrap"><div class="top"><button class="btn secondary" onclick="location.href='index.html'">← Games</button><span class="pill">😈 LEVEL DEVIL</span><span class="pill" id="progress">Best: 1 / 20</span></div><h1>Don't Trust the Floor!</h1><p class="sub">20 tricky stages · hidden traps · checkpoints · precision jumps</p><section class="panel"><div class="stats"><b id="stage">LEVEL 1 / 20</b><span>•</span><span id="deaths">Falls: 0</span><span>•</span><span id="status">Reach the portal ✦</span></div><canvas id="game" width="760" height="360" aria-label="Level Devil platform game"></canvas><div class="hint" id="hint">Move with ◀ ▶ and jump with JUMP.</div><div class="controls"><div class="mobile"><button class="btn secondary" id="left">◀</button><button class="btn secondary" id="right">▶</button></div><button class="btn" id="jump">JUMP ↑</button><button class="btn secondary" id="restart">↻ Restart</button></div><p class="foot">Keyboard: A / D or ← / → · Space / ↑ to jump · R to restart</p></section><div class="controls"><button class="btn secondary" id="prev">Previous</button><button class="btn" id="next" disabled>Next level 🔒</button></div></main>
 <script>
-const c=document.getElementById('game'),x=c.getContext('2d');let level=1,p={x:30,y:238,vx:0,vy:0},held={},dead=false,won=false,trap=0;
-function reset(){p={x:30,y:238,vx:0,vy:0};dead=won=false;trap=Math.min(1,level*.045);document.getElementById('status').textContent='Reach the door!';}
-function draw(){x.clearRect(0,0,640,300);x.fillStyle='#456b42';x.fillRect(0,260,640,40);x.fillStyle='#202943';x.fillRect(0,270,640,30);x.fillStyle='#19a66a';x.fillRect(580,210,34,50);x.fillStyle='#fff';x.fillRect(590,220,14,30);
-x.fillStyle='#db475c';if(level>1)x.fillRect(230,252,70,8);if(level>3)x.fillRect(390,252,70,8);
-if(level>2 && trap>.2){x.fillStyle='#e44';x.fillRect(310,245,26,15);}
-x.fillStyle='#27324b';x.fillRect(p.x,p.y,22,22);x.fillStyle='#fff';x.fillRect(p.x+5,p.y+5,4,4);x.fillRect(p.x+14,p.y+5,4,4);
-if(!dead&&!won){p.vx=(held.right?3.4:0)-(held.left?3.4:0);p.x+=p.vx;p.vy+=.45;p.y+=p.vy;if(p.y>238){p.y=238;p.vy=0;}if(p.x<0)p.x=0;if(p.x>618)p.x=618;
-if(level>2&&p.x>300&&p.x<345&&Math.random()<.035){dead=true;}
-if(level>1&&p.x>230&&p.x<300&&p.y>230){dead=true;}
-if(p.x>560){won=true;document.getElementById('status').textContent='Level cleared!';}}
-if(dead){document.getElementById('status').textContent='Oops! Trap caught you — restart.';}
-if(won){x.fillStyle='#073';x.fillRect(160,90,320,70);x.fillStyle='#fff';x.font='24px system-ui';x.fillText('LEVEL CLEARED!',220,133);}
-requestAnimationFrame(draw)}
-function jump(){if(p.y>=238&&!dead&&!won)p.vy=-9.5}
-['left','right'].forEach(k=>{let b=document.getElementById(k);b.onpointerdown=()=>held[k]=true;b.onpointerup=b.onpointerleave=()=>held[k]=false});
-document.getElementById('jump').onclick=jump;document.getElementById('restart').onclick=reset;
-onkeydown=e=>{if(e.key==='ArrowLeft')held.left=true;if(e.key==='ArrowRight')held.right=true;if(e.code==='Space')jump()};onkeyup=e=>{if(e.key==='ArrowLeft')held.left=false;if(e.key==='ArrowRight')held.right=false};
-document.getElementById('stage').onclick=()=>{};const old=draw;let stageCheck=setInterval(()=>{if(won){level=Math.min(20,level+1);document.getElementById('stage').textContent='Level '+level+' / 20';reset();}},300);draw();
+(()=>{
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),W=760,H=360;
+const $=id=>document.getElementById(id);let level=1,best=1,deaths=0,won=false,dead=false,frame=0,keys={left:false,right:false};
+try{best=Math.max(1,Math.min(20,+(localStorage.getItem('az_leveldevil_best')||1)))}catch(e){}
+const player={x:34,y:270,w:22,h:28,vx:0,vy:0,ground:false};
+const layouts=[
+{spikes:[],gaps:[],traps:[]},
+{spikes:[[250,38]],gaps:[],traps:[]},
+{spikes:[[210,48],[440,48]],gaps:[],traps:[]},
+{spikes:[[300,45]],gaps:[[470,535]],traps:[]},
+{spikes:[[180,40],[540,45]],gaps:[],traps:[{x:360,y:285,w:35,h:12,type:'pop'}]},
+{spikes:[[250,55],[490,45]],gaps:[[390,440]],traps:[]},
+{spikes:[[160,40],[360,40],[560,40]],gaps:[],traps:[{x:285,y:280,w:30,h:16,type:'pop'}]},
+{spikes:[[250,55],[510,55]],gaps:[[350,410]],traps:[]},
+{spikes:[[180,50],[430,50],[620,35]],gaps:[],traps:[{x:320,y:280,w:40,h:15,type:'pop'}]},
+{spikes:[[280,60],[520,55]],gaps:[[400,455]],traps:[]},
+{spikes:[[150,45],[330,45],[530,45]],gaps:[],traps:[{x:430,y:280,w:40,h:15,type:'pop'}]},
+{spikes:[[220,50],[470,50]],gaps:[[340,400],[570,610]],traps:[]},
+{spikes:[[160,50],[360,50],[580,50]],gaps:[],traps:[{x:260,y:280,w:38,h:14,type:'pop'}]},
+{spikes:[[240,60],[500,60]],gaps:[[390,450]],traps:[{x:590,y:280,w:36,h:14,type:'pop'}]},
+{spikes:[[150,50],[300,50],[470,50],[620,35]],gaps:[],traps:[]},
+{spikes:[[220,55],[470,55]],gaps:[[340,405],[570,625]],traps:[{x:130,y:280,w:38,h:14,type:'pop'}]},
+{spikes:[[170,55],[380,55],[590,50]],gaps:[],traps:[{x:275,y:280,w:42,h:14,type:'pop'}]},
+{spikes:[[240,60],[520,55]],gaps:[[390,450]],traps:[{x:610,y:280,w:38,h:14,type:'pop'}]},
+{spikes:[[140,50],[310,50],[490,50],[650,30]],gaps:[[400,450]],traps:[]},
+{spikes:[[180,60],[370,60],[560,60]],gaps:[[280,325],[470,515]],traps:[{x:645,y:280,w:40,h:14,type:'pop'}]}
+];
+function reset(){player.x=34;player.y=270;player.vx=player.vy=0;player.ground=false;dead=won=false;frame=0;$('status').textContent='Reach the portal ✦';$('hint').textContent='Watch the floor. Some traps activate only when you get close.';$('next').disabled=true;}
+function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
+function die(msg='Trap! Try a different route.'){if(dead||won)return;dead=true;deaths++;$('deaths').textContent='Falls: '+deaths;$('status').textContent='Ouch!';$('hint').textContent=msg;setTimeout(()=>{if(dead)reset()},650)}
+function complete(){if(won||dead)return;won=true;best=Math.max(best,level);try{localStorage.setItem('az_leveldevil_best',best)}catch(e){}$('progress').textContent='Best: '+best+' / 20';$('status').textContent='Stage cleared!';$('hint').textContent=level===20?'🏆 You conquered all 20 stages!':'Great run! Next stage unlocked.';$('next').disabled=level>=20;}
+function load(n){level=Math.max(1,Math.min(20,n));$('stage').textContent='LEVEL '+level+' / 20';$('prev').disabled=level===1;reset();}
+function floorAt(x){const gap=(layouts[level-1].gaps||[]).some(g=>x+player.w>g[0]&&x<g[1]);return !gap;}
+function update(){if(dead||won)return;frame++;const L=layouts[level-1];player.vx=(keys.right?3.6:0)-(keys.left?3.6:0);player.x+=player.vx;player.x=Math.max(0,Math.min(W-player.w,player.x));player.vy=Math.min(10,player.vy+.48);player.y+=player.vy;player.ground=false;
+if(player.y+player.h>=300&&floorAt(player.x+player.w/2)){player.y=300-player.h;player.vy=0;player.ground=true;}if(player.y>H+25){die('You fell! Watch the gaps.');return;}
+for(const s of L.spikes){const r={x:s[0],y:286,w:s[1],h:14};if(hit(player,r)){die('Spikes! Jump over the red hazards.');return;}}
+for(const t of L.traps){const active=player.x>t.x-65;const rise=active&&Math.sin(frame*.16)>-.1;const r={x:t.x,y:rise?260:300,w:t.w,h:rise?40:0};if(rise&&hit(player,r)){die('Surprise trap! Time your jump.');return;}}
+if(player.x>W-64&&player.y+player.h>245)complete();}
+function draw(){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#7bd3ff');g.addColorStop(.72,'#dff7ff');g.addColorStop(1,'#8ab56d');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ctx.fillStyle='#fff8';for(let i=0;i<5;i++){let x=(i*173+frame*.15)%850-50;ctx.beginPath();ctx.arc(x,58+i%2*32,18,0,7);ctx.arc(x+22,58+i%2*32,24,0,7);ctx.arc(x+47,58+i%2*32,17,0,7);ctx.fill();}
+const L=layouts[level-1];ctx.fillStyle='#395d46';ctx.fillRect(0,300,W,60);for(const gap of L.gaps){ctx.fillStyle='#121b30';ctx.fillRect(gap[0],300,gap[1]-gap[0],60);}
+ctx.fillStyle='#ff526d';for(const s of L.spikes){for(let x=s[0];x<s[0]+s[1];x+=16){ctx.beginPath();ctx.moveTo(x,300);ctx.lineTo(x+8,281);ctx.lineTo(x+16,300);ctx.fill();}}
+for(const t of L.traps){const active=player.x>t.x-65&&Math.sin(frame*.16)>-.1;ctx.fillStyle='#ff3f65';if(active)ctx.fillRect(t.x,260,t.w,40);else ctx.fillRect(t.x,296,t.w,4);}
+// portal
+ctx.shadowColor='#5affd0';ctx.shadowBlur=18;ctx.fillStyle='#22d6a0';ctx.fillRect(700,236,34,64);ctx.shadowBlur=0;ctx.strokeStyle='#eaffff';ctx.lineWidth=3;ctx.strokeRect(706,242,22,52);
+// player
+ctx.fillStyle='#17223d';ctx.fillRect(player.x,player.y,player.w,player.h);ctx.fillStyle='#fff';ctx.fillRect(player.x+5,player.y+7,4,4);ctx.fillRect(player.x+14,player.y+7,4,4);ctx.fillStyle='#ffca55';ctx.fillRect(player.x+6,player.y+19,11,3);
+if(won){ctx.fillStyle='#09152bdc';ctx.fillRect(190,110,380,90);ctx.fillStyle='#fff';ctx.font='bold 30px system-ui';ctx.textAlign='center';ctx.fillText('STAGE CLEARED!',380,164);}if(dead){ctx.fillStyle='#351323aa';ctx.fillRect(190,110,380,90);ctx.fillStyle='#fff';ctx.font='bold 30px system-ui';ctx.textAlign='center';ctx.fillText('TRY AGAIN!',380,164);}}
+function loop(){update();draw();requestAnimationFrame(loop)}
+function jump(){if(player.ground&&!dead&&!won){player.vy=-10.6;player.ground=false;}}
+function bindHold(id,key){const b=$(id);const on=e=>{e.preventDefault();keys[key]=true};const off=e=>{e.preventDefault();keys[key]=false};b.addEventListener('pointerdown',on);['pointerup','pointercancel','pointerleave'].forEach(v=>b.addEventListener(v,off));}
+bindHold('left','left');bindHold('right','right');$('jump').addEventListener('pointerdown',e=>{e.preventDefault();jump()});$('restart').onclick=reset;$('next').onclick=()=>{if(won&&level<20)load(level+1)};$('prev').onclick=()=>load(level-1);
+addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight',' ','ArrowUp'].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=true;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=true;if(e.key===' '||e.key==='ArrowUp'||e.key.toLowerCase()==='w')jump();if(e.key.toLowerCase()==='r')reset()});addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=false;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=false});addEventListener('blur',()=>{keys.left=keys.right=false});$('progress').textContent='Best: '+best+' / 20';load(Math.min(best,20));loop();
+})();
 </script></body></html>

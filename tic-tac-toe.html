@@ -473,10 +473,11 @@ function loadFb() {
     const next = i => { if (i === L.length) { try { firebase.initializeApp(c); fbDb = firebase.database(); firebase.auth().onAuthStateChanged(u => {
           if (u) afterLogin(u);
           else {
-            const wasSignedIn = !!fbUser;
             fbUser = null;
+            // Keep one device-bound guest identity forever. Logging out must
+            // return to the same guest profile, never mint a new one.
             let guestId = localStorage.getItem('az_guest_id');
-            if (wasSignedIn || !guestId) {
+            if (!guestId) {
               guestId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
               try { localStorage.setItem('az_guest_id', guestId); } catch (e) {}
             }

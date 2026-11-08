@@ -458,10 +458,11 @@ function loadFb() {
     const next = i => { if (i === L.length) { try { firebase.initializeApp(c); fbDb = firebase.database(); firebase.auth().onAuthStateChanged(u => {
           if (u) afterLogin(u);
           else {
-            const wasSignedIn = !!fbUser;
             fbUser = null;
+            // Keep one device-bound guest identity forever. Logging out must
+            // return to the same guest profile, never mint a new one.
             let guestId = localStorage.getItem('az_guest_id');
-            if (wasSignedIn || !guestId) {
+            if (!guestId) {
               guestId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
               try { localStorage.setItem('az_guest_id', guestId); } catch (e) {}
             }
@@ -512,7 +513,7 @@ Az.login = function () {
   const m = Az.modal('<div id="lgin"></div>', {});
   const box = () => m.querySelector('#lgin');
   if (fbUser) { box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + (fbUser.email || fbUser.phoneNumber) + '<br>Coins & levels cloud me save ho rahe hain ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div>';
-    m.addEventListener('click', e => { if (e.target.id === 'lo') { firebase.auth().signOut(); try { localStorage.removeItem('az_login'); } catch (x) {} const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 Login'; m.close(); } }); return m; }
+    m.addEventListener('click', e => { if (e.target.id === 'lo') { firebase.auth().signOut(); fbUser = null; try { localStorage.removeItem('az_login'); } catch (x) {} const b = document.getElementById('azlogin'); if (b) b.textContent = '👤 Login'; m.close(); } }); return m; }
   box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login</h2><p class="sub" style="text-align:center">Account banao, coins aur levels save rahenge.</p><div class="azrow c"><button class="azbtn" id="gg">🔵 Google (Gmail) se login</button></div><p class="sub" style="text-align:center;margin-top:12px">ya phone OTP se:</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>';
   const err = t => { box().querySelector('#lerr').textContent = t; }; let conf = null, ver = null;
   m.addEventListener('click', e => {
