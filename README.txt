@@ -29,18 +29,28 @@ FREE SPARK CLOUD SAVE UPDATE
 - Publish database.rules.json in Firebase Realtime Database > Rules. Each account can read/write only its own user node.
 
 
-ACCOUNT ISOLATION UPDATE
-- Local profiles are now namespaced per Firebase Auth UID.
-- Guest profile uses one persistent device-bound guest ID; logging out returns to the same guest profile and preserves its local progress.
-- Google accounts load/save only users/{authUid}/gameData.
-- Existing legacy users/{authUid} profile data is imported once when gameData is absent.
-- Added Level Devil (20-stage platform challenge with responsive keyboard/touch controls) and UNO with bot and 2-player pass-and-play modes.
-- JavaScript inline scripts passed Node syntax checks. Live Firebase behavior still requires testing
-  on the deployed GitHub Pages domain with the published Firebase rules.
+ACCOUNT FIX UPDATE (v2)
+- NEW shared file az.js: ab game engine (coins, XP, shop, login, cloud save) sirf ek jagah hai. Har page
+  <script src="az.js"> se use karta hai. Pehle har page me engine ki copy thi aur index.html alag/purani thi.
+  GitHub me az.js bhi upload karna zaroori hai (baaki files ke saath).
+- Bug jo "dusra Gmail bhi same token/UID dikhata tha": Google popup bina account chooser ke pehle se
+  logged-in Gmail utha leta tha. Ab prompt=select_account laga hai, to har baar Gmail chuna ja sakta hai.
+- Har Gmail ka alag local record (az2:user:<authUid>) aur alag cloud node users/<authUid>/gameData.
+  Naya Gmail = bilkul naya account (150 coins, naya 8-digit Player ID, level 1).
+- Logout par naya guest ID banta hai (naya progress). Purana guest/Gmail data alag safe rehta hai.
+- Cloud se aaya data ab normalize hota hai (Firebase khaali {} objects hata deta hai -> pehle crash hota tha).
+- Cloud load ke purane/late answers ignore hote hain (account switch race fix) aur page band hote hi
+  last coins flush hote hain (pagehide).
+- Login ke baad home screen ka level-progress/coins/theme turant naye account ke hisaab se refresh hota hai.
+- Welcome/name popup ab cloud load hone ke baad aata hai (returning user ko dobara nahi).
+- Home page: games count 13, categories theek kiye (Cards, Platformer; khaali Puzzle/Brain hata diye).
+- Zone Survivor ki shop me Guns bhi ab dikhte hain.
 
+NEW GAMES
+- Level Devil: 20 levels (fake floor, invisible walls, shy door, falling spikes, saws, moving lifts...).
+  Har level automatic solver se check hua hai ki jeetna possible hai. Keyboard + touch controls.
+- UNO: asli 108-card UNO. vs Computer (1-3 bots, easy/medium/hard) ya 2-4 players pass-and-play
+  (cards chhupane wali screen ke saath). Wild colour choose, Skip/Reverse/+2/+4, UNO call + penalty.
 
-GUEST + GAME UPDATE (2026-11-08)
-- Guest ID is generated only when the device has no guest ID. Logout no longer rotates it.
-- Guest progress remains in az2:guest:{deviceGuestId}; Google profiles remain in az2:user:{FirebaseAuthUID} and users/{FirebaseAuthUID}/gameData.
-- Level Devil controls were rebuilt for pointer/touch and keyboard input, with 20 progressively harder stages, restart, and best-stage tracking.
-- UNO now supports You vs Bot and local 2-player modes, three bot difficulty settings, wild colour selection, draw/pass, and round wins.
+Live Firebase (real Google login) ko deploy karke ek baar test zaroor karo. Local tests me Firebase
+ko mock karke account isolation verify kiya gaya hai.

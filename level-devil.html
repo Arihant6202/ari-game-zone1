@@ -1,61 +1,318 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Level Devil · Ari Game Zone</title>
-<style>
-:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#26365e,#0b1020 65%);color:#f7f8ff;font:15px system-ui;text-align:center}.wrap{max-width:900px;margin:auto;padding:16px}.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.pill,.panel{background:#18233c;border:1px solid #344568;border-radius:18px}.pill{padding:9px 14px}.panel{padding:14px;margin:12px 0;box-shadow:0 14px 35px #0005}h1{margin:8px 0;font-size:clamp(25px,5vw,38px)}.sub{color:#b8c5df;margin:4px 0 14px}canvas{display:block;width:100%;max-width:760px;height:auto;margin:auto;border-radius:14px;border:2px solid #49618b;background:#8edaff;touch-action:none}.controls{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap}.btn{border:0;border-radius:13px;padding:13px 19px;background:linear-gradient(180deg,#ffe08b,#ffb52e);color:#222;font-weight:900;font-size:16px;box-shadow:0 4px 0 #a96a12;touch-action:none;user-select:none}.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #a96a12}.btn.secondary{background:#34496e;color:#fff;box-shadow:0 4px 0 #1c2a45}.btn:disabled{opacity:.45}.stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;color:#d5def1}.hint{min-height:24px;color:#ffd77a;font-weight:650}.mobile{display:flex;justify-content:center;gap:12px;flex:1}.mobile .btn{min-width:66px}.foot{font-size:12px;color:#91a2c3}
-</style></head><body><main class="wrap"><div class="top"><button class="btn secondary" onclick="location.href='index.html'">← Games</button><span class="pill">😈 LEVEL DEVIL</span><span class="pill" id="progress">Best: 1 / 20</span></div><h1>Don't Trust the Floor!</h1><p class="sub">20 tricky stages · hidden traps · checkpoints · precision jumps</p><section class="panel"><div class="stats"><b id="stage">LEVEL 1 / 20</b><span>•</span><span id="deaths">Falls: 0</span><span>•</span><span id="status">Reach the portal ✦</span></div><canvas id="game" width="760" height="360" aria-label="Level Devil platform game"></canvas><div class="hint" id="hint">Move with ◀ ▶ and jump with JUMP.</div><div class="controls"><div class="mobile"><button class="btn secondary" id="left">◀</button><button class="btn secondary" id="right">▶</button></div><button class="btn" id="jump">JUMP ↑</button><button class="btn secondary" id="restart">↻ Restart</button></div><p class="foot">Keyboard: A / D or ← / → · Space / ↑ to jump · R to restart</p></section><div class="controls"><button class="btn secondary" id="prev">Previous</button><button class="btn" id="next" disabled>Next level 🔒</button></div></main>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="firebase-config.js"></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0614">
+<title>Level Devil · Ari Game Zone</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐤</text></svg>">
+<style data-az>
+/* Ari Game Zone - shared styles (themes, bar, modals, buttons, game layout) */
+:root{
+  --bg1:#0a0614;--bg2:#2a0f55;--panel:rgba(255,255,255,.07);--panel2:rgba(255,255,255,.12);--line:rgba(255,255,255,.16);
+  --text:#f5f3ff;--muted:#b9b0dc;--a1:#00e5ff;--a2:#ff3d9a;--a3:#b6ff3b;--a4:#ffb82e;--bad:#ff4d6d;
+  --canvas:#0b0620;--ink:#10061f;--ring:rgba(0,229,255,.3);
+  --blob1:rgba(255,61,154,.35);--blob2:rgba(0,229,255,.28);--blob3:rgba(124,58,237,.38);
+}
+[data-theme=sunset]{--bg1:#1a0a12;--bg2:#4a1630;--text:#fff4ee;--muted:#dcb6a8;--a1:#ff9f1c;--a2:#ff3b81;--a3:#ffe066;--a4:#ff6b4a;--canvas:#210b16;--ink:#2a0a12;--ring:rgba(255,159,28,.3);--blob1:rgba(255,107,74,.38);--blob2:rgba(255,184,46,.26);--blob3:rgba(255,59,129,.32)}
+[data-theme=ocean]{--bg1:#031018;--bg2:#0b3354;--text:#eaf7ff;--muted:#9fc3d9;--a1:#2dd4ff;--a2:#3b82f6;--a3:#34f5b0;--a4:#a78bfa;--canvas:#04141f;--ink:#02121c;--ring:rgba(45,212,255,.3);--blob1:rgba(45,212,255,.28);--blob2:rgba(59,130,246,.34);--blob3:rgba(52,245,176,.2)}
+[data-theme=forest]{--bg1:#04120a;--bg2:#0f4a2a;--text:#effff4;--muted:#a6d4b4;--a1:#7CFC8A;--a2:#ffd23f;--a3:#c6ff5a;--a4:#ff9f43;--canvas:#05170d;--ink:#04120a;--ring:rgba(124,252,138,.3);--blob1:rgba(124,252,138,.25);--blob2:rgba(255,210,63,.2);--blob3:rgba(34,139,34,.35)}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{color-scheme:dark}
+body{margin:0;min-height:100vh;color:var(--text);font-family:'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  background:radial-gradient(1100px 650px at 15% -10%,var(--bg2),transparent 60%),radial-gradient(900px 600px at 100% 100%,var(--bg2),transparent 60%),var(--bg1);background-attachment:fixed;overflow-x:hidden}
+h1,h2,h3{font-family:'Orbitron',system-ui,sans-serif}
+a{color:inherit}
+[hidden]{display:none!important}
+
+/* animated background */
+.azbg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.azbg i{position:absolute;border-radius:50%;filter:blur(70px);animation:azdrift 18s ease-in-out infinite alternate}
+.azbg i:nth-of-type(1){width:46vmax;height:46vmax;left:-12vmax;top:-12vmax;background:var(--blob1)}
+.azbg i:nth-of-type(2){width:40vmax;height:40vmax;right:-14vmax;top:20vh;background:var(--blob2);animation-duration:23s}
+.azbg i:nth-of-type(3){width:44vmax;height:44vmax;left:20vw;bottom:-20vmax;background:var(--blob3);animation-duration:27s}
+.azbg::after{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:46px 46px;opacity:.28;-webkit-mask-image:radial-gradient(ellipse at 50% 25%,#000 5%,transparent 70%);mask-image:radial-gradient(ellipse at 50% 25%,#000 5%,transparent 70%)}
+.azbg span{position:absolute;bottom:-70px;font-size:28px;opacity:.18;animation:azrise linear infinite}
+
+/* top bar */
+.azbar{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(10,6,20,.72);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.azbar .azhome{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:var(--panel2);border:1px solid var(--line);text-decoration:none;font-size:18px}
+.azbar .aztitle{flex:1;min-width:0;font-family:'Orbitron',system-ui,sans-serif;font-weight:700;font-size:clamp(12px,3.6vw,17px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.azbadges{display:flex;gap:6px;align-items:center}
+.azpill{padding:6px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:12px;font-weight:700;white-space:nowrap}
+.azpill.coin{color:var(--a4)}
+.azbtn-i{width:34px;height:34px;border-radius:11px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;font-size:15px}
+.azbtn-i:hover{border-color:var(--a1)}
+
+/* buttons / inputs */
+.azbtn{border:0;border-radius:12px;padding:11px 18px;background:linear-gradient(135deg,var(--a1),var(--a2));color:var(--ink);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px -8px var(--a1);transition:transform .15s,filter .2s;text-decoration:none;display:inline-block}
+.azbtn:hover{filter:brightness(1.12);transform:translateY(-2px)}.azbtn:active{transform:scale(.95)}
+.azbtn.ghost{background:var(--panel2);color:var(--text);border:1px solid var(--line);box-shadow:none}
+.azbtn.sm{padding:7px 12px;font-size:12px;border-radius:10px}
+.azbtn:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none}
+.azchip{padding:9px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.azchip:hover{border-color:var(--a1)}
+.azchip.on{background:linear-gradient(135deg,var(--a1),var(--a2));color:var(--ink);border-color:transparent;box-shadow:0 6px 16px -8px var(--a1)}
+.azinput{padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--text);font-family:inherit;font-size:16px;text-align:center;letter-spacing:3px;text-transform:uppercase;width:150px}
+.azinput:focus{outline:none;border-color:var(--a1);box-shadow:0 0 0 4px var(--ring)}
+
+/* game page layout */
+.azgame{width:min(980px,100% - 20px);margin:12px auto 40px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.azhud{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:100%}
+.azhud .azpill{font-size:13px}
+.azstage{width:100%;display:flex;flex-direction:column;align-items:center;gap:10px}
+.azgame canvas{display:block;max-width:100%;border-radius:16px;background:var(--canvas);box-shadow:0 0 0 1px var(--line),0 0 34px -12px var(--a1);touch-action:none}
+.azmsg{min-height:24px;color:var(--a3);font-weight:600;text-align:center}
+.azctl{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.azpanel{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.azdpad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(2,56px);gap:6px;justify-content:center}
+.azdpad button,.azhold{border-radius:14px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:22px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none}
+.azdpad button:active,.azhold:active{background:var(--a1);color:var(--ink)}
+
+/* modal */
+.azmodal{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:14px;background:rgba(5,2,12,.72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:azfade .2s;overflow:auto}
+.azbox{width:min(520px,100%);max-height:92vh;overflow:auto;background:linear-gradient(160deg,rgba(40,20,80,.92),rgba(12,6,26,.96));border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 30px 80px -20px #000,0 0 60px -30px var(--a1);animation:azpop .3s}
+.azbox h2{margin:0 0 4px;font-size:clamp(20px,5vw,26px)}
+.azbox .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+.azrow{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.azrow.c{justify-content:center}
+.azlbl{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin:14px 0 4px;font-weight:700}
+.azstep{display:flex;align-items:center;gap:10px;justify-content:center}
+.azstep b{min-width:140px;text-align:center;font-size:15px}
+.azstep button{width:38px;height:38px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:20px;cursor:pointer}
+.azbig{font-size:clamp(34px,10vw,54px);text-align:center;margin:6px 0}
+.azstat{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin:10px 0}
+.azstat div{text-align:center}.azstat b{display:block;font-size:22px;color:var(--a4)}.azstat small{color:var(--muted)}
+.azcode{font-family:'Orbitron',sans-serif;font-size:38px;letter-spacing:8px;text-align:center;color:var(--a1);margin:10px 0;text-shadow:0 0 20px var(--a1)}
+.azerr{color:var(--bad);font-size:13px;text-align:center;min-height:18px}
+
+/* shop */
+.azshopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
+.azitem{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center}
+.azitem.eq{border-color:var(--a3);box-shadow:0 0 18px -8px var(--a3)}
+.azitem .pv{font-size:34px;height:48px;display:grid;place-items:center}
+.azitem .sw{width:38px;height:38px;border-radius:50%;margin:auto;border:3px solid rgba(255,255,255,.7)}
+.azitem b{display:block;font-size:13px}.azitem small{display:block;color:var(--muted);font-size:11px;min-height:28px}
+.azitem .azbtn{width:100%;margin-top:6px}
+
+/* toast */
+.aztoast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:200;background:rgba(20,10,40,.95);border:1px solid var(--a1);padding:10px 18px;border-radius:14px;font-size:14px;font-weight:600;animation:azpop .25s}
+
+@keyframes azdrift{to{transform:translate(9vmax,6vmax) scale(1.15)}}
+@keyframes azrise{from{transform:translateY(0) rotate(0)}to{transform:translateY(-115vh) rotate(360deg)}}
+@keyframes azpop{from{opacity:0;transform:translateY(14px) scale(.94)}}
+@keyframes azfade{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+</style>
+</head>
+<body data-game="leveldevil">
+<main class="azgame">
+  <div class="azhud"><span class="azpill" id="hLv">Level 1 / 20</span><span class="azpill" id="hDeath">💀 0</span><span class="azpill" id="hName">—</span></div>
+  <div class="azstage"><canvas id="cv" width="800" height="450" style="width:min(100%,800px)"></canvas></div>
+  <div class="azmsg" id="msg">Door tak pahucho. Bharosa mat karna! 😈</div>
+  <div class="azctl ldpad">
+    <button class="azbtn ghost" id="bl" aria-label="Left">◀</button>
+    <button class="azbtn" id="bj" aria-label="Jump">⤒ JUMP</button>
+    <button class="azbtn ghost" id="br" aria-label="Right">▶</button>
+    <button class="azbtn ghost sm" id="rst">🔄 Restart</button>
+  </div>
+  <p class="azmsg" style="color:var(--muted);font-size:12px;font-weight:400">⌨️ Arrow keys / A D move · Space / W / ↑ jump · R restart</p>
+</main>
+<style>.ldpad .azbtn{min-width:84px;font-size:18px;padding:14px 18px;touch-action:none;user-select:none;-webkit-user-select:none}.ldpad .azbtn.sm{min-width:0;font-size:13px;padding:10px 14px}</style>
+<script src="az.js"></script>
 <script>
-(()=>{
-const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),W=760,H=360;
-const $=id=>document.getElementById(id);let level=1,best=1,deaths=0,won=false,dead=false,frame=0,keys={left:false,right:false};
-try{best=Math.max(1,Math.min(20,+(localStorage.getItem('az_leveldevil_best')||1)))}catch(e){}
-const player={x:34,y:270,w:22,h:28,vx:0,vy:0,ground:false};
-const layouts=[
-{spikes:[],gaps:[],traps:[]},
-{spikes:[[250,38]],gaps:[],traps:[]},
-{spikes:[[210,48],[440,48]],gaps:[],traps:[]},
-{spikes:[[300,45]],gaps:[[470,535]],traps:[]},
-{spikes:[[180,40],[540,45]],gaps:[],traps:[{x:360,y:285,w:35,h:12,type:'pop'}]},
-{spikes:[[250,55],[490,45]],gaps:[[390,440]],traps:[]},
-{spikes:[[160,40],[360,40],[560,40]],gaps:[],traps:[{x:285,y:280,w:30,h:16,type:'pop'}]},
-{spikes:[[250,55],[510,55]],gaps:[[350,410]],traps:[]},
-{spikes:[[180,50],[430,50],[620,35]],gaps:[],traps:[{x:320,y:280,w:40,h:15,type:'pop'}]},
-{spikes:[[280,60],[520,55]],gaps:[[400,455]],traps:[]},
-{spikes:[[150,45],[330,45],[530,45]],gaps:[],traps:[{x:430,y:280,w:40,h:15,type:'pop'}]},
-{spikes:[[220,50],[470,50]],gaps:[[340,400],[570,610]],traps:[]},
-{spikes:[[160,50],[360,50],[580,50]],gaps:[],traps:[{x:260,y:280,w:38,h:14,type:'pop'}]},
-{spikes:[[240,60],[500,60]],gaps:[[390,450]],traps:[{x:590,y:280,w:36,h:14,type:'pop'}]},
-{spikes:[[150,50],[300,50],[470,50],[620,35]],gaps:[],traps:[]},
-{spikes:[[220,55],[470,55]],gaps:[[340,405],[570,625]],traps:[{x:130,y:280,w:38,h:14,type:'pop'}]},
-{spikes:[[170,55],[380,55],[590,50]],gaps:[],traps:[{x:275,y:280,w:42,h:14,type:'pop'}]},
-{spikes:[[240,60],[520,55]],gaps:[[390,450]],traps:[{x:610,y:280,w:38,h:14,type:'pop'}]},
-{spikes:[[140,50],[310,50],[490,50],[650,30]],gaps:[[400,450]],traps:[]},
-{spikes:[[180,60],[370,60],[560,60]],gaps:[[280,325],[470,515]],traps:[{x:645,y:280,w:40,h:14,type:'pop'}]}
+(function(){
+'use strict';
+const W=800,H=450,F=390,PW=26,PH=34,SPD=4.2,GRAV=.62,JV=12.2,$=id=>document.getElementById(id);
+
+/* ============================ level building blocks ============================ */
+const g=(a,b)=>({k:'g',x:a,y:F,w:b-a,h:60});                          // solid ground piece
+const pl=(x,y,w)=>({k:'g',x,y,w:w||80,h:14,ow:1});                    // one-way platform (jump up through it)
+const cr=(x,y,w,d)=>({k:'cr',x,y,w,h:y>=F?60:14,d:d||14,ow:y<F?1:0});  // crumbles d frames after you step on it
+const hid=(x,y,w,h)=>({k:'hid',x,y,w,h});                            // invisible wall, shows when touched
+const app=(x,y,w,h,tx,tr)=>({k:'app',x,y,w,h,tx,tr,ow:1});            // appears when you come near tx (+-tr)
+const mv=(x1,y1,x2,y2,w,sp)=>({k:'mv',x:x1,y:y1,w,h:14,x1,y1,x2,y2,sp,ow:1});
+const sp=(x,w,h)=>({k:'st',x,y:F-(h||26),w,h:h||26});                  // normal spikes on the floor
+const pop=(x,w,h,r)=>({k:'pop',x,y:F-h,w,h,r});                      // spikes that jump out when you come close
+const drop=(x,y,w,h,r)=>({k:'drop',x,y,w,h,r});                      // ceiling spikes that fall
+const dash=(x,y,w,h,tx,s)=>({k:'dash',x,y,w,h,tx,sp:s});             // spikes that rush from the right
+const saw=(x1,y1,x2,y2,r,s)=>({x1,y1,x2,y2,r,sp:s});
+const DOOR={x:735,y:344};
+function L(name,taunt,o){const d=Object.assign({name,taunt,s:[30,F-PH],so:[],sp:[],saw:[],fake:[]},o);d.door=Object.assign({w:30,h:46},DOOR,o.door||{});return d;}
+
+const LEVELS=[
+ /*1*/()=>L('Easy peasy','Itna aasan? Soch lo... 😏',{so:[g(0,800)],sp:[pop(380,34,28,90)]}),
+ /*2*/()=>L('Floor is a lie','Zameen bhi dhokha deti hai.',{so:[g(0,300),cr(300,F,120,3),g(420,800)]}),
+ /*3*/()=>L('Shy door','Darwaza sharmeela hai!',{so:[g(0,800),pl(570,300,110)],sp:[pop(300,30,26,80)],door:{x:735,y:344,run:[{x:605,y:254}],rr:120}}),
+ /*4*/()=>L('Invisible walls','Deewar dikhti nahi...',{so:[g(0,800),hid(430,300,26,90),hid(610,290,26,100)]}),
+ /*5*/()=>L('Look up!','Upar dekho! 👆',{so:[g(0,800)],sp:[drop(240,230,56,46,115),pop(520,30,28,85),drop(620,200,50,50,60)]}),
+ /*6*/()=>L('Elevator','Lift pe chadho.',{so:[g(0,270),mv(280,F,440,F,90,1.8),g(530,800)],sp:[{k:'st',x:270,y:416,w:260,h:30},pop(650,30,28,80)]}),
+ /*7*/()=>L('Which door?','Asli darwaza kaun sa?',{so:[g(0,800),pl(130,320,90),pl(260,255,90),pl(390,190,90)],door:{x:425,y:144,w:30,h:46},fake:[{x:735,y:344}]}),
+ /*8*/()=>L('Spike sea','Neeche mat girna.',{so:[g(0,120),pl(130,330,70),cr(250,330,70,12),pl(370,330,70),cr(490,330,70,12),pl(610,330,70),g(700,800)],sp:[sp(120,580,26)]}),
+ /*9*/()=>L('Buzzsaw','Aari chal rahi hai ⚙️',{so:[g(0,800)],saw:[saw(300,372,560,372,18,2.4)],sp:[pop(650,30,28,80)]}),
+ /*10*/()=>L('Ambush','Peeche se hamla!',{so:[g(0,300),g(380,800)],sp:[dash(830,364,60,26,500,6.5)]}),
+ /*11*/()=>L('Ghost bridge','Pul toot raha hai!',{so:[g(0,250),cr(262,F,70,6),cr(362,F,70,6),cr(462,F,70,6),g(560,800)],sp:[pop(640,30,28,80)]}),
+ /*12*/()=>L('Stairway','Seedhi chadhai.',{so:[g(0,800),pl(60,330,80),pl(190,275,80),pl(320,220,80),pl(450,165,80),app(580,125,60,14,480,90),pl(680,95,110)],door:{x:725,y:49,w:30,h:46}}),
+ /*13*/()=>L('Lifts','Do lift, ek guffa.',{so:[g(0,150),mv(160,F-10,160,200,80,1.5),pl(250,200,90),mv(350,200,470,200,80,1.6),pl(560,200,80),g(620,800)],sp:[{k:'st',x:150,y:416,w:470,h:30}]}),
+ /*14*/()=>L('Spike rhythm','Taal pe kudo! 🎵',{so:[g(0,800)],sp:[pop(250,26,30,65),pop(340,26,30,65),pop(430,26,30,65),pop(520,26,30,65),pop(610,26,30,65)]}),
+ /*15*/()=>L('Door runner','Darwaza bhaag raha hai.',{so:[g(0,800),pl(300,260,90),pl(520,310,90)],saw:[saw(380,372,470,372,18,2.5)],door:{x:735,y:344,w:30,h:46,run:[{x:330,y:214},{x:550,y:264}],rr:110}}),
+ /*16*/()=>L('Head bump','Sir bachao!',{so:[g(0,260),g(400,800),hid(190,250,45,40)],sp:[pop(500,30,28,80)]}),
+ /*17*/()=>L('Spike rain','Baarish aa rahi hai ☔',{so:[g(0,800)],sp:[drop(170,230,40,44,60),drop(290,230,40,44,60),drop(410,230,40,44,60),drop(530,230,40,44,60),drop(650,230,40,44,60)]}),
+ /*18*/()=>L('Crumble run','Sab kuch gir raha hai!',{so:[g(0,150),cr(160,360,70,14),cr(270,330,60,12),cr(380,300,60,12),cr(490,330,60,12),cr(600,360,60,14),g(700,800)],sp:[sp(150,550,26)],saw:[saw(355,230,355,330,14,2)]}),
+ /*19*/()=>L('Gauntlet','Sab kuch ek saath!',{so:[g(0,200),g(330,800),hid(540,300,24,90)],sp:[pop(390,28,30,70),pop(450,28,30,70),dash(830,364,60,26,620,7)]}),
+ /*20*/()=>L("Devil's castle",'Ab asli shaitan! 👹',{so:[g(0,140),mv(150,F,250,F,90,1.7),g(340,480),cr(480,F,100,3),g(580,800),pl(560,325,60),pl(640,260,60),pl(720,195,80)],sp:[pop(410,30,28,75)],saw:[saw(600,372,720,372,18,2.6)],door:{x:745,y:149,w:30,h:46},fake:[{x:735,y:344}]}),
 ];
-function reset(){player.x=34;player.y=270;player.vx=player.vy=0;player.ground=false;dead=won=false;frame=0;$('status').textContent='Reach the portal ✦';$('hint').textContent='Watch the floor. Some traps activate only when you get close.';$('next').disabled=true;}
-function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
-function die(msg='Trap! Try a different route.'){if(dead||won)return;dead=true;deaths++;$('deaths').textContent='Falls: '+deaths;$('status').textContent='Ouch!';$('hint').textContent=msg;setTimeout(()=>{if(dead)reset()},650)}
-function complete(){if(won||dead)return;won=true;best=Math.max(best,level);try{localStorage.setItem('az_leveldevil_best',best)}catch(e){}$('progress').textContent='Best: '+best+' / 20';$('status').textContent='Stage cleared!';$('hint').textContent=level===20?'🏆 You conquered all 20 stages!':'Great run! Next stage unlocked.';$('next').disabled=level>=20;}
-function load(n){level=Math.max(1,Math.min(20,n));$('stage').textContent='LEVEL '+level+' / 20';$('prev').disabled=level===1;reset();}
-function floorAt(x){const gap=(layouts[level-1].gaps||[]).some(g=>x+player.w>g[0]&&x<g[1]);return !gap;}
-function update(){if(dead||won)return;frame++;const L=layouts[level-1];player.vx=(keys.right?3.6:0)-(keys.left?3.6:0);player.x+=player.vx;player.x=Math.max(0,Math.min(W-player.w,player.x));player.vy=Math.min(10,player.vy+.48);player.y+=player.vy;player.ground=false;
-if(player.y+player.h>=300&&floorAt(player.x+player.w/2)){player.y=300-player.h;player.vy=0;player.ground=true;}if(player.y>H+25){die('You fell! Watch the gaps.');return;}
-for(const s of L.spikes){const r={x:s[0],y:286,w:s[1],h:14};if(hit(player,r)){die('Spikes! Jump over the red hazards.');return;}}
-for(const t of L.traps){const active=player.x>t.x-65;const rise=active&&Math.sin(frame*.16)>-.1;const r={x:t.x,y:rise?260:300,w:t.w,h:rise?40:0};if(rise&&hit(player,r)){die('Surprise trap! Time your jump.');return;}}
-if(player.x>W-64&&player.y+player.h>245)complete();}
-function draw(){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#7bd3ff');g.addColorStop(.72,'#dff7ff');g.addColorStop(1,'#8ab56d');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-ctx.fillStyle='#fff8';for(let i=0;i<5;i++){let x=(i*173+frame*.15)%850-50;ctx.beginPath();ctx.arc(x,58+i%2*32,18,0,7);ctx.arc(x+22,58+i%2*32,24,0,7);ctx.arc(x+47,58+i%2*32,17,0,7);ctx.fill();}
-const L=layouts[level-1];ctx.fillStyle='#395d46';ctx.fillRect(0,300,W,60);for(const gap of L.gaps){ctx.fillStyle='#121b30';ctx.fillRect(gap[0],300,gap[1]-gap[0],60);}
-ctx.fillStyle='#ff526d';for(const s of L.spikes){for(let x=s[0];x<s[0]+s[1];x+=16){ctx.beginPath();ctx.moveTo(x,300);ctx.lineTo(x+8,281);ctx.lineTo(x+16,300);ctx.fill();}}
-for(const t of L.traps){const active=player.x>t.x-65&&Math.sin(frame*.16)>-.1;ctx.fillStyle='#ff3f65';if(active)ctx.fillRect(t.x,260,t.w,40);else ctx.fillRect(t.x,296,t.w,4);}
-// portal
-ctx.shadowColor='#5affd0';ctx.shadowBlur=18;ctx.fillStyle='#22d6a0';ctx.fillRect(700,236,34,64);ctx.shadowBlur=0;ctx.strokeStyle='#eaffff';ctx.lineWidth=3;ctx.strokeRect(706,242,22,52);
-// player
-ctx.fillStyle='#17223d';ctx.fillRect(player.x,player.y,player.w,player.h);ctx.fillStyle='#fff';ctx.fillRect(player.x+5,player.y+7,4,4);ctx.fillRect(player.x+14,player.y+7,4,4);ctx.fillStyle='#ffca55';ctx.fillRect(player.x+6,player.y+19,11,3);
-if(won){ctx.fillStyle='#09152bdc';ctx.fillRect(190,110,380,90);ctx.fillStyle='#fff';ctx.font='bold 30px system-ui';ctx.textAlign='center';ctx.fillText('STAGE CLEARED!',380,164);}if(dead){ctx.fillStyle='#351323aa';ctx.fillRect(190,110,380,90);ctx.fillStyle='#fff';ctx.font='bold 30px system-ui';ctx.textAlign='center';ctx.fillText('TRY AGAIN!',380,164);}}
-function loop(){update();draw();requestAnimationFrame(loop)}
-function jump(){if(player.ground&&!dead&&!won){player.vy=-10.6;player.ground=false;}}
-function bindHold(id,key){const b=$(id);const on=e=>{e.preventDefault();keys[key]=true};const off=e=>{e.preventDefault();keys[key]=false};b.addEventListener('pointerdown',on);['pointerup','pointercancel','pointerleave'].forEach(v=>b.addEventListener(v,off));}
-bindHold('left','left');bindHold('right','right');$('jump').addEventListener('pointerdown',e=>{e.preventDefault();jump()});$('restart').onclick=reset;$('next').onclick=()=>{if(won&&level<20)load(level+1)};$('prev').onclick=()=>load(level-1);
-addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight',' ','ArrowUp'].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=true;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=true;if(e.key===' '||e.key==='ArrowUp'||e.key.toLowerCase()==='w')jump();if(e.key.toLowerCase()==='r')reset()});addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key.toLowerCase()==='a')keys.left=false;if(e.key==='ArrowRight'||e.key.toLowerCase()==='d')keys.right=false});addEventListener('blur',()=>{keys.left=keys.right=false});$('progress').textContent='Best: '+best+' / 20';load(Math.min(best,20));loop();
+
+/* ============================ simulation (pure, so it can be tested) ============================ */
+function build(n){
+  const d=LEVELS[n-1]();
+  const S={n,t:0,dead:0,won:false,why:'',
+    p:{x:d.s[0],y:d.s[1],vx:0,vy:0,on:false,coy:0,jb:0,jl:false,face:1,ri:-1},
+    so:d.so.map(s=>Object.assign({},s,{act:s.k!=='app',vis:s.k==='hid'?0:1,tm:0,vy:0,began:false,ph:0,dx:0,dy:0,len:s.k==='mv'?Math.hypot(s.x2-s.x1,s.y2-s.y1):0})),
+    sp:d.sp.map(s=>Object.assign({},s,{on:false,f:s.k==='pop'?0:1,vy:0,done:false,x0:s.x,y0:s.y})),
+    saw:d.saw.map(s=>Object.assign({},s,{ph:Math.random()*0,x:s.x1,y:s.y1,a:0,len:Math.hypot(s.x2-s.x1,s.y2-s.y1)||1})),
+    door:Object.assign({i:0,sl:0,sx:0,sy:0,tx:0,ty:0,run:[],rr:0},d.door),
+    fake:d.fake.map(f=>({x:f.x,y:f.y,w:30,h:46})),
+    ev:[]};
+  return S;
+}
+const hit=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+const tri=v=>{v=v%2;return v<1?v:2-v;};
+function die(S,why){if(!S.dead){S.dead=1;S.why=why;S.ev.push('die');}}
+
+function step(S,inp){
+  if(S.dead||S.won)return;
+  S.t++;const p=S.p,pcx=p.x+PW/2;
+  /* movers / crumblers / appearing blocks */
+  for(const s of S.so){
+    s.dx=0;s.dy=0;
+    if(s.k==='mv'){const ox=s.x,oy=s.y;s.ph+=s.sp/s.len;const u=tri(s.ph);s.x=s.x1+(s.x2-s.x1)*u;s.y=s.y1+(s.y2-s.y1)*u;s.dx=s.x-ox;s.dy=s.y-oy;}
+    else if(s.k==='cr'){ if(s.began){s.tm++; if(s.act&&s.tm>=s.d){s.act=false;} if(!s.act){s.vy+=.6;s.y+=s.vy;}} }
+    else if(s.k==='app'&&!s.act){ if(Math.abs(pcx-s.tx)<s.tr){s.act=true;s.vis=0;} }
+    if(s.k==='app'&&s.act&&s.vis<1)s.vis=Math.min(1,s.vis+.12);
+  }
+  if(p.ri>=0){const r=S.so[p.ri];if(r&&r.act){p.x+=r.dx;p.y+=r.dy;}}
+  /* input */
+  const ax=(inp.r?1:0)-(inp.l?1:0);p.vx=ax*SPD;if(ax)p.face=ax;
+  if(inp.j){if(!p.jl)p.jb=7;p.jl=true;}else{p.jl=false;if(p.vy<-3.5)p.vy=-3.5;}
+  if(p.on)p.coy=6;else if(p.coy>0)p.coy--;
+  if(p.jb>0&&p.coy>0){p.vy=-JV;p.jb=0;p.coy=0;p.on=false;S.ev.push('jump');}
+  if(p.jb>0)p.jb--;
+  p.vy=Math.min(14,p.vy+GRAV);
+  /* move X */
+  p.x+=p.vx;if(p.x<0)p.x=0;if(p.x>W-PW)p.x=W-PW;
+  for(const s of S.so){if(!s.act||s.ow)continue;if(hit({x:p.x,y:p.y,w:PW,h:PH},s)){if(p.vx>0)p.x=s.x-PW;else if(p.vx<0)p.x=s.x+s.w;if(s.k==='hid'&&s.vis===0){s.vis=.01;S.ev.push('reveal');}}}
+  /* move Y */
+  const pb=p.y+PH;p.y+=p.vy;p.on=false;let ri=-1;
+  for(let i=0;i<S.so.length;i++){const s=S.so[i];if(!s.act)continue;if(!hit({x:p.x,y:p.y,w:PW,h:PH},s))continue;
+    if(p.vy>=0&&(!s.ow||pb<=s.y+6+Math.max(0,s.dy))){p.y=s.y-PH;p.vy=0;p.on=true;ri=i;if(s.k==='cr')s.began=true;}
+    else if(!s.ow){ if(p.vy<0){p.y=s.y+s.h;p.vy=0;if(s.k==='hid'&&s.vis===0){s.vis=.01;S.ev.push('reveal');}} }
+  }
+  p.ri=ri;
+  for(const s of S.so)if(s.k==='hid'&&s.vis>0&&s.vis<1)s.vis=Math.min(1,s.vis+.15);
+  if(p.y<-90){p.y=-90;if(p.vy<0)p.vy=0;}
+  /* spikes */
+  const pr={x:p.x+4,y:p.y+4,w:PW-8,h:PH-6};
+  for(const s of S.sp){
+    if(s.k==='pop'){ if(!s.on&&Math.abs(pcx-(s.x+s.w/2))<s.r){s.on=true;S.ev.push('pop');} if(s.on&&s.f<1)s.f=Math.min(1,s.f+1/5); }
+    else if(s.k==='drop'){ if(!s.on&&Math.abs(pcx-(s.x+s.w/2))<s.r)s.on=true; if(s.on&&!s.done){s.vy+=.9;s.y+=s.vy;if(s.y+s.h>=F){s.y=F-s.h;s.done=true;S.ev.push('boom');}else if(s.y>H+120)s.done=true;} }
+    else if(s.k==='dash'){ if(!s.on&&pcx>s.tx)s.on=true; if(s.on&&s.x>-120){s.x-=s.sp;} }
+    const hb=s.k==='pop'?{x:s.x+3,y:s.y+s.h*(1-s.f),w:s.w-6,h:s.h*s.f}:{x:s.x+3,y:s.y+3,w:s.w-6,h:s.h-4};
+    if(hb.h>3&&hit(pr,hb))die(S,'spike');
+  }
+  for(const z of S.saw){ z.a+=.25; const u=tri((S.t*z.sp)/z.len);z.x=z.x1+(z.x2-z.x1)*u;z.y=z.y1+(z.y2-z.y1)*u;
+    const cx=Math.max(pr.x,Math.min(z.x,pr.x+pr.w)),cy=Math.max(pr.y,Math.min(z.y,pr.y+pr.h));
+    if(Math.hypot(z.x-cx,z.y-cy)<z.r-3)die(S,'saw'); }
+  if(p.y>H+60)die(S,'pit');
+  /* doors */
+  const d=S.door;
+  if(d.sl>0){d.sl--;d.x=d.sx+(d.tx-d.sx)*(1-d.sl/14);d.y=d.sy+(d.ty-d.sy)*(1-d.sl/14);if(d.sl===0){d.x=d.tx;d.y=d.ty;}}
+  else if(d.i<d.run.length&&Math.hypot(pcx-(d.x+d.w/2),p.y+PH/2-(d.y+d.h/2))<d.rr){const t=d.run[d.i++];d.sx=d.x;d.sy=d.y;d.tx=t.x;d.ty=t.y;d.sl=14;S.ev.push('hop');}
+  for(const f of S.fake)if(hit(pr,{x:f.x+4,y:f.y+4,w:f.w-8,h:f.h-4}))die(S,'fake');
+  if(!S.dead&&d.sl===0&&hit(pr,{x:d.x+4,y:d.y,w:d.w-8,h:d.h}))S.won=true;
+}
+
+/* ============================ rendering ============================ */
+const cv=$('cv'),ctx=cv.getContext('2d');
+function rr(x,y,w,h,r){ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,r):ctx.rect(x,y,w,h);}
+function drawSpikes(x,y,w,h,dir){const n=Math.max(1,Math.round(w/14)),sw=w/n;ctx.beginPath();for(let i=0;i<n;i++){ctx.moveTo(x+i*sw,y+h);ctx.lineTo(x+i*sw+sw/2,y);ctx.lineTo(x+(i+1)*sw,y+h);}ctx.closePath();ctx.fill();}
+function drawDoor(d,fake,t){ctx.save();ctx.fillStyle=fake?'#7a3b2a':'#2d6b4a';rr(d.x-3,d.y-3,d.w+6,d.h+3,8);ctx.fill();ctx.fillStyle=fake?'#ffb199':'#b9ffd9';rr(d.x+3,d.y+3,d.w-6,d.h-3,6);ctx.fill();ctx.fillStyle='#1b1b2f';ctx.beginPath();ctx.arc(d.x+d.w-9,d.y+d.h/2+4,2.5,0,6.3);ctx.fill();if(!fake){ctx.shadowColor='#7dffb2';ctx.shadowBlur=14+4*Math.sin(t/12);ctx.strokeStyle='#7dffb2';ctx.lineWidth=2;rr(d.x-3,d.y-3,d.w+6,d.h+3,8);ctx.stroke();}ctx.restore();}
+function draw(S,pl){
+  const t=S.t;
+  const gr=ctx.createLinearGradient(0,0,0,H);gr.addColorStop(0,pl.sky[0]);gr.addColorStop(1,pl.sky[1]);ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
+  ctx.globalAlpha=.25;ctx.fillStyle='#fff';for(let i=0;i<5;i++){const cx=(i*190+t*.15+40)%(W+160)-80;rr(cx,60+i*38%120,90,22,11);ctx.fill();}ctx.globalAlpha=1;
+  for(const s of S.so){
+    if(s.k==='hid'&&s.vis<=0)continue;
+    if(s.k==='app'&&!s.act)continue;
+    let ox=0;if(s.k==='cr'&&s.began&&s.act)ox=Math.sin(t*1.7)*2;
+    ctx.globalAlpha=(s.k==='hid'||s.k==='app')?s.vis:1;
+    const isG=s.k==='g'&&!s.ow||(s.k==='cr'&&s.h>20);
+    ctx.fillStyle=isG?pl.ground:(s.k==='mv'?'#8d99ae':pl.ground);
+    ctx.fillRect(s.x+ox,s.y,s.w,s.h);
+    ctx.fillStyle=pl.accent;ctx.fillRect(s.x+ox,s.y,s.w,s.ow?6:7);
+    if(s.k==='hid'){ctx.fillStyle=pl.ground;ctx.fillRect(s.x,s.y,s.w,s.h);ctx.fillStyle=pl.accent;ctx.fillRect(s.x,s.y,s.w,6);}
+    ctx.globalAlpha=1;
+  }
+  ctx.fillStyle='#e63946';
+  for(const s of S.sp){
+    if(s.k==='pop'){if(s.f>0){const h=s.h*s.f;drawSpikes(s.x,s.y+s.h-h,s.w,h);}}
+    else if(s.k==='drop'){ctx.fillStyle='#7b2d3a';ctx.fillRect(s.x,s.y,s.w,Math.min(10,s.h*.3));ctx.fillStyle='#e63946';ctx.save();ctx.translate(0,0);ctx.beginPath();const n=Math.max(1,Math.round(s.w/14)),sw=s.w/n;for(let i=0;i<n;i++){ctx.moveTo(s.x+i*sw,s.y+Math.min(10,s.h*.3));ctx.lineTo(s.x+i*sw+sw/2,s.y+s.h);ctx.lineTo(s.x+(i+1)*sw,s.y+Math.min(10,s.h*.3));}ctx.fill();ctx.restore();}
+    else if(s.k==='dash'){if(s.on||s.x<W)drawSpikes(s.x,s.y,s.w,s.h);}
+    else drawSpikes(s.x,s.y,s.w,s.h);
+  }
+  for(const z of S.saw){ctx.save();ctx.translate(z.x,z.y);ctx.rotate(z.a);ctx.fillStyle='#cfd8dc';ctx.beginPath();for(let i=0;i<10;i++){const a=i*Math.PI/5;ctx.lineTo(Math.cos(a)*z.r,Math.sin(a)*z.r);ctx.lineTo(Math.cos(a+Math.PI/10)*(z.r-6),Math.sin(a+Math.PI/10)*(z.r-6));}ctx.closePath();ctx.fill();ctx.fillStyle='#546e7a';ctx.beginPath();ctx.arc(0,0,4,0,6.3);ctx.fill();ctx.restore();}
+  for(const f of S.fake)drawDoor(f,true,t);
+  drawDoor(S.door,false,t);
+  const p=S.p;
+  if(!S.dead){ctx.fillStyle='#1d2433';rr(p.x,p.y,PW,PH,7);ctx.fill();ctx.fillStyle=pl.accent;ctx.fillRect(p.x+3,p.y+PH-5,PW-6,3);
+    const ex=p.face>0?7:1;ctx.fillStyle='#fff';ctx.fillRect(p.x+4+ex,p.y+8,6,7);ctx.fillRect(p.x+13+ex-4,p.y+8,6,7);ctx.fillStyle='#111';ctx.fillRect(p.x+7+ex+(p.face>0?2:0),p.y+10,3,4);ctx.fillRect(p.x+16+ex-4+(p.face>0?2:0),p.y+10,3,4);}
+}
+const parts=[];
+function burst(x,y){for(let i=0;i<22;i++)parts.push({x,y,vx:(Math.random()-.5)*8,vy:-Math.random()*8,l:1});}
+function drawParts(){for(let i=parts.length-1;i>=0;i--){const q=parts[i];q.x+=q.vx;q.y+=q.vy;q.vy+=.4;q.l-=.03;if(q.l<=0){parts.splice(i,1);continue;}ctx.globalAlpha=q.l;ctx.fillStyle='#e63946';ctx.fillRect(q.x,q.y,6,6);ctx.globalAlpha=1;}}
+
+/* ============================ game flow ============================ */
+let O=null,level=1,S=null,place=null,deaths=0,totalDeaths=0,held={l:0,r:0,j:0},acc=0,last=0,raf=0,paused=false,over=false,dieT=0;
+const TAUNT=['Hehe, phir se! 😈','Ye to trap tha!','Dhyaan se dekho...','Aise nahi, waise!','Shaitan jeet gaya 😂','Ek aur koshish!','Mere paas aur bhi traps hain 😈'];
+function hud(){$('hLv').textContent='Level '+level+' / '+LEVELS.length;$('hDeath').textContent='💀 '+deaths;$('hName').textContent=S?LEVELS[level-1]().name:'—';}
+function begin(n){level=Math.max(1,Math.min(LEVELS.length,n|0));place=Az.place(level);S=build(level);deaths=0;over=false;dieT=0;parts.length=0;acc=0;last=performance.now();held={l:0,r:0,j:0};hud();$('msg').textContent=LEVELS[level-1]().taunt;if(!raf)raf=requestAnimationFrame(loop);}
+function respawn(){S=build(level);dieT=0;parts.length=0;$('msg').textContent=TAUNT[(Math.max(1,deaths)-1)%TAUNT.length];hud();}
+function win(){over=true;Az.sfx('win');
+  Az.finish({game:'leveldevil',level,diff:'medium',won:true,base:Math.max(10,26-deaths),score:Math.max(0,1000-deaths*50),
+    title:'😈 Level '+level+' clear!',sub:deaths?('Deaths: '+deaths+' — shaitan ne khoob troll kiya.'):'Ek bhi death nahi! Bhagwan ho kya?',
+    next:lv=>begin(lv),retry:lv=>begin(lv)});}
+function frame(){
+  const inp={l:held.l,r:held.r,j:held.j};
+  if(!S.dead&&!S.won)step(S,inp);
+  for(const e of S.ev){ if(e==='jump')Az.sfx('jump'); else if(e==='pop'||e==='boom'||e==='reveal'||e==='hop')Az.sfx('pop'); else if(e==='die'){Az.sfx('hit');burst(S.p.x+PW/2,S.p.y+PH/2);deaths++;totalDeaths++;hud();} }
+  S.ev.length=0;
+  if(S.dead){dieT++;if(dieT>38)respawn();}
+  else if(S.won&&!over)win();
+}
+function loop(t){
+  raf=requestAnimationFrame(loop);
+  if(!S||paused){last=t;return;}
+  acc+=Math.min(100,t-last);last=t;
+  while(acc>=1000/60){acc-=1000/60;if(!over)frame();}
+  draw(S,place);drawParts();
+}
+document.addEventListener('visibilitychange',()=>{paused=document.hidden;last=performance.now();});
+
+/* ============================ controls ============================ */
+const KEY={ArrowLeft:'l',a:'l',A:'l',ArrowRight:'r',d:'r',D:'r',ArrowUp:'j',w:'j',W:'j',' ':'j'};
+addEventListener('keydown',e=>{const k=KEY[e.key];if(k){held[k]=1;e.preventDefault();}else if(e.key==='r'||e.key==='R'){if(S&&!over)respawn();}});
+addEventListener('keyup',e=>{const k=KEY[e.key];if(k){held[k]=0;e.preventDefault();}});
+addEventListener('blur',()=>{held={l:0,r:0,j:0};});
+[['bl','l'],['br','r'],['bj','j']].forEach(([id,k])=>{const b=$(id);
+  const on=e=>{e.preventDefault();held[k]=1;try{b.setPointerCapture(e.pointerId);}catch(x){}},off=e=>{held[k]=0;};
+  b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('lostpointercapture',off);b.addEventListener('contextmenu',e=>e.preventDefault());});
+$('rst').onclick=()=>{if(S&&!over)respawn();};
+
+window.__LD={LEVELS,build,step,hit,PW,PH,W,H,get S(){return S;},begin:n=>{O=O||{};begin(n);},over:()=>over};
+Az.start({game:'leveldevil',noDiff:true,onStart:o=>{O=o;begin(o.level);}});
 })();
-</script></body></html>
+</script>
+</body>
+</html>
