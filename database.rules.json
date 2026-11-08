@@ -4,14 +4,8 @@
     ".write": false,
     "users": {
       "$authUid": {
-        "profile": {
-          ".read": "auth != null && auth.uid === $authUid",
-          ".write": "auth != null && auth.uid === $authUid",
-          ".validate": "newData.hasChildren(['name', 'photo'])",
-          "name": { ".validate": "newData.isString() && newData.val().length <= 20" },
-          "photo": { ".validate": "newData.isString() && newData.val().length <= 30000" },
-          "$other": { ".validate": false }
-        }
+        ".read": "auth != null && auth.uid === $authUid",
+        ".write": "auth != null && auth.uid === $authUid"
       }
     }
   }

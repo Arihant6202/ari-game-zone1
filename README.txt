@@ -20,3 +20,10 @@ The rules allow each signed-in user to read/write only their own profile node. T
 to coin, XP, moderation, or audit nodes. Do not loosen rules to public read/write.
 The Firebase web apiKey is a public project identifier, not a server secret; restrict it in Google Cloud
 API key settings to the required APIs and your website referrers where practical.
+
+
+FREE SPARK CLOUD SAVE UPDATE
+- After login, game progress is stored at users/{FirebaseAuthUID}/gameData.
+- Coins, XP, unlocked levels, best scores, owned/equipped items and profile sync across devices using the same Firebase account.
+- This is client-side sync on Spark. Players can tamper with their own gameData; it is not cheat-proof. Do not use for real-money value.
+- Publish database.rules.json in Firebase Realtime Database > Rules. Each account can read/write only its own user node.
