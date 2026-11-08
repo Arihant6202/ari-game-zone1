@@ -1,10 +1,338 @@
-<!doctype html><html lang="en"><head><script src="firebase-config.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Badminton Rally · Ari Game Zone</title><link rel="stylesheet" href="az.css"></head><body data-game="badminton"><main class="azgame"><div class="azpanel" style="width:100%;max-width:560px;padding:12px"><div class="azhud"><span class="azpill" id="rally">Your points 0</span><span class="azpill" id="goal">Target 12</span><span class="azpill" id="hint">Ready</span></div><div id="versus" class="sub" style="text-align:center;margin-top:8px">🏸 Solo challenge</div><div id="opponent" class="sub" style="text-align:center">Opponent: waiting</div></div><div class="azstage"><canvas id="cv" width="420" height="600" style="width:min(100%,420px)"></canvas><p class="azmsg" id="msg">Tap HIT when the shuttle enters the glowing zone. Build your highest rally!</p></div><div class="azctl"><button class="azbtn" id="hit">🏸 HIT</button><button class="azbtn ghost" id="restart">↻ Restart</button><button class="azbtn ghost" id="emoji">👏 React</button></div></main><script src="az.js?v=13"></script><script>
-(()=>{const c=document.getElementById('cv'),x=c.getContext('2d'),$=id=>document.getElementById(id);let L=1,points=0,target=12,phase='incoming',sx=340,sy=250,vx=-205,vy=35,last=0,raf=0,dead=false,net=null,opPoints=0,opName='Opponent',lastSend=0,streak=0;
-function reset(level){L=level;points=0;target=12+Math.floor(L/3);phase='incoming';sx=340;sy=250;vx=-205-L*3;vy=40;dead=false;last=0;streak=0;$('goal').textContent='Target '+target;$('rally').textContent='Your points 0';$('hint').textContent='Watch shuttle';$('msg').textContent='Tap HIT as shuttle reaches your side.';cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);}
-function hit(){if(dead)return;if(phase==='incoming'&&sx<155&&sx>65){points++;streak++;$('rally').textContent='Your points '+points;$('hint').textContent='Perfect return!';phase='outgoing';vx=235+L*3;vy=-65-Math.random()*110;Az.sfx('hit');if(net)net.send({__game:'badminton-score',score:points,name:Az.name()});if(points>=target){finish(true);return;}}else{$('hint').textContent='Wait for the shuttle zone';Az.sfx('pop');}}
-function finish(won){if(dead)return;dead=true;cancelAnimationFrame(raf);if(net)net.send({__game:'badminton-finish',score:points,name:Az.name()});Az.finish({game:'badminton',level:L,diff:'medium',won,base:won?24:8,score:points,title:won?'Rally champion!':'Rally ended',sub:net?'Your points: '+points+' · '+opName+': '+opPoints:'You made '+points+' returns.',next:n=>reset(n),retry:reset});}
-function loop(ts){raf=requestAnimationFrame(loop);let dt=Math.min(.035,(ts-(last||ts))/1000);last=ts;if(dead)return;sx+=vx*dt;sy+=vy*dt;if(phase==='outgoing'&&sx>355){phase='incoming';sx=355;sy=180+Math.random()*170;vx=-(195+L*4);vy=(Math.random()-.5)*130;}if(sx<35||sx>400||sy<55||sy>500){finish(false);return;}if(net&&ts-lastSend>300){lastSend=ts;net.send({__game:'badminton-live',score:points,name:Az.name()});}draw();}
-function draw(){let g=x.createLinearGradient(0,0,0,600);g.addColorStop(0,'#123b55');g.addColorStop(1,'#0b1a34');x.fillStyle=g;x.fillRect(0,0,420,600);x.fillStyle='#1e805f';x.fillRect(25,65,370,455);x.strokeStyle='rgba(255,255,255,.8)';x.lineWidth=3;x.strokeRect(25,65,370,455);x.setLineDash([8,7]);x.beginPath();x.moveTo(210,65);x.lineTo(210,520);x.stroke();x.setLineDash([]);x.strokeStyle='#ffcf6e';x.lineWidth=5;x.beginPath();x.moveTo(28,455);x.lineTo(392,455);x.stroke();x.fillStyle='rgba(255,255,255,.12)';x.fillRect(45,120,115,300);x.fillRect(260,120,115,300);x.font='52px sans-serif';x.textAlign='center';x.fillText('🏸',88,450);x.fillText('🏸',332,125);x.font='38px sans-serif';x.fillText('🪶',sx,sy);x.fillStyle='#fff';x.font='bold 17px system-ui';x.fillText('YOU',88,555);x.fillText('OPPONENT',332,45);x.fillStyle='#ffe08a';x.font='bold 14px system-ui';x.fillText('RETURN ZONE',100,405);}
-$('hit').onclick=hit;$('restart').onclick=()=>reset(L);$('emoji').onclick=()=>{if(net)net.sendEmoji('👏');Az.toast('👏');};c.addEventListener('pointerdown',hit);addEventListener('keydown',e=>{if(e.code==='Space'||e.key==='Enter'){e.preventDefault();hit();}});
-Az.start({game:'badminton',onStart:o=>{net=o.net||null;if(net){$('versus').textContent='🌐 ONLINE RALLY CHALLENGE';$('opponent').textContent='Opponent: '+(net.peer?.name||'Connected');net.on(d=>{if(!d||!d.__game)return;if(d.__game==='badminton-score'||d.__game==='badminton-live'){opPoints=+d.score||0;opName=d.name||net.peer?.name||'Opponent';$('opponent').textContent=opName+': '+opPoints+' returns';}if(d.__game==='badminton-finish'){$('opponent').textContent=(d.name||opName)+' finished with '+(+d.score||0)+' returns';opPoints=+d.score||0;}});net.onclose(()=>{$('opponent').textContent='Opponent disconnected';});}else{$('versus').textContent='🏸 SOLO MODE';$('opponent').textContent='Beat your personal best';}reset(o.level);}});
-})();</script></body></html>
+<!doctype html><html lang="en"><head><script src="firebase-config.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Badminton Rally · Ari Game Zone</title><link rel="stylesheet" href="az.css">
+<style>
+.bd-ctl{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:min(100%,420px)}
+.bd-ctl .azbtn{padding:15px 6px;font-size:15px;touch-action:none;user-select:none;-webkit-user-select:none}
+.bd-sub{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.bd-tip{font-size:12px;color:var(--muted);text-align:center;margin:0;max-width:420px}
+</style></head>
+<body data-game="badminton"><main class="azgame">
+<div class="azpanel" style="width:100%;max-width:560px;padding:12px">
+  <div class="azhud"><span class="azpill" id="rally">You 0 – 0 CPU</span><span class="azpill" id="goal">First to 5</span><span class="azpill" id="hint">Ready</span></div>
+  <div id="versus" class="sub" style="text-align:center;margin-top:8px">🏸 Solo match</div>
+  <div id="opponent" class="sub" style="text-align:center">Opponent: waiting</div>
+</div>
+<div class="azstage">
+  <canvas id="cv" width="420" height="600" style="width:min(100%,420px)"></canvas>
+  <p class="azmsg" id="msg">Drag on the court to move. Get under the shuttle, then HIT!</p>
+</div>
+<div class="bd-ctl"><button class="azbtn" id="hit">🏸 HIT<br><small>safe clear</small></button><button class="azbtn ghost" id="drop">🎯 DROP<br><small>short, at the net</small></button><button class="azbtn" id="smash" style="background:linear-gradient(135deg,#ff9f1c,#ff3d5a)">💥 SMASH<br><small>hit it high & early</small></button></div>
+<div class="bd-sub"><button class="azbtn ghost sm" id="restart">↻ Restart</button><button class="azbtn ghost sm" id="emoji">👏 React</button></div>
+<p class="bd-tip">Move: drag on the court / arrow keys / WASD · HIT = Space · DROP = Z · SMASH = X. Hold a direction while hitting to aim. Hit the shuttle while it is inside your green ring.</p>
+</main>
+<script src="az.js?v=14"></script>
+<script>
+(() => {
+const c = document.getElementById('cv'), $ = id => document.getElementById(id);
+const DPR = Math.min(2, window.devicePixelRatio || 1), W = 420, H = 600;
+c.width = W * DPR; c.height = H * DPR;
+const x = c.getContext('2d'); x.setTransform(DPR, 0, 0, DPR, 0, 0);
+const LF = 50, RT = 370, TOP = 90, BOT = 540, NET = 315, MID = 210;
+const COURTS = ['#1e805f', '#2563a8', '#a64b2a', '#6d28a8', '#0f766e', '#9a3412'];
+const rnd = (a, b) => a + Math.random() * (b - a), clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const hex = h => { h = String(h || '#000').replace('#', ''); if (h.length === 3) h = h.split('').map(a => a + a).join(''); const n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const lum = h => { const [r, g, b] = hex(h); return (.299 * r + .587 * g + .114 * b) / 255; };
+
+/* ---------- state ---------- */
+let L = 1, place, racket, shuttle, courtCol = COURTS[0];
+let pts = 0, aiPts = 0, target = 5, phase = 'serve', server = 'p', phaseT = 0, rally = 0, longest = 0, over = false, started = false;
+let P = { x: 215, y: 470, sw: 0, cd: 0 }, A = { x: 205, y: 150, sw: 0 };
+let shot = null, S = { x: 215, y: 470, z: 60 }, trail = [], parts = [], texts = [], raf = 0, last = 0, t = 0, shake = 0;
+let drag = null; const keys = {};
+let net = null, opPts = 0, opName = 'Opponent';
+let lastSend = 0, lastAim = 0;
+
+/* ---------- difficulty (by level) ---------- */
+const aiSpeed = () => Math.min(330, 150 + L * 2.2);
+const aiReach = () => 50 + Math.min(24, L * .25);
+const aiMissP = type => clamp(.2 - L * .0018, .04, .2) + (type === 'smash' ? .12 : type === 'drop' ? .06 : 0);
+
+/* ---------- reset / flow ---------- */
+function setHint(s) { $('hint').textContent = s; }
+function setScore() { $('rally').textContent = 'You ' + pts + ' – ' + aiPts + ' CPU'; }
+function reset(level) {
+  cancelAnimationFrame(raf);
+  L = level; place = Az.place(L); racket = Az.eq('racket'); shuttle = Az.eq('shuttle');
+  courtCol = COURTS[Math.floor((L - 1) / 4) % COURTS.length];
+  target = clamp(5 + Math.floor(L / 8), 5, 15);
+  pts = 0; aiPts = 0; rally = 0; longest = 0; over = false; started = true; server = 'p';
+  trail = []; parts = []; texts = []; shot = null; t = 0; last = 0; shake = 0;
+  $('goal').textContent = 'First to ' + target; setScore();
+  Az.setBadge && Az.setBadge('Lv ' + L);
+  beginServe();
+  raf = requestAnimationFrame(loop);
+}
+function beginServe() {
+  phase = 'serve'; phaseT = 0; shot = null; rally = 0; trail = [];
+  P.x = 215; P.y = 470; A.x = 205; A.y = 150; P.sw = A.sw = 0; P.cd = 0;
+  if (server === 'p') { S = { x: P.x, y: P.y, z: 60 }; setHint('Your serve'); $('msg').textContent = 'Your serve — press HIT (long) or DROP (short).'; }
+  else { S = { x: A.x, y: A.y, z: 60 }; setHint('CPU serves'); $('msg').textContent = 'CPU is serving — get ready!'; }
+}
+
+/* ---------- shots ---------- */
+function makeShot(by, type, fx, fy, fz, aimX, err) {
+  let x1, y1, D;
+  if (by === 'p') {
+    y1 = (type === 'clear' ? TOP + rnd(12, 42) : type === 'drop' ? NET - rnd(30, 62) : TOP + rnd(80, 170)) + rnd(-err, err) * .8;
+    D = type === 'clear' ? 1.0 : type === 'drop' ? .82 : .46 / Math.min(1.3, racket.power);
+  } else {
+    y1 = (type === 'clear' ? BOT - rnd(14, 44) : type === 'drop' ? NET + rnd(30, 62) : NET + rnd(90, 180)) + rnd(-err, err) * .8;
+    D = type === 'clear' ? 1.05 : type === 'drop' ? .85 : Math.max(.4, .66 - L * .0024);
+  }
+  x1 = aimX + rnd(-err, err);
+  const Hh = type === 'clear' ? 140 : type === 'drop' ? 90 : 45;
+  const out = x1 < LF + 16 || x1 > RT - 16 || y1 < TOP || y1 > BOT || (by === 'p' ? y1 > NET - 4 : y1 < NET + 4);
+  shot = { by, type, x0: fx, y0: fy, z0: clamp(fz, 20, 150), x1, y1, D, Hh, age: 0, out, fault: false, aiMiss: by === 'p' && Math.random() < aiMissP(type) };
+  trail = [];
+}
+function netFault(by, fx, fy) {
+  shot = { by, type: 'fault', x0: fx, y0: fy, z0: 40, x1: fx, y1: by === 'p' ? NET + 8 : NET - 8, D: .32, Hh: 20, age: 0, out: false, fault: true, aiMiss: true };
+}
+function pos() {
+  const s = clamp(shot.age / shot.D, 0, 1);
+  const g = 1 - (1 - s) * (1 - s);            // a shuttlecock slows down a lot near the end -> a fair, wide hitting window
+  return { x: shot.x0 + (shot.x1 - shot.x0) * g, y: shot.y0 + (shot.y1 - shot.y0) * g, z: shot.z0 * (1 - s) + 4 * shot.Hh * s * (1 - s), s };
+}
+function steer() {
+  let dx = (keys.ArrowRight || keys.d || keys.D ? 1 : 0) - (keys.ArrowLeft || keys.a || keys.A ? 1 : 0);
+  if (!dx && drag) dx = clamp((drag.x - P.x) / 70, -1, 1);
+  return dx;
+}
+function playerAim() {
+  const st = steer(); if (Math.abs(st) > .25) return clamp(MID + st * 125, LF + 30, RT - 30);
+  return A.x < MID ? rnd(245, 340) : rnd(80, 175);       // auto: aim at the open side
+}
+function doSwing() { P.sw = .26; }
+function playerHit(type) {
+  if (over || !started) return;
+  if (phase === 'serve') {
+    if (server !== 'p') return;
+    if (type === 'smash') type = 'clear';
+    doSwing(); Az.sfx('hit'); makeShot('p', type, P.x, P.y, 60, playerAim(), 8); phase = 'rally'; setHint('Rally!'); $('msg').textContent = 'Rally! Watch the CPU\'s return.'; return;
+  }
+  if (phase !== 'rally' || P.cd > 0) return;
+  P.cd = .32; doSwing();
+  if (!shot || shot.by !== 'a') { Az.sfx('pop'); return; }
+  const q = pos(), d = Math.hypot(q.x - P.x, q.y - P.y), R = 46 * racket.reach;
+  if (d > R || q.z > 150 || q.s < .2) { Az.sfx('pop'); setHint(d > R ? 'Too far! Move closer' : 'Wait for it…'); return; }
+  if (type === 'smash' && q.z < 70) { Az.sfx('lose'); netFault('p', P.x, P.y); rally++; setHint('Smash too low → net!'); floatText(P.x, P.y - 70, 'NET!', '#ff7a7a'); return; }
+  const err = 6 + d * .5 / racket.reach;
+  Az.sfx(type === 'smash' ? 'boom' : 'hit'); burst(q.x, q.y - q.z * .55, racket.color, type === 'smash' ? 16 : 8);
+  if (type === 'smash') shake = 7;
+  makeShot('p', type, P.x, P.y, q.z, playerAim(), err); rally++;
+  setHint(d < R * .35 ? 'Perfect!' : type === 'smash' ? 'SMASH!' : 'Good shot!');
+}
+function aiTryHit() {
+  const q = pos();
+  if (shot.by !== 'p' || shot.out || shot.fault || shot.aiMiss) return;
+  const d = Math.hypot(q.x - A.x, q.y - A.y);
+  if (q.s >= .62 && d <= aiReach() && q.z <= 150) {
+    let type = Math.random() < .5 ? 'clear' : Math.random() < .55 ? 'drop' : 'smash';
+    if (type === 'smash' && q.z < 70) type = 'clear';
+    const aimX = Math.random() < .7 ? (P.x < MID ? rnd(240, 345) : rnd(75, 185)) : rnd(80, 340);
+    const err = 9 + (1 - L / 100) * 14 + (Math.random() < clamp(.1 - L * .001, .02, .1) ? 45 : 0);
+    A.sw = .26; Az.sfx('hit'); burst(q.x, q.y - q.z * .55, '#ff9aae', 6);
+    makeShot('a', type, A.x, A.y, q.z, aimX, err); rally++;
+    if (type === 'smash') setHint('CPU smash! 💥');
+  }
+}
+function land() {
+  const by = shot.by, bad = shot.out || shot.fault;
+  const winner = bad ? (by === 'p' ? 'a' : 'p') : by;
+  const lx = shot.x1, ly = shot.y1;
+  parts.push({ ring: true, x: lx, y: ly, r: 4, life: .5, max: .5, c: bad ? '#ff6b6b' : '#ffffff' });
+  longest = Math.max(longest, rally);
+  const why = shot.fault ? 'Net!' : shot.out ? 'OUT!' : (by === 'p' ? 'Winner!' : 'CPU winner');
+  winPoint(winner, why);
+}
+function winPoint(w, why) {
+  phase = 'point'; phaseT = 0; server = w;
+  if (w === 'p') { pts++; Az.sfx('coin'); setHint('Point you! ' + why); $('msg').textContent = '🎉 Point for you — ' + why + (rally > 4 ? ' (rally of ' + rally + ')' : ''); }
+  else { aiPts++; Az.sfx('lose'); setHint('CPU point — ' + why); $('msg').textContent = 'CPU scores — ' + why + ' Stay sharp!'; }
+  setScore();
+  if (net && w === 'p') net.send({ __game: 'badminton-score', score: pts, name: Az.name() });
+}
+
+/* ---------- finish ---------- */
+function finish(won) {
+  if (over) return; over = true; cancelAnimationFrame(raf);
+  if (net) net.send({ __game: 'badminton-finish', score: pts, name: Az.name() });
+  draw();
+  Az.finish({
+    game: 'badminton', level: L, diff: 'medium', won, base: won ? 24 : 8, score: pts,
+    title: won ? 'Match won! 🏆' : 'Match lost',
+    sub: 'You ' + pts + ' – ' + aiPts + ' CPU · longest rally ' + longest + (net ? ' · ' + opName + ': ' + opPts + ' pts' : ''),
+    next: n => reset(n), retry: reset
+  });
+}
+
+/* ---------- effects ---------- */
+function burst(px, py, col, n) { for (let i = 0; i < n; i++) { const a = rnd(0, 6.28), v = rnd(40, 200); parts.push({ x: px, y: py, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: .5, max: .5, c: col, r: rnd(1.5, 3.5) }); } }
+function floatText(px, py, s, col) { texts.push({ x: px, y: py, s, c: col, life: .9 }); }
+
+/* ---------- update ---------- */
+function movePlayer(dt) {
+  let mx = (keys.ArrowRight || keys.d || keys.D ? 1 : 0) - (keys.ArrowLeft || keys.a || keys.A ? 1 : 0);
+  let my = (keys.ArrowDown || keys.s || keys.S ? 1 : 0) - (keys.ArrowUp || keys.w || keys.W ? 1 : 0);
+  const sp = 270;
+  if (mx || my) { const l = Math.hypot(mx, my); P.x += mx / l * sp * dt; P.y += my / l * sp * dt; }
+  else if (drag) { const dx = drag.x - P.x, dy = drag.y - P.y, d = Math.hypot(dx, dy); if (d > 3) { const v = Math.min(320, d * 9) * dt; P.x += dx / d * Math.min(v, d); P.y += dy / d * Math.min(v, d); } }
+  P.x = clamp(P.x, LF + 6, RT - 6); P.y = clamp(P.y, NET + 24, BOT - 6);
+}
+function moveAI(dt) {
+  let tx = 205, ty = 175, sp = aiSpeed() * .7;
+  if (shot && shot.by === 'p' && !shot.out && !shot.fault) { tx = clamp(shot.x1, LF + 8, RT - 8); ty = clamp(shot.y1, TOP + 6, NET - 22); sp = aiSpeed(); if (shot.age < Math.max(.05, .3 - L * .0025)) sp = 0; }
+  const dx = tx - A.x, dy = ty - A.y, d = Math.hypot(dx, dy);
+  if (d > 2 && sp > 0) { const v = Math.min(sp * dt, d); A.x += dx / d * v; A.y += dy / d * v; }
+}
+function update(dt) {
+  t += dt; P.cd = Math.max(0, P.cd - dt); P.sw = Math.max(0, P.sw - dt); A.sw = Math.max(0, A.sw - dt);
+  movePlayer(dt); moveAI(dt);
+  if (phase === 'serve') {
+    phaseT += dt;
+    if (server === 'p') S = { x: P.x, y: P.y, z: 60 + Math.sin(t * 5) * 4 };
+    else { S = { x: A.x, y: A.y, z: 60 }; if (phaseT > 1) { A.sw = .26; Az.sfx('hit'); makeShot('a', Math.random() < .7 ? 'clear' : 'drop', A.x, A.y, 60, rnd(90, 330), 10); phase = 'rally'; setHint('Rally!'); $('msg').textContent = 'Move under the shuttle and hit it!'; } }
+  } else if (phase === 'rally' && shot) {
+    shot.age += dt;
+    const q = pos(); S = { x: q.x, y: q.y, z: q.z };
+    trail.push({ x: q.x, y: q.y - q.z * .55, life: .35 }); if (trail.length > 22) trail.shift();
+    if (shot.by === 'p') aiTryHit();
+    if (shot && shot.age >= shot.D) land();
+  } else if (phase === 'point') {
+    phaseT += dt;
+    if (phaseT > 1.15) { if (pts >= target) { finish(true); return; } if (aiPts >= target) { finish(false); return; } beginServe(); }
+  }
+  trail.forEach(p => p.life -= dt); trail = trail.filter(p => p.life > 0);
+  parts.forEach(p => { p.life -= dt; if (p.ring) p.r += 70 * dt; else { p.x += p.vx * dt; p.y += p.vy * dt; } }); parts = parts.filter(p => p.life > 0);
+  texts.forEach(q => { q.life -= dt; q.y -= 30 * dt; }); texts = texts.filter(q => q.life > 0);
+  shake = Math.max(0, shake - dt * 24);
+  if (net && performance.now() - lastSend > 400) { lastSend = performance.now(); net.send({ __game: 'badminton-live', score: pts, name: Az.name() }); }
+}
+function loop(ts) {
+  raf = requestAnimationFrame(loop);
+  const dt = Math.min(.035, (ts - (last || ts)) / 1000); last = ts;
+  if (!over) update(dt);
+  if (!over) draw();
+}
+
+/* ---------- drawing ---------- */
+function drawCourt() {
+  const sk = place.sky;
+  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, sk[0]); g.addColorStop(1, sk[1]); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.fillStyle = 'rgba(0,0,0,.42)'; x.fillRect(0, 0, W, H);                       // arena shade
+  // crowd dots
+  for (let i = 0; i < 40; i++) { x.fillStyle = 'hsla(' + (i * 37 % 360) + ',70%,65%,.5)'; x.beginPath(); x.arc(14 + i * 10.3, 28 + (i % 3) * 8 + Math.sin(t * 3 + i) * 1.5, 4, 0, 7); x.fill(); }
+  x.fillStyle = courtCol; x.fillRect(LF - 12, TOP - 12, RT - LF + 24, BOT - TOP + 24);
+  const c2 = x.createLinearGradient(0, TOP, 0, BOT); c2.addColorStop(0, 'rgba(255,255,255,.08)'); c2.addColorStop(1, 'rgba(0,0,0,.15)'); x.fillStyle = c2; x.fillRect(LF - 12, TOP - 12, RT - LF + 24, BOT - TOP + 24);
+  x.strokeStyle = 'rgba(255,255,255,.9)'; x.lineWidth = 3; x.strokeRect(LF, TOP, RT - LF, BOT - TOP);
+  x.lineWidth = 2; x.beginPath();
+  x.moveTo(LF + 16, TOP); x.lineTo(LF + 16, BOT); x.moveTo(RT - 16, TOP); x.lineTo(RT - 16, BOT);
+  x.moveTo(LF, NET - 62); x.lineTo(RT, NET - 62); x.moveTo(LF, NET + 62); x.lineTo(RT, NET + 62);
+  x.moveTo(MID, TOP); x.lineTo(MID, NET - 62); x.moveTo(MID, NET + 62); x.lineTo(MID, BOT); x.stroke();
+  // net
+  x.fillStyle = 'rgba(0,0,0,.25)'; x.fillRect(LF - 10, NET + 3, RT - LF + 20, 6);
+  x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = 1; for (let i = LF - 8; i <= RT + 8; i += 8) { x.beginPath(); x.moveTo(i, NET - 6); x.lineTo(i, NET + 3); x.stroke(); }
+  x.fillStyle = '#f8fafc'; x.fillRect(LF - 10, NET - 8, RT - LF + 20, 3);
+  x.fillStyle = '#334155'; x.fillRect(LF - 14, NET - 10, 6, 16); x.fillRect(RT + 8, NET - 10, 6, 16);
+}
+function drawPlayer(p, col, facingDown, rk, sw, you) {
+  x.save(); x.translate(p.x, p.y);
+  x.fillStyle = 'rgba(0,0,0,.3)'; x.beginPath(); x.ellipse(0, 6, 17, 7, 0, 0, 7); x.fill();
+  // legs hint
+  const stp = Math.sin(t * 14 + (you ? 0 : 2)) * 3; x.fillStyle = '#1f2937'; x.fillRect(-8, -2 + stp * .3, 5, 9); x.fillRect(3, -2 - stp * .3, 5, 9);
+  // body
+  x.fillStyle = col; x.beginPath(); x.ellipse(0, -14, 14, 16, 0, 0, 7); x.fill(); x.strokeStyle = 'rgba(0,0,0,.4)'; x.lineWidth = 1.5; x.stroke();
+  // head
+  x.fillStyle = '#f1c27d'; x.beginPath(); x.arc(0, -36, 9, 0, 7); x.fill(); x.stroke();
+  x.fillStyle = '#2b1b0e'; x.beginPath(); x.arc(0, facingDown ? -38 : -39, 9, facingDown ? Math.PI : Math.PI * .05, facingDown ? 7 : Math.PI * .95, !facingDown); x.fill();
+  // racket
+  x.save(); x.translate(facingDown ? -16 : 16, -18); const ang = (facingDown ? .6 : -.6) + (sw > 0 ? (sw / .26) * -2.2 * (facingDown ? -1 : 1) + (facingDown ? 1.1 : -1.1) : 0); x.rotate(ang);
+  x.strokeStyle = '#3b3b47'; x.lineWidth = 3; x.beginPath(); x.moveTo(0, 0); x.lineTo(0, -16); x.stroke();
+  if (rk.glow) { x.shadowColor = rk.color; x.shadowBlur = 14; }
+  x.strokeStyle = rk.color; x.lineWidth = 3; x.beginPath(); x.ellipse(0, -28, 8, 12, 0, 0, 7); x.stroke(); x.shadowBlur = 0;
+  x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = .8; x.beginPath(); x.moveTo(0, -40); x.lineTo(0, -16); x.moveTo(-6, -33); x.lineTo(6, -33); x.moveTo(-7, -27); x.lineTo(7, -27); x.moveTo(-6, -21); x.lineTo(6, -21); x.stroke();
+  x.restore(); x.restore();
+}
+function shuttleCol() { return shuttle.fx === 'rainbow' ? 'hsl(' + (t * 300 % 360) + ',95%,62%)' : shuttle.color; }
+function drawShuttle(px, py, z, ang) {
+  const sy = py - z * .55, sc = 1 + z / 260;
+  x.fillStyle = 'rgba(0,0,0,.28)'; x.beginPath(); x.ellipse(px, py, 7 / sc + 2, 3, 0, 0, 7); x.fill();
+  x.save(); x.translate(px, sy); x.rotate(ang); x.scale(sc, sc);
+  const col = shuttleCol(); x.shadowColor = col; x.shadowBlur = shuttle.fx === 'none' ? 4 : 12;
+  x.fillStyle = shuttle.color === '#ff4d6d' ? '#ffffff' : col; x.globalAlpha = .95; x.strokeStyle = 'rgba(0,0,0,.5)'; x.lineWidth = 1;
+  x.beginPath(); x.moveTo(0, 5); x.lineTo(-8, -10); x.quadraticCurveTo(0, -14, 8, -10); x.closePath(); x.fill(); x.stroke(); x.globalAlpha = 1; x.shadowBlur = 0;
+  x.fillStyle = '#f8e7c0'; x.beginPath(); x.arc(0, 7, 4.5, 0, 7); x.fill(); x.stroke(); x.restore();
+}
+function draw() {
+  x.save();
+  if (shake > 0) x.translate(rnd(-shake, shake) * .4, rnd(-shake, shake) * .4);
+  drawCourt();
+  // landing marker of incoming shot
+  if (phase === 'rally' && shot && shot.by === 'a' && !shot.fault) { const k = 1 + Math.sin(t * 10) * .12; x.strokeStyle = shot.out ? 'rgba(255,120,120,.9)' : 'rgba(255,255,255,.8)'; x.lineWidth = 2; x.setLineDash([5, 4]); x.beginPath(); x.ellipse(shot.x1, shot.y1, 15 * k, 8 * k, 0, 0, 7); x.stroke(); x.setLineDash([]); if (shot.out) { x.fillStyle = 'rgba(255,120,120,.9)'; x.font = 'bold 10px system-ui'; x.textAlign = 'center'; x.fillText('OUT?', shot.x1, shot.y1 - 12); } }
+  // hit ring
+  let canHit = false;
+  if (phase === 'rally' && shot && shot.by === 'a') { const q = pos(); canHit = Math.hypot(q.x - P.x, q.y - P.y) <= 46 * racket.reach && q.z <= 150 && q.s >= .2; }
+  x.strokeStyle = canHit ? 'rgba(124,252,138,.95)' : 'rgba(255,255,255,.22)'; x.lineWidth = canHit ? 3 : 1.5; x.beginPath(); x.arc(P.x, P.y - 14, 46 * racket.reach, 0, 7); x.stroke();
+  if (canHit) { x.fillStyle = 'rgba(124,252,138,.12)'; x.fill(); }
+  if (drag && !(keys.ArrowLeft || keys.ArrowRight || keys.ArrowUp || keys.ArrowDown)) { x.strokeStyle = 'rgba(255,255,255,.5)'; x.lineWidth = 2; x.beginPath(); x.arc(drag.x, drag.y, 10, 0, 7); x.stroke(); }
+  // players (far first)
+  drawPlayer(A, '#e5484d', true, { color: '#ff9aae' }, A.sw, false);
+  // shuttle trail
+  if (shuttle.fx !== 'none') trail.forEach(p => { x.globalAlpha = clamp(p.life / .35, 0, 1) * (shuttle.fx === 'comet' ? .9 : .6); x.fillStyle = shuttle.fx === 'rainbow' ? 'hsl(' + ((p.x + p.y) % 360) + ',95%,62%)' : shuttle.color; x.beginPath(); x.arc(p.x, p.y, shuttle.fx === 'comet' ? 4.5 : 3, 0, 7); x.fill(); }); x.globalAlpha = 1;
+  if (phase !== 'point' || shot) {
+    const ang = shot ? Math.atan2((shot.y1 - shot.y0), (shot.x1 - shot.x0)) + Math.PI / 2 : 0;
+    drawShuttle(S.x, S.y, S.z, shot && phase === 'rally' ? ang : 0);
+  }
+  drawPlayer(P, '#3b82f6', false, racket, P.sw, true);
+  // particles / texts
+  parts.forEach(p => { x.globalAlpha = clamp(p.life / p.max, 0, 1); if (p.ring) { x.strokeStyle = p.c; x.lineWidth = 2.5; x.beginPath(); x.ellipse(p.x, p.y, p.r, p.r * .5, 0, 0, 7); x.stroke(); } else { x.fillStyle = p.c; x.beginPath(); x.arc(p.x, p.y, p.r, 0, 7); x.fill(); } }); x.globalAlpha = 1;
+  x.textAlign = 'center'; x.font = 'bold 15px system-ui'; x.lineWidth = 3; x.strokeStyle = 'rgba(0,0,0,.6)';
+  texts.forEach(q => { x.globalAlpha = clamp(q.life * 1.6, 0, 1); x.strokeText(q.s, q.x, q.y); x.fillStyle = q.c; x.fillText(q.s, q.x, q.y); }); x.globalAlpha = 1;
+  // scoreboard + labels
+  x.fillStyle = 'rgba(0,0,0,.5)'; x.beginPath(); x.roundRect ? x.roundRect(10, 8, 130, 40, 10) : x.rect(10, 8, 130, 40); x.fill();
+  x.textAlign = 'left'; x.font = 'bold 12px system-ui'; x.fillStyle = '#fff'; x.fillText(place.emoji + ' ' + place.name, 18, 24); x.fillStyle = '#ffe08a'; x.fillText('Level ' + L + ' · to ' + target, 18, 40);
+  x.textAlign = 'center'; x.font = 'bold 26px Orbitron,system-ui'; x.lineWidth = 4; x.strokeStyle = 'rgba(0,0,0,.65)';
+  const sc = pts + ' – ' + aiPts; x.strokeText(sc, 330, 40); x.fillStyle = '#fff'; x.fillText(sc, 330, 40);
+  x.font = 'bold 11px system-ui'; x.fillStyle = '#9be7ff'; x.fillText('YOU – CPU', 330, 54);
+  if (phase === 'point') { x.font = 'bold 30px Orbitron,system-ui'; x.lineWidth = 5; const m = server === 'p' ? 'POINT!' : 'CPU POINT'; x.strokeStyle = 'rgba(0,0,0,.7)'; x.strokeText(m, MID, 300); x.fillStyle = server === 'p' ? '#7cfc8a' : '#ff9aae'; x.fillText(m, MID, 300); }
+  if (phase === 'serve' && server === 'p') { x.font = 'bold 15px system-ui'; x.lineWidth = 3; x.strokeStyle = 'rgba(0,0,0,.7)'; x.strokeText('Tap HIT to serve', P.x, P.y + 40); x.fillStyle = '#fff'; x.fillText('Tap HIT to serve', P.x, P.y + 40); }
+  x.restore();
+}
+
+/* ---------- input ---------- */
+const press = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); fn(); });
+press($('hit'), () => playerHit('clear')); press($('drop'), () => playerHit('drop')); press($('smash'), () => playerHit('smash'));
+function cpos(e) { const r = c.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * W, y: (e.clientY - r.top) / r.height * H }; }
+c.addEventListener('pointerdown', e => { e.preventDefault(); drag = cpos(e); try { c.setPointerCapture(e.pointerId); } catch (_) {} });
+c.addEventListener('pointermove', e => { if (drag) drag = cpos(e); });
+const endDrag = () => { drag = null; };
+c.addEventListener('pointerup', endDrag); c.addEventListener('pointercancel', endDrag); c.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') endDrag(); });
+$('restart').onclick = () => reset(L);
+$('emoji').onclick = () => { if (net) net.sendEmoji('👏'); Az.toast('👏'); };
+addEventListener('keydown', e => {
+  if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
+  keys[e.key] = true;
+  if (e.repeat) return;
+  if (e.code === 'Space' || e.key === 'Enter') { e.preventDefault(); playerHit('clear'); }
+  else if (e.key === 'z' || e.key === 'Z') playerHit('drop');
+  else if (e.key === 'x' || e.key === 'X') playerHit('smash');
+});
+addEventListener('keyup', e => { keys[e.key] = false; });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+
+/* ---------- start ---------- */
+Az.start({ game: 'badminton', onStart: o => {
+  net = o.net || null;
+  if (net) {
+    $('versus').textContent = '🌐 ONLINE RALLY CHALLENGE · both play a match, compare points'; $('opponent').textContent = 'Opponent: ' + (net.peer && net.peer.name || 'Connected');
+    net.on(d => {
+      if (!d || !d.__game) return;
+      if (d.__game === 'badminton-score' || d.__game === 'badminton-live') { opPts = +d.score || 0; opName = d.name || (net.peer && net.peer.name) || 'Opponent'; $('opponent').textContent = opName + ': ' + opPts + ' points'; }
+      if (d.__game === 'badminton-finish') { $('opponent').textContent = (d.name || opName) + ' finished with ' + (+d.score || 0) + ' points'; opPts = +d.score || 0; }
+    });
+    net.onclose(() => { $('opponent').textContent = 'Opponent disconnected'; });
+  } else { $('versus').textContent = '🏸 SOLO MATCH vs CPU'; $('opponent').textContent = 'Beat the CPU to ' + (clamp(5 + Math.floor((o.level || 1) / 8), 5, 15)) + ' points'; }
+  reset(o.level);
+} });
+window.__bad = { get S() { return { L, pts, aiPts, phase, server, target, shot: shot && { by: shot.by, type: shot.type, out: shot.out, age: shot.age, D: shot.D } }; }, hit: playerHit, step: dt => { if (!over) { update(dt); draw(); } }, P, A, reset, get shotNow() { return shot; } };
+})();
+</script></body></html>

@@ -12,7 +12,9 @@ PLAYER FEATURES
 - Guest progress is stored separately on the current device.
 - Google accounts have separate cloud progress per Firebase account.
 - Mail inbox is available from the home page and game top bar.
-- Level rewards: +100 Gold Coins every level; every fifth level also grants a free shop item.
+- Level rewards: +100 Gold Coins every level; every fifth level grants a special item of a different kind (trail, gun, bird, car, outfit, runner, snake, chess set, ball, dice, token, card back, hero, racket, shuttle, disc). Rare/legendary items are level-reward only (shown as 🔒 in the shop).
+- Name: the player's own name is the only name shown. The Gmail name is used only until the player sets a name.
+- v14: Neon Runner and Badminton Rally rebuilt (double jump, slide, drones, shields, magnets / real rallies with clear, drop & smash). New shop items for every game, with rarity badges.
 - Lucky Reward costs 100 Gold Coins per spin and may award an unowned shop item or Gold Coins.
 - Multiplayer games that use PeerJS can show opponent names and exchange quick emoji reactions.
 

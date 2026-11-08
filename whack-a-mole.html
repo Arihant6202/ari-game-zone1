@@ -130,7 +130,7 @@ a{color:inherit}
   <div class="azmsg" id="msg">Tap the moles! 🐹 +1 · 🌟 golden +5 · 🪖 helmet needs 2 hits · 💣 bomb = penalty</div>
   <div class="azctl"><button class="azbtn ghost" id="rst">🔄 Restart</button></div>
 </main>
-<script src="az.js?v=12"></script>
+<script src="az.js?v=14"></script>
 <script>
 (function(){
 const $=id=>document.getElementById(id);let O,level,S=null,timer=null,spawnT=null;
@@ -147,7 +147,7 @@ function build(){const f=$('field');f.style.gridTemplateColumns='repeat(' + S.c.
   const p=Az.place(level);f.style.background='linear-gradient(180deg,'+p.ground+','+p.sky[0]+'55)';
   for(let i=0;i<S.c.n*S.c.n;i++){const h=document.createElement('div');h.className='hole';h.dataset.i=i;h.style.setProperty('--fs',(S.c.n===3?54:S.c.n===4?42:34)+'px');h.innerHTML='<div class="mole"></div>';
     h.addEventListener('pointerdown',e=>{e.preventDefault();whack(i,e);});f.appendChild(h);}}
-function begin(lv){clearInterval(timer);clearTimeout(spawnT);level=lv;const c=cfg(),p=Az.place(level);
+function begin(lv){applyHammer();clearInterval(timer);clearTimeout(spawnT);level=lv;const c=cfg(),p=Az.place(level);
   S={c,score:0,t:c.time,combo:1,streak:0,ups:{},over:false,misses:0};Az.setBadge('Lv '+level+' · '+p.emoji+' '+p.name);build();hud();
   $('msg').textContent='Go go go! 🔨';
   timer=setInterval(tick,1000);spawnT=setTimeout(spawn,400);}
@@ -164,10 +164,14 @@ function spawn(){if(S.over)return;const holes=[...document.querySelectorAll('.ho
 function down(i,timeout){const m=S.ups[i];if(!m)return;clearTimeout(m.tm);delete S.ups[i];const h=document.querySelectorAll('.hole')[i];if(!h)return;h.classList.remove('up');
   if(timeout&&m.type!=='bomb'){S.combo=1;S.streak=0;hud();}}
 function pop(h,txt,col){const p=document.createElement('div');p.className='pop';p.textContent=txt;p.style.color=col;p.style.left='50%';p.style.top='30%';p.style.transform='translateX(-50%)';h.appendChild(p);setTimeout(()=>p.remove(),800);}
+function applyHammer(){const hm=Az.eq('hammer');let st=document.getElementById('hmstyle');if(!st){st=document.createElement('style');st.id='hmstyle';document.head.appendChild(st);}
+  const svg="<svg xmlns='http://www.w3.org/2000/svg' width='34' height='34'><text x='2' y='27' font-size='27'>"+hm.emoji+"</text></svg>";
+  st.textContent='.hole{cursor:url(\"data:image/svg+xml,'+encodeURIComponent(svg)+'\") 6 6,pointer!important}.hmfx{position:absolute;left:50%;top:18%;font-size:34px;pointer-events:none;z-index:4;animation:hmswing .28s ease-out forwards;filter:drop-shadow(0 0 8px '+hm.fx+')}@keyframes hmswing{from{transform:translate(-50%,-70%) rotate(-70deg);opacity:1}to{transform:translate(-50%,10%) rotate(25deg);opacity:0}}';}
+function swingFx(h){const hm=Az.eq('hammer');const d=document.createElement('div');d.className='hmfx';d.textContent=hm.emoji;h.appendChild(d);setTimeout(()=>d.remove(),300);}
 function whack(i){if(S.over)return;const h=document.querySelectorAll('.hole')[i],m=S.ups[i];
   if(!m){S.combo=1;S.streak=0;hud();return;}
   if(m.type==='bomb'){down(i);h.classList.add('bad');setTimeout(()=>h.classList.remove('bad'),250);S.score=Math.max(0,S.score-3);S.t=Math.max(0,S.t-2);S.combo=1;S.streak=0;Az.sfx('boom');pop(h,'💥 -3','#ff4d6d');hud();return;}
-  m.hp--;h.classList.add('hit');setTimeout(()=>h.classList.remove('hit'),180);
+  swingFx(h);m.hp--;h.classList.add('hit');setTimeout(()=>h.classList.remove('hit'),180);
   if(m.hp>0){Az.sfx('hit');pop(h,'🪖!','#ffd166');return;}
   const pts=(m.type==='gold'?5:1)*S.combo;S.score+=pts;S.streak++;if(S.streak%5===0)S.combo=Math.min(5,S.combo+1);
   if(m.type==='gold'){S.t+=2;pop(h,'+'+pts+' ⏱+2','#ffd700');Az.sfx('coin');}else{pop(h,'+'+pts,'#b6ff3b');Az.sfx('pop');}

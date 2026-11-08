@@ -1,10 +1,328 @@
-<!doctype html><html lang="en"><head><script src="firebase-config.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Neon Runner · Ari Game Zone</title><link rel="stylesheet" href="az.css"></head><body data-game="runner"><main class="azgame"><div class="azpanel" style="width:100%;max-width:560px;padding:12px"><div class="azhud"><span class="azpill" id="score">Distance 0</span><span class="azpill" id="target">Target 600</span><span class="azpill" id="speed">Speed 1x</span></div><div id="versus" class="sub" style="text-align:center;margin-top:8px">🏃 Solo run</div><div id="opponent" class="sub" style="text-align:center">Opponent: waiting</div></div><div class="azstage"><canvas id="cv" width="420" height="600" style="width:min(100%,420px)"></canvas><p class="azmsg" id="msg">Tap JUMP or press Space / ↑. Avoid the barriers and reach the distance target!</p></div><div class="azctl"><button class="azbtn" id="jump">⬆️ JUMP</button><button class="azbtn ghost" id="restart">↻ Restart</button><button class="azbtn ghost" id="emoji">😎 React</button></div></main><script src="az.js?v=13"></script><script>
-(()=>{const c=document.getElementById('cv'),x=c.getContext('2d'),$=id=>document.getElementById(id);let L=1,score=0,y=490,vy=0,obs=[],t=0,last=0,raf=0,dead=false,started=false,speed=245,target=600,net=null,host=true,opScore=0,opName='Opponent',lastSend=0,finishSent=false;
-function reset(level){L=level;score=0;y=490;vy=0;t=0;last=0;dead=false;started=true;finishSent=false;speed=245+L*7;target=600+L*70;obs=[];for(let i=0;i<4;i++)obs.push({x:480+i*300,w:25+Math.random()*22,h:34+Math.random()*55});$('target').textContent='Target '+target;$('score').textContent='Distance 0';$('speed').textContent='Speed 1x';$('msg').textContent='Run! Jump over the glowing barriers.';cancelAnimationFrame(raf);raf=requestAnimationFrame(loop);}
-function jump(){if(!started||dead)return;if(y>=489){vy=-650;Az.sfx('jump');}}
-function finish(won){if(dead)return;dead=true;cancelAnimationFrame(raf);if(net){net.send({__game:'runner-finish',score:Math.floor(score),name:Az.name()});$('msg').textContent='Finish recorded. Opponent score: '+opScore;}Az.finish({game:'runner',level:L,diff:'medium',won,base:won?22:8,score:Math.floor(score),title:won?'Distance cleared!':'Run complete',sub:net?'Your distance: '+Math.floor(score)+' · '+opName+': '+opScore:'You reached '+Math.floor(score)+' distance.',retry:reset});}
-function loop(ts){raf=requestAnimationFrame(loop);let dt=Math.min(.035,(ts-(last||ts))/1000);last=ts;if(dead)return;t+=dt;score+=dt*speed*.45;let s=speed+L*2;vy+=1600*dt;y=Math.min(490,y+vy*dt);obs.forEach(o=>o.x-=s*dt);if(obs[obs.length-1].x<250)obs.push({x:500+Math.random()*150,w:25+Math.random()*22,h:34+Math.random()*65});obs=obs.filter(o=>o.x>-60);for(const o of obs){if(o.x<112&&o.x+o.w>58&&y>490-o.h-27){finish(false);return;}}if(score>=target){score=target;finish(true);return;}$('score').textContent='Distance '+Math.floor(score);$('speed').textContent='Speed '+(s/245).toFixed(1)+'x';if(net&&ts-lastSend>250){lastSend=ts;net.send({__game:'runner-score',score:Math.floor(score),name:Az.name()});}draw();}
-function draw(){let g=x.createLinearGradient(0,0,0,600);g.addColorStop(0,'#14234b');g.addColorStop(1,'#10152c');x.fillStyle=g;x.fillRect(0,0,420,600);for(let i=0;i<40;i++){x.fillStyle='rgba(180,220,255,.5)';x.fillRect((i*97-t*16)%420,(i*47)%400,2,2);}x.fillStyle='#1d2c48';x.fillRect(0,490,420,110);x.fillStyle='#60e8ff';x.fillRect(0,490,420,4);obs.forEach(o=>{x.shadowBlur=16;x.shadowColor='#ff5d9e';x.fillStyle='#ff5d9e';x.fillRect(o.x,490-o.h,o.w,o.h);x.shadowBlur=0;});x.font='46px sans-serif';x.textAlign='center';x.fillText('🏃',85,y);x.fillStyle='#fff';x.font='bold 17px system-ui';x.fillText('LEVEL '+L,210,38);x.font='12px system-ui';x.fillStyle='#a9c8ed';x.fillText('YOUR LANE',210,570);}
-$('jump').onclick=jump;$('restart').onclick=()=>reset(L);$('emoji').onclick=()=>{if(net)net.sendEmoji('😎');Az.toast('😎');};c.addEventListener('pointerdown',jump);addEventListener('keydown',e=>{if(e.code==='Space'||e.key==='ArrowUp'){e.preventDefault();jump();}});
-Az.start({game:'runner',onStart:o=>{net=o.net||null;host=!!o.host;if(net){$('versus').textContent='🌐 ONLINE RACE · Room connected';$('opponent').textContent='Opponent: '+(net.peer?.name||'Connected');net.on(d=>{if(!d||!d.__game)return;if(d.__game==='runner-score'){opScore=+d.score||0;opName=d.name||net.peer?.name||'Opponent';$('opponent').textContent=opName+': '+opScore+' m';}if(d.__game==='runner-finish'){$('opponent').textContent=(d.name||opName)+' finished: '+(+d.score||0)+' m';opScore=+d.score||0;}});net.onclose(()=>{$('opponent').textContent='Opponent disconnected';});}else{$('versus').textContent='🏃 SOLO MODE';$('opponent').textContent='Beat your own best distance';}reset(o.level);}});
-})();</script></body></html>
+<!doctype html><html lang="en"><head><script src="firebase-config.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Neon Runner · Ari Game Zone</title><link rel="stylesheet" href="az.css">
+<style>
+.rn-ctl{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:min(100%,420px)}
+.rn-ctl .azbtn{padding:16px 10px;font-size:16px;touch-action:none;user-select:none;-webkit-user-select:none}
+.rn-sub{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.rn-tip{font-size:12px;color:var(--muted);text-align:center;margin:0}
+</style></head>
+<body data-game="runner"><main class="azgame">
+<div class="azpanel" style="width:100%;max-width:560px;padding:12px">
+  <div class="azhud"><span class="azpill" id="score">Distance 0</span><span class="azpill" id="target">Target 600</span><span class="azpill" id="speed">Speed 1x</span><span class="azpill" id="coins">⭐ 0</span></div>
+  <div id="versus" class="sub" style="text-align:center;margin-top:8px">🏃 Solo run</div>
+  <div id="opponent" class="sub" style="text-align:center">Opponent: waiting</div>
+</div>
+<div class="azstage">
+  <canvas id="cv" width="420" height="600" style="width:min(100%,420px)"></canvas>
+  <p class="azmsg" id="msg">Tap JUMP (twice for a double jump) · SLIDE under drones · grab ⭐ stars, 🛡️ shields & 🧲 magnets!</p>
+</div>
+<div class="rn-ctl"><button class="azbtn" id="jump">⬆️ JUMP</button><button class="azbtn" id="slide">⬇️ SLIDE</button></div>
+<div class="rn-sub"><button class="azbtn ghost sm" id="restart">↻ Restart</button><button class="azbtn ghost sm" id="emoji">😎 React</button></div>
+<p class="rn-tip">Keys: Space / ↑ / W = jump (press again in the air to double jump) · ↓ / S = slide or fast-fall</p>
+</main>
+<script src="az.js?v=14"></script>
+<script>
+(() => {
+const c = document.getElementById('cv'), $ = id => document.getElementById(id);
+const DPR = Math.min(2, window.devicePixelRatio || 1), W = 420, H = 600, GY = 490, PX = 85;
+c.width = W * DPR; c.height = H * DPR;
+const x = c.getContext('2d'); x.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+/* ---------- helpers ---------- */
+const hex = h => { h = String(h || '#000').replace('#', ''); if (h.length === 3) h = h.split('').map(a => a + a).join(''); const n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const lum = h => { const [r, g, b] = hex(h); return (.299 * r + .587 * g + .114 * b) / 255; };
+const mix = (a, b, t) => { const A = hex(a), B = hex(b); return 'rgb(' + A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',') + ')'; };
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* ---------- state ---------- */
+let L = 1, place, skin, trailFx, target = 600, score = 0, picked = 0, dist = 0, t = 0, last = 0, raf = 0;
+let phase = 'idle', deathT = 0, shake = 0;
+let py = GY, vy = 0, jumps = 0, slideT = 0, wantSlide = false, shield = 0, magnet = 0, inv = 0, stepT = 0, trailT = 0;
+let obs = [], coins = [], pups = [], parts = [], texts = [], far = [], near = [], stars = [];
+let nextGap = 300, pupTimer = 8, combo = 0;
+let net = null, opScore = 0, opName = 'Opponent', lastSend = 0, opDone = false;
+
+/* ---------- level setup ---------- */
+function baseSpeed() { return Math.min(520, 245 + L * 5); }
+function curSpeed() { return baseSpeed() * (1 + Math.min(.3, t * .012)); }
+function buildScenery() {
+  const r = Az.rng(L * 7919 + 13); far = []; near = []; stars = [];
+  for (let i = 0, px = 0; px < W * 2 + 100; i++) { const w = 40 + r() * 60, h = 60 + r() * 150; far.push({ x: px, w, h }); px += w + r() * 14; }
+  for (let i = 0, px = 0; px < W * 2 + 100; i++) { const w = 30 + r() * 70, h = 30 + r() * 90; near.push({ x: px, w, h, win: r() }); px += w + 6 + r() * 30; }
+  for (let i = 0; i < 46; i++) stars.push({ x: r() * W, y: r() * 330, s: r() * 1.8 + .6, p: r() * 6 });
+}
+function reset(level) {
+  cancelAnimationFrame(raf);
+  L = level; place = Az.place(L); skin = Az.eq('runner'); trailFx = Az.eq('trail');
+  target = 700 + L * 75;
+  score = 0; picked = 0; t = 0; last = 0; phase = 'run'; deathT = 0; shake = 0;
+  py = GY; vy = 0; jumps = 0; slideT = 0; wantSlide = false; shield = 0; magnet = 0; inv = 0; combo = 0; pupTimer = 7;
+  obs = []; coins = []; pups = []; parts = []; texts = []; nextGap = 260; opDone = false;
+  buildScenery();
+  $('target').textContent = 'Target ' + target; $('score').textContent = 'Distance 0'; $('speed').textContent = 'Speed 1.0x'; $('coins').textContent = '⭐ 0';
+  $('msg').textContent = 'Run! Jump over barriers, slide under drones.';
+  Az.setBadge && Az.setBadge('Lv ' + L);
+  raf = requestAnimationFrame(loop);
+}
+
+/* ---------- actions ---------- */
+function onGround() { return py >= GY - .5; }
+function jump() {
+  if (phase !== 'run') return;
+  if (onGround()) { vy = -650; jumps = 1; slideT = 0; Az.sfx('jump'); puff(PX, GY, 6, '#ffffff'); }
+  else if (jumps < 2) { vy = -570; jumps = 2; slideT = 0; Az.sfx('pop'); ring(PX, py - 20); }
+}
+function slide() {
+  if (phase !== 'run') return;
+  if (onGround()) { slideT = .62; Az.sfx('click'); puff(PX - 8, GY, 5, '#ffffff'); }
+  else { vy = Math.max(vy, 760); wantSlide = true; }       // fast-fall, then slide when you land
+}
+
+/* ---------- effects ---------- */
+function puff(px, py2, n, col) { for (let i = 0; i < n; i++) parts.push({ x: px + rnd(-6, 6), y: py2 - 2, vx: rnd(-90, 20), vy: rnd(-70, -10), life: .4, max: .4, c: col, r: rnd(1.5, 3.5), g: 0 }); }
+function ring(px, py2) { parts.push({ x: px, y: py2, ring: true, life: .35, max: .35, c: '#ffffff', r: 6 }); }
+function burst(px, py2, col, n) { for (let i = 0; i < n; i++) { const a = rnd(0, 6.28), v = rnd(60, 280); parts.push({ x: px, y: py2, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: .7, max: .7, c: col, r: rnd(2, 4.5), g: 500 }); } }
+function floatText(px, py2, s, col) { texts.push({ x: px, y: py2, s, c: col || '#fff', life: .9 }); }
+function trailSpawn(dt) {
+  const fx = trailFx && trailFx.fx; if (!fx || fx === 'none') return;
+  trailT -= dt; if (trailT > 0) return; trailT = .028;
+  const hy = py - (slideT > 0 ? 12 : 24), col = fx === 'rainbow' ? 'hsl(' + (t * 400 % 360) + ',95%,60%)' : fx === 'fire' ? (Math.random() < .5 ? '#ff6b35' : '#ffd166') : fx === 'ice' ? (Math.random() < .5 ? '#9be7ff' : '#ffffff') : fx === 'galaxy' ? (Math.random() < .5 ? '#b794f4' : '#ffffff') : trailFx.color;
+  parts.push({ x: PX - 20, y: hy + rnd(-8, 8), vx: -rnd(40, 120), vy: fx === 'fire' ? -rnd(20, 70) : rnd(-20, 20), life: .5, max: .5, c: col, r: rnd(2, fx === 'neon' ? 5 : 4), g: 0, glow: fx === 'neon' || fx === 'gold' });
+}
+
+/* ---------- spawning ---------- */
+function spawnObstacle() {
+  const s = curSpeed(), r = Math.random(), x0 = W + 70;
+  let o;
+  const droneChance = L >= 3 ? Math.min(.38, .12 + L * .004) : 0;
+  if (r < droneChance) o = { k: 'drone', x: x0, w: 46, h: 22, y: GY - 74 };
+  else if (r < droneChance + .22) o = { k: 'spike', x: x0, w: rnd(34, 48), h: rnd(28, 36), y: GY };
+  else if (r < droneChance + .34 && L >= 2) o = { k: 'wide', x: x0, w: rnd(84, 118), h: rnd(34, 46), y: GY };
+  else o = { k: 'block', x: x0, w: rnd(26, 44), h: rnd(36, 72), y: GY };
+  obs.push(o);
+  // stars: arc over ground obstacles, or a row under drones
+  if (Math.random() < .7) {
+    const n = o.k === 'wide' ? 5 : 4;
+    for (let i = 0; i < n; i++) {
+      const u = n === 1 ? .5 : i / (n - 1);
+      if (o.k === 'drone') coins.push({ x: o.x + u * 120 - 20, y: GY - 16, ph: i });
+      else coins.push({ x: o.x + o.w / 2 + (u - .5) * (o.w + 120), y: GY - o.h - 30 - Math.sin(u * Math.PI) * 46, ph: i });
+    }
+  }
+  const minGap = s * .56 + 36 + o.w * .2;
+  nextGap = minGap + Math.random() * s * Math.max(.25, .75 - L * .006);
+}
+function spawnPowerup() {
+  const k = Math.random() < .5 ? 'shield' : 'magnet';
+  pups.push({ k, x: W + 60, y: GY - rnd(50, 110), ph: 0 });
+}
+
+/* ---------- finish ---------- */
+function finish(won) {
+  if (phase === 'done') return; phase = 'done'; cancelAnimationFrame(raf);
+  if (net) { net.send({ __game: 'runner-finish', score: Math.floor(score), name: Az.name() }); $('msg').textContent = 'Finish recorded. Opponent: ' + opScore; }
+  const bonus = Math.floor(picked / 5); if (bonus > 0) Az.addCoins(bonus);
+  draw();
+  Az.finish({
+    game: 'runner', level: L, diff: 'medium', won, base: won ? 22 : 8, score: Math.floor(score),
+    title: won ? 'Distance cleared!' : 'Crashed!',
+    sub: (net ? 'Your distance: ' + Math.floor(score) + ' · ' + opName + ': ' + opScore : 'You ran ' + Math.floor(score) + ' / ' + target + ' m') + ' · ⭐ ' + picked + (bonus ? ' (+' + bonus + ' bonus coins)' : ''),
+    next: n => reset(n), retry: reset
+  });
+}
+function crash() {
+  phase = 'dying'; deathT = 0; shake = 14; Az.sfx('boom');
+  burst(PX, py - 24, '#ff5d9e', 26); burst(PX, py - 24, '#ffffff', 10);
+}
+
+/* ---------- update ---------- */
+function hitBox() { return slideT > 0 ? { x1: PX - 20, x2: PX + 24, y1: py - 24, y2: py } : { x1: PX - 15, x2: PX + 15, y1: py - 50, y2: py }; }
+const over = (a, b) => a.x1 < b.x2 && a.x2 > b.x1 && a.y1 < b.y2 && a.y2 > b.y1;
+function obsBox(o) {
+  if (o.k === 'drone') return { x1: o.x + 4, x2: o.x + o.w - 4, y1: o.y + 2, y2: o.y + o.h - 2 };
+  if (o.k === 'spike') return { x1: o.x + 8, x2: o.x + o.w - 8, y1: GY - o.h + 10, y2: GY };
+  return { x1: o.x + 3, x2: o.x + o.w - 3, y1: GY - o.h + 3, y2: GY };
+}
+function update(dt) {
+  t += dt; inv = Math.max(0, inv - dt); magnet = Math.max(0, magnet - dt);
+  const s = curSpeed();
+  // player physics
+  if (slideT > 0) { slideT -= dt; if (slideT < 0) slideT = 0; }
+  vy += 1750 * dt; py += vy * dt;
+  if (py >= GY) { if (vy > 300) { puff(PX, GY, 7, '#ffffff'); } py = GY; vy = 0; jumps = 0; if (wantSlide) { wantSlide = false; slideT = .55; } }
+  stepT += dt; if (onGround() && stepT > .09) { stepT = 0; puff(PX - 10, GY, 1, 'rgba(255,255,255,.7)'); }
+  trailSpawn(dt);
+  // world
+  obs.forEach(o => o.x -= s * dt); coins.forEach(q => q.x -= s * dt); pups.forEach(q => { q.x -= s * dt; q.ph += dt; });
+  const lastOb = obs[obs.length - 1];
+  if (!lastOb || (lastOb.x + lastOb.w + nextGap < W + 70)) spawnObstacle();
+  pupTimer -= dt; if (pupTimer <= 0) { pupTimer = rnd(9, 16); spawnPowerup(); }
+  obs = obs.filter(o => o.x > -140); coins = coins.filter(q => q.x > -30); pups = pups.filter(q => q.x > -40);
+  // magnet pulls stars
+  if (magnet > 0) coins.forEach(q => { const dx = PX - q.x, dy = (py - 26) - q.y, d = Math.hypot(dx, dy); if (d < 190 && d > 1) { q.x += dx / d * 420 * dt; q.y += dy / d * 420 * dt; } });
+  // collisions
+  const hb = hitBox();
+  for (const o of obs) {
+    if (o.hit) continue;
+    if (over(hb, obsBox(o))) {
+      if (inv > 0) continue;
+      if (shield > 0) { shield--; inv = 1; o.hit = true; burst(o.x + o.w / 2, GY - 20, '#38bdf8', 18); floatText(PX, py - 70, 'Shield saved you!', '#7dd3fc'); Az.sfx('hit'); continue; }
+      crash(); return;
+    }
+  }
+  coins = coins.filter(q => {
+    if (Math.abs(q.x - PX) < 26 && q.y > py - 64 && q.y < py + 6) { picked++; combo++; Az.sfx('coin'); burst(q.x, q.y, '#ffd84d', 5); floatText(q.x, q.y - 8, '+1', '#ffe066'); return false; }
+    return true;
+  });
+  pups = pups.filter(q => {
+    if (Math.abs(q.x - PX) < 28 && q.y > py - 70 && q.y < py + 10) {
+      if (q.k === 'shield') { shield = 1; floatText(PX, py - 76, '🛡️ Shield!', '#7dd3fc'); } else { magnet = 7; floatText(PX, py - 76, '🧲 Magnet!', '#f0abfc'); }
+      Az.sfx('win'); burst(q.x, q.y, q.k === 'shield' ? '#38bdf8' : '#e879f9', 14); return false;
+    }
+    return true;
+  });
+  // distance
+  score += dt * s * .35;
+  if (score >= target) { score = target; finish(true); return; }
+  $('score').textContent = 'Distance ' + Math.floor(score); $('speed').textContent = 'Speed ' + (s / 245).toFixed(1) + 'x'; $('coins').textContent = '⭐ ' + picked;
+  if (net && performance.now() - lastSend > 250) { lastSend = performance.now(); net.send({ __game: 'runner-score', score: Math.floor(score), name: Az.name() }); }
+}
+function updateFx(dt) {
+  parts.forEach(p => { p.life -= dt; if (!p.ring) { p.x += (p.vx || 0) * dt; p.y += (p.vy || 0) * dt; p.vy = (p.vy || 0) + (p.g || 0) * dt; } else p.r += 90 * dt; });
+  parts = parts.filter(p => p.life > 0); if (parts.length > 260) parts.splice(0, parts.length - 260);
+  texts.forEach(q => { q.life -= dt; q.y -= 34 * dt; }); texts = texts.filter(q => q.life > 0);
+  shake = Math.max(0, shake - dt * 30);
+}
+function loop(ts) {
+  raf = requestAnimationFrame(loop);
+  const dt = Math.min(.035, (ts - (last || ts)) / 1000); last = ts;
+  if (phase === 'run') update(dt);
+  else if (phase === 'dying') { deathT += dt; vy += 1750 * dt; if (deathT > .75) { finish(false); return; } }
+  updateFx(dt);
+  draw();
+}
+
+/* ---------- drawing ---------- */
+function drawBackground() {
+  const sk = place.sky, dark = lum(sk[0]) < .35;
+  const g = x.createLinearGradient(0, 0, 0, GY); g.addColorStop(0, sk[0]); g.addColorStop(1, sk[1]); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  if (dark) { stars.forEach(a => { x.globalAlpha = .45 + .45 * Math.sin(t * 2 + a.p); x.fillStyle = '#fff'; x.fillRect((a.x - t * 6 * a.s + W * 3) % W, a.y, a.s, a.s); }); x.globalAlpha = 1; }
+  // sun / moon
+  x.fillStyle = dark ? 'rgba(255,255,240,.9)' : 'rgba(255,255,255,.75)'; x.beginPath(); x.arc(320, 96, dark ? 24 : 32, 0, 7); x.fill();
+  if (dark) { x.fillStyle = sk[0]; x.beginPath(); x.arc(329, 90, 21, 0, 7); x.fill(); }
+  // parallax skylines
+  const sp = curSpeed(), t1 = (t * sp * .12) % (W * 2), t2 = (t * sp * .3) % (W * 2);
+  const farC = mix(sk[1], place.ground, .35), nearC = mix(sk[1], place.ground, .65);
+  x.fillStyle = farC; far.forEach(b => { const bx = ((b.x - t1) % (W * 2) + W * 2) % (W * 2) - 60; x.fillRect(bx, GY - 40 - b.h, b.w, b.h + 40); });
+  x.fillStyle = nearC; near.forEach(b => { const bx = ((b.x - t2) % (W * 2) + W * 2) % (W * 2) - 60; x.fillRect(bx, GY - 20 - b.h, b.w, b.h + 20); if (dark && b.win > .45) { x.fillStyle = place.accent; x.globalAlpha = .55; for (let i = 0; i < 3; i++) x.fillRect(bx + 8 + i * 16, GY - 12 - b.h + 10, 6, 6); x.globalAlpha = 1; x.fillStyle = nearC; } });
+  // ground
+  x.fillStyle = place.ground; x.fillRect(0, GY, W, H - GY);
+  x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(0, GY, W, 8);
+  const off = (t * sp) % 60; x.fillStyle = 'rgba(255,255,255,.14)';
+  for (let i = -1; i < W / 60 + 1; i++) x.fillRect(i * 60 - off, GY + 30, 34, 4);
+  x.shadowColor = place.accent; x.shadowBlur = 12; x.fillStyle = place.accent; x.fillRect(0, GY - 1, W, 4); x.shadowBlur = 0;
+}
+function drawObstacle(o) {
+  const ac = place.accent, dk = '#0b0b12';
+  x.save(); x.shadowColor = ac; x.shadowBlur = 14; x.lineWidth = 2.5; x.strokeStyle = dk;
+  if (o.k === 'spike') {
+    const n = Math.max(1, Math.round(o.w / 22)), sw = o.w / n;
+    x.fillStyle = '#ff5d6c'; for (let i = 0; i < n; i++) { x.beginPath(); x.moveTo(o.x + i * sw, GY); x.lineTo(o.x + i * sw + sw / 2, GY - o.h); x.lineTo(o.x + (i + 1) * sw, GY); x.closePath(); x.fill(); x.stroke(); }
+  } else if (o.k === 'drone') {
+    const bob = Math.sin(t * 8 + o.x * .05) * 3, yy = o.y + bob;
+    x.fillStyle = '#2a2f45'; x.beginPath(); x.roundRect ? x.roundRect(o.x, yy + 6, o.w, 14, 6) : x.rect(o.x, yy + 6, o.w, 14); x.fill(); x.stroke();
+    x.fillStyle = '#ff3d5a'; x.shadowColor = '#ff3d5a'; x.beginPath(); x.arc(o.x + o.w / 2, yy + 13, 4, 0, 7); x.fill();
+    x.shadowBlur = 0; x.fillStyle = '#9aa4b2'; const sp = Math.sin(t * 60) * 10; x.fillRect(o.x - 2, yy + 2, 16 + sp * .2, 3); x.fillRect(o.x + o.w - 14 - sp * .2, yy + 2, 16 + sp * .2, 3);
+    x.fillStyle = 'rgba(255,61,90,.12)'; x.beginPath(); x.moveTo(o.x + 6, yy + 20); x.lineTo(o.x + o.w - 6, yy + 20); x.lineTo(o.x + o.w + 10, GY); x.lineTo(o.x - 10, GY); x.fill();
+  } else {
+    const gr = x.createLinearGradient(o.x, GY - o.h, o.x, GY); gr.addColorStop(0, ac); gr.addColorStop(1, mix(ac, '#000000', .45));
+    x.fillStyle = gr; x.beginPath(); x.rect(o.x, GY - o.h, o.w, o.h); x.fill(); x.stroke();
+    x.shadowBlur = 0; x.fillStyle = 'rgba(255,255,255,.35)'; x.fillRect(o.x + 3, GY - o.h + 3, o.w - 6, 4);
+    x.strokeStyle = 'rgba(0,0,0,.35)'; x.lineWidth = 1.5; x.beginPath(); for (let yy = GY - o.h + 14; yy < GY - 4; yy += 14) { x.moveTo(o.x + 2, yy); x.lineTo(o.x + o.w - 2, yy); } x.stroke();
+  }
+  x.restore();
+}
+function drawStar(q) {
+  const sc = Math.abs(Math.cos(t * 5 + q.ph * .6)) * .6 + .4;
+  x.save(); x.translate(q.x, q.y + Math.sin(t * 4 + q.ph) * 2); x.scale(sc, 1);
+  x.shadowColor = '#ffd84d'; x.shadowBlur = 10; x.fillStyle = '#ffd84d'; x.strokeStyle = '#b45309'; x.lineWidth = 1.6;
+  x.beginPath(); x.arc(0, 0, 9, 0, 7); x.fill(); x.stroke(); x.shadowBlur = 0; x.fillStyle = '#fff3a8'; x.beginPath(); x.arc(-2, -2, 3.2, 0, 7); x.fill();
+  x.restore();
+}
+function drawPlayer() {
+  const sliding = slideT > 0, em = skin.emoji;
+  x.save();
+  if (inv > 0 && Math.floor(t * 20) % 2 === 0) x.globalAlpha = .45;
+  // shadow
+  x.fillStyle = 'rgba(0,0,0,.28)'; const sh = clamp(1 - (GY - py) / 180, .3, 1); x.beginPath(); x.ellipse(PX, GY + 3, 22 * sh, 5 * sh, 0, 0, 7); x.fill();
+  if (phase === 'dying') { x.translate(PX, py - 24 + Math.min(40, deathT * 120)); x.rotate(deathT * 9); x.font = '46px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(em, 0, 0); x.restore(); return; }
+  const bob = onGround() && !sliding ? Math.sin(t * 22) * 2 : 0;
+  x.translate(PX, py + bob);
+  if (shield > 0) { x.strokeStyle = 'rgba(125,211,252,.9)'; x.lineWidth = 3; x.shadowColor = '#38bdf8'; x.shadowBlur = 14; x.beginPath(); x.arc(0, -26, 34 + Math.sin(t * 6) * 2, 0, 7); x.stroke(); x.fillStyle = 'rgba(56,189,248,.14)'; x.fill(); x.shadowBlur = 0; }
+  if (magnet > 0) { x.strokeStyle = 'rgba(232,121,249,' + (.25 + .2 * Math.sin(t * 8)) + ')'; x.lineWidth = 2; x.beginPath(); x.arc(0, -26, 60 + (t * 90) % 40, 0, 7); x.stroke(); }
+  if (sliding) { x.translate(0, -12); x.scale(1.25, .55); } else { x.translate(0, -2); x.rotate(clamp(vy / 2200, -.22, .3)); }
+  x.font = '46px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+  x.fillText(em, 0, 0);
+  x.restore();
+}
+function drawHud() {
+  // progress bars (you + opponent)
+  const bw = 200, bx = (W - bw) / 2;
+  x.fillStyle = 'rgba(0,0,0,.35)'; x.beginPath(); x.roundRect ? x.roundRect(bx - 6, 10, bw + 12, net ? 34 : 20, 8) : x.rect(bx - 6, 10, bw + 12, net ? 34 : 20); x.fill();
+  x.fillStyle = 'rgba(255,255,255,.18)'; x.fillRect(bx, 16, bw, 6);
+  x.fillStyle = '#7cfc8a'; x.fillRect(bx, 16, bw * clamp(score / target, 0, 1), 6);
+  x.font = '14px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#fff'; x.fillText('🏁', bx + bw + 14, 19);
+  if (net) { x.fillStyle = 'rgba(255,255,255,.18)'; x.fillRect(bx, 31, bw, 6); x.fillStyle = '#ff7ab8'; x.fillRect(bx, 31, bw * clamp(opScore / target, 0, 1), 6); }
+  x.textBaseline = 'alphabetic'; x.textAlign = 'left'; x.font = 'bold 13px system-ui'; x.lineWidth = 3; x.strokeStyle = 'rgba(0,0,0,.6)'; x.fillStyle = '#fff';
+  const lab = place.emoji + ' ' + place.name + ' · Level ' + L; x.strokeText(lab, 12, 66); x.fillText(lab, 12, 66);
+  if (shield > 0) { x.strokeText('🛡️ Shield ready', 12, 84); x.fillText('🛡️ Shield ready', 12, 84); }
+  if (magnet > 0) { const q = '🧲 Magnet ' + magnet.toFixed(1) + 's'; x.strokeText(q, 12, shield > 0 ? 102 : 84); x.fillText(q, 12, shield > 0 ? 102 : 84); }
+  x.textAlign = 'center'; x.font = 'bold 15px system-ui';
+  texts.forEach(q => { x.globalAlpha = clamp(q.life * 1.6, 0, 1); x.strokeText(q.s, q.x, q.y); x.fillStyle = q.c; x.fillText(q.s, q.x, q.y); }); x.globalAlpha = 1;
+}
+function draw() {
+  x.save();
+  if (shake > 0) x.translate(rnd(-shake, shake) * .5, rnd(-shake, shake) * .5);
+  drawBackground();
+  coins.forEach(drawStar);
+  pups.forEach(q => { x.save(); x.translate(q.x, q.y + Math.sin(q.ph * 4) * 4); x.shadowColor = q.k === 'shield' ? '#38bdf8' : '#e879f9'; x.shadowBlur = 16; x.fillStyle = q.k === 'shield' ? 'rgba(56,189,248,.35)' : 'rgba(232,121,249,.35)'; x.beginPath(); x.arc(0, 0, 18, 0, 7); x.fill(); x.shadowBlur = 0; x.font = '22px "Apple Color Emoji","Segoe UI Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(q.k === 'shield' ? '🛡️' : '🧲', 0, 1); x.restore(); });
+  obs.forEach(o => { if (!o.hit) drawObstacle(o); });
+  // particles (behind player for trail look)
+  parts.forEach(p => {
+    x.globalAlpha = clamp(p.life / p.max, 0, 1);
+    if (p.ring) { x.strokeStyle = p.c; x.lineWidth = 2.5; x.beginPath(); x.arc(p.x, p.y, p.r, 0, 7); x.stroke(); }
+    else { if (p.glow) { x.shadowColor = p.c; x.shadowBlur = 10; } x.fillStyle = p.c; x.beginPath(); x.arc(p.x, p.y, p.r, 0, 7); x.fill(); x.shadowBlur = 0; }
+  }); x.globalAlpha = 1;
+  drawPlayer();
+  drawHud();
+  x.restore();
+}
+
+/* ---------- input ---------- */
+const press = (el, fn) => el.addEventListener('pointerdown', e => { e.preventDefault(); fn(); });
+press($('jump'), jump); press($('slide'), slide);
+c.addEventListener('pointerdown', e => { e.preventDefault(); jump(); });
+$('restart').onclick = () => reset(L);
+$('emoji').onclick = () => { if (net) net.sendEmoji('😎'); Az.toast('😎'); };
+addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') { e.preventDefault(); if (!e.repeat) jump(); }
+  else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') { e.preventDefault(); if (!e.repeat) slide(); }
+});
+
+/* ---------- start ---------- */
+Az.start({ game: 'runner', onStart: o => {
+  net = o.net || null;
+  if (net) {
+    $('versus').textContent = '🌐 ONLINE RACE · Room connected'; $('opponent').textContent = 'Opponent: ' + (net.peer && net.peer.name || 'Connected');
+    net.on(d => {
+      if (!d || !d.__game) return;
+      if (d.__game === 'runner-score') { opScore = +d.score || 0; opName = d.name || (net.peer && net.peer.name) || 'Opponent'; $('opponent').textContent = opName + ': ' + opScore + ' m'; }
+      if (d.__game === 'runner-finish') { $('opponent').textContent = (d.name || opName) + ' finished: ' + (+d.score || 0) + ' m'; opScore = +d.score || 0; }
+    });
+    net.onclose(() => { $('opponent').textContent = 'Opponent disconnected'; });
+  } else { $('versus').textContent = '🏃 SOLO MODE'; const b = Az.best('runner'); $('opponent').textContent = b ? 'Your best distance: ' + b + ' m' : 'Beat your own best distance'; }
+  reset(o.level);
+} });
+window.__runner = { get S() { return { L, score, picked, phase, shield, magnet, obs: obs.length, py, target }; }, jump, slide, reset, update, finish, step: dt => { if (phase === 'run') update(dt); updateFx(dt); draw(); } };
+})();
+</script></body></html>

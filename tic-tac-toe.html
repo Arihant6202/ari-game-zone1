@@ -140,7 +140,7 @@ a{color:inherit}
   <div class="azmsg" id="msg">&nbsp;</div>
   <div class="azctl"><button class="azbtn ghost sm" id="bRestart">🔄 Restart</button><button class="azbtn ghost sm" id="bMenu">⚙️ Menu</button></div>
 </main>
-<script src="az.js?v=12"></script>
+<script src="az.js?v=14"></script>
 <script>
 'use strict';
 let O, net = null, N = 3, K = 3, board = [], turn = 'X', mine = 'X', aiMark = null, over = true, gameNo = 0, lvl = 1, mode = 'single';
@@ -184,7 +184,13 @@ function lineAt(b, i, p) {
 }
 
 /* ---------- game flow ---------- */
+function applyXO() {      // equipped X / O colours from the shop
+  const xo = Az.eq('xo'); let st = document.getElementById('xostyle');
+  if (!st) { st = document.createElement('style'); st.id = 'xostyle'; document.head.appendChild(st); }
+  st.textContent = '.tt-x{stroke:' + xo.x + '!important;filter:drop-shadow(0 0 5px ' + xo.x + ')!important}.tt-o{stroke:' + xo.o + '!important;filter:drop-shadow(0 0 5px ' + xo.o + ')!important}.tt-mx{color:' + xo.x + '!important}.tt-mo{color:' + xo.o + '!important}';
+}
 function newGame(manual) {
+  applyXO();
   clearTimeout(aiTimer); gen++;
   if (mode === 'single') { N = sizeFor(lvl); K = N === 3 ? 3 : 4; }
   else { N = 3; K = 3; }

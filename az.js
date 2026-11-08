@@ -82,17 +82,17 @@ const GAMES = [
   { id: 'arena', file: 'arena-strike.html', name: 'Arena Strike', emoji: '🔫', cat: 'Shooter', max: 100, modes: ['single', 'online'], shop: ['gun', 'outfit'], desc: 'Fast team deathmatch. Respawn, fight bots and reach the kill target first.' },
   { id: 'race', file: 'turbo-racing.html', name: 'Turbo Racing', emoji: '🏎️', cat: 'Racing', max: 100, modes: ['single', 'local', 'online'], shop: ['car'], desc: 'Dodge traffic at crazy speed. Solo, 2 players on one device, or race a friend online!' },
   { id: 'chess', file: 'chess.html', name: 'Royal Chess', emoji: '♟️', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: ['piece'], desc: 'Full chess with a smart computer (50 levels), 2 players, or play online.' },
-  { id: 'ttt', file: 'tic-tac-toe.html', name: 'Tic Tac Toe', emoji: '⭕', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: [], desc: 'Classic X and O. Beat the AI, play a friend or go online.' },
-  { id: 'c4', file: 'connect-four.html', name: 'Connect Four', emoji: '🔴', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: [], desc: 'Drop discs and connect four. AI levels, 2 players or online.' },
+  { id: 'ttt', file: 'tic-tac-toe.html', name: 'Tic Tac Toe', emoji: '⭕', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: ['xo'], desc: 'Classic X and O. Beat the AI, play a friend or go online.' },
+  { id: 'c4', file: 'connect-four.html', name: 'Connect Four', emoji: '🔴', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: ['disc'], desc: 'Drop discs and connect four. AI levels, 2 players or online.' },
   { id: 'ludo', file: 'ludo.html', name: 'Ludo', emoji: '🎲', cat: 'Board', max: 1, modes: ['single', 'local', 'online'], shop: ['dice', 'token'], desc: 'Classic Ludo for 2-4 players: vs computer, on one phone, or online with a friend. Shop: dice & token skins.' },
   { id: 'flyer', file: 'sky-flyer.html', name: 'Sky Flyer', emoji: '🐤', cat: 'Arcade', max: 100, modes: ['single'], shop: ['bird'], desc: 'Tap to fly through the gaps. Pick a cool bird skin.' },
   { id: 'snake', file: 'snake-evolution.html', name: 'Snake Evolution', emoji: '🐍', cat: 'Arcade', max: 100, modes: ['single'], shop: ['snake'], desc: 'Eat, grow and avoid walls. Obstacles and speed grow each level.' },
   { id: 'brick', file: 'brick-breaker.html', name: 'Brick Breaker', emoji: '🧱', cat: 'Arcade', max: 100, modes: ['single'], shop: ['ball'], desc: 'Break all bricks, catch power-ups. 100 different layouts.' },
-  { id: 'mole', file: 'whack-a-mole.html', name: 'Whack-a-Mole', emoji: '🐹', cat: 'Fun', max: 100, modes: ['single'], shop: [], desc: 'Tap the moles fast, avoid bombs and grab golden moles.' },
+  { id: 'mole', file: 'whack-a-mole.html', name: 'Whack-a-Mole', emoji: '🐹', cat: 'Fun', max: 100, modes: ['single'], shop: ['hammer'], desc: 'Tap the moles fast, avoid bombs and grab golden moles.' },
   { id: 'leveldevil', file: 'level-devil.html', name: 'Level Devil', emoji: '😈', cat: 'Platformer', max: 20, modes: ['single', 'online'], shop: ['hero'], desc: 'A tricky platform challenge with hidden surprises and 20 stages. Race a friend online to the door!' },
   { id: 'uno', file: 'uno.html', name: 'UNO', emoji: '🃏', cat: 'Cards', max: 1, modes: ['single', 'local', 'online'], shop: ['cardback'], desc: 'Classic colour-and-number card game: vs computer bots, pass-and-play, or online 1v1 with a friend.' },
-  { id: 'runner', file: 'runner.html', name: 'Neon Runner', emoji: '🏃', cat: 'Arcade', max: 100, modes: ['single', 'online'], shop: ['hero'], desc: 'A polished endless runner. Race a friend online and compare live distance.' },
-  { id: 'badminton', file: 'badminton.html', name: 'Badminton Rally', emoji: '🏸', cat: 'Sports', max: 100, modes: ['single', 'online'], shop: [], desc: 'Fast badminton rally challenge. Compete online with a friend using a room code.' },
+  { id: 'runner', file: 'runner.html', name: 'Neon Runner', emoji: '🏃', cat: 'Arcade', max: 100, modes: ['single', 'online'], shop: ['runner', 'trail'], desc: 'Endless runner v2: jump, slide, double-jump, grab coins & shields. Race a friend online!' },
+  { id: 'badminton', file: 'badminton.html', name: 'Badminton Rally', emoji: '🏸', cat: 'Sports', max: 100, modes: ['single', 'online'], shop: ['racket', 'shuttle'], desc: 'Real badminton v2: move, clear, drop & smash against a smart AI. Race a friend online too!' },
 ];
 
 /* ------------------------------ places (change as levels go up) ------------------------------ */
@@ -129,6 +129,11 @@ const SHOP = {
     { id: 'g_dragon', name: 'Dragon Breath', price: 55000, color: '#ff7b00', dmg: 18, rate: 5, pellets: 6, spread: .22, speed: 11, mag: 18, range: 700, desc: 'Dragon fire cone. Mid range monster.' },
     { id: 'g_void', name: 'Void Ripper', price: 80000, color: '#7c3aed', dmg: 48, rate: 8.5, pellets: 1, spread: .025, speed: 21, mag: 40, range: 1200, desc: 'Dark-matter rifle. Fast & deadly.' },
     { id: 'g_divine', name: 'Divine Cannon', price: 150000, color: '#fff4a3', dmg: 70, rate: 10, pellets: 2, spread: .03, speed: 24, mag: 50, range: 1300, desc: 'THE ULTIMATE. Only for true legends.' },
+    /* ---- NEW (v14): rare guns. Appended last so bots & loot stay the same. lvl = reward only, cannot be bought ---- */
+    { id: 'g_frost', name: 'Frost Bite', price: 12000, color: '#9be7ff', dmg: 26, rate: 7, pellets: 1, spread: .035, speed: 15, mag: 30, range: 1000, desc: 'Icy rifle. Cold, clean precision.' },
+    { id: 'g_plasma', name: 'Plasma Pulse', price: 26000, color: '#39ff14', dmg: 24, rate: 12, pellets: 1, spread: .05, speed: 18, mag: 45, range: 1100, rarity: 'epic', desc: 'Green plasma bolts. Rapid and deadly.' },
+    { id: 'g_storm', name: 'Storm Breaker', price: 60000, color: '#fde047', dmg: 55, rate: 6, pellets: 3, spread: .09, speed: 20, mag: 24, range: 1200, rarity: 'legendary', lvl: 25, desc: '3 lightning bolts per shot. LEVEL 25 REWARD.' },
+    { id: 'g_nebula', name: 'Nebula Reaper', price: 120000, color: '#e879f9', dmg: 62, rate: 11, pellets: 2, spread: .025, speed: 26, mag: 60, range: 1500, rarity: 'mythic', lvl: 60, desc: 'Cosmic twin-beam. LEVEL 60 REWARD.' },
   ] },
   outfit: { title: 'Outfits', emoji: '🧥', items: [
     { id: 'o_rookie', name: 'Rookie', price: 0, color: '#4cc9f0', hat: '', hp: 100, desc: 'Starter. 100 HP.' },
@@ -147,7 +152,13 @@ const SHOP = {
     { id: 'o_vampire', name: 'Night Vampire', price: 3200, color: '#7a0f2b', hat: '🧛', hp: 165, desc: '+65 HP' },
     { id: 'o_hero', name: 'Super Hero', price: 5000, color: '#1d4ed8', hat: '🦸', hp: 190, desc: '+90 HP' },
     { id: 'o_dragon', name: 'Dragon Warrior', price: 6500, color: '#b91c1c', hat: '🐲', hp: 210, desc: '+110 HP' },
-    { id: 'o_phoenix', name: 'Phoenix Legend', price: 9000, color: '#ff6a00', hat: '🔥', hp: 230, desc: '+130 HP. Legendary.' },,
+    { id: 'o_phoenix', name: 'Phoenix Legend', price: 9000, color: '#ff6a00', hat: '🔥', hp: 230, desc: '+130 HP. Legendary.' },
+    /* ---- NEW (v14) ---- */
+    { id: 'o_samurai', name: 'Ronin Samurai', price: 4200, color: '#c1121f', hat: '⚔️', hp: 170, desc: '+70 HP. Honour & steel.' },
+    { id: 'o_frost', name: 'Frost Giant', price: 12000, color: '#7dd3fc', hat: '❄️', hp: 220, desc: '+120 HP. Cold as ice.' },
+    { id: 'o_reaper', name: 'Shadow Reaper', price: 40000, color: '#1f1235', hat: '💀', hp: 260, rarity: 'epic', desc: '+160 HP. Silent harvest.' },
+    { id: 'o_thunder', name: 'Thunder Lord', price: 70000, color: '#fde047', hat: '⚡', hp: 280, rarity: 'legendary', lvl: 30, desc: '+180 HP. LEVEL 30 REWARD.' },
+    { id: 'o_cosmos', name: 'Cosmic Emperor', price: 150000, color: '#7c3aed', hat: '🌌', hp: 320, rarity: 'mythic', lvl: 75, desc: '+220 HP. LEVEL 75 REWARD.' },
   ] },
   car: { title: 'Cars', emoji: '🏎️', items: [
     { id: 'c_red', name: 'Red Spark', price: 0, color: '#ef233c', speed: 1, desc: 'Starter car.' },
@@ -156,6 +167,11 @@ const SHOP = {
     { id: 'c_sport', name: 'Pink Sport', price: 1200, color: '#ff006e', speed: 1.08, desc: '+8% speed.' },
     { id: 'c_police', name: 'Patrol X', price: 1800, color: '#1d3557', speed: 1.12, desc: '+12% speed.' },
     { id: 'c_gold', name: 'Golden GT', price: 4000, color: '#ffd700', speed: 1.18, desc: '+18% speed. Legend.' },
+    /* ---- NEW (v14) ---- */
+    { id: 'c_ice', name: 'Frost Racer', price: 2600, color: '#7dd3fc', speed: 1.14, desc: '+14% speed. Ice cold.' },
+    { id: 'c_inferno', name: 'Inferno RS', price: 6500, color: '#ff4500', speed: 1.22, desc: '+22% speed. Burns the road.' },
+    { id: 'c_phantom', name: 'Phantom GT', price: 14000, color: '#7c3aed', speed: 1.26, rarity: 'epic', desc: '+26% speed. A ghost on wheels.' },
+    { id: 'c_royal', name: 'Royal Chariot', price: 40000, color: '#fbbf24', speed: 1.3, rarity: 'legendary', lvl: 20, desc: '+30% speed. LEVEL 20 REWARD.' },
   ] },
   ship: { title: 'Spaceships', emoji: '🚀', items: [
     { id: 's_scout', name: 'Scout', price: 0, color: '#4cc9f0', power: 1, desc: 'Starter ship.' },
@@ -171,6 +187,11 @@ const SHOP = {
     { id: 'b_penguin', name: 'Penguin', price: 700, emoji: '🐧', desc: 'Funny flyer.' },
     { id: 'b_unicorn', name: 'Unicorn', price: 1500, emoji: '🦄', desc: 'Magic!' },
     { id: 'b_dragon', name: 'Dragon', price: 3000, emoji: '🐉', desc: 'Legendary.' },
+    /* ---- NEW (v14) ---- */
+    { id: 'b_flamingo', name: 'Flamingo', price: 1100, emoji: '🦩', desc: 'Pretty in pink.' },
+    { id: 'b_peacock', name: 'Royal Peacock', price: 2200, emoji: '🦚', desc: 'Show-off feathers.' },
+    { id: 'b_invader', name: 'Space Invader', price: 6000, emoji: '👾', rarity: 'epic', desc: 'From another galaxy.' },
+    { id: 'b_ghost', name: 'Ghost Bird', price: 25000, emoji: '👻', rarity: 'legendary', lvl: 15, desc: 'LEVEL 15 REWARD. Boo!' },
   ] },
   runner: { title: 'Runners', emoji: '🏃', items: [
     { id: 'r_boy', name: 'Runner', price: 0, emoji: '🏃', desc: 'Starter.' },
@@ -179,6 +200,24 @@ const SHOP = {
     { id: 'r_astro', name: 'Astronaut', price: 1500, emoji: '🧑‍🚀', desc: 'Out of this world.' },
     { id: 'r_dog', name: 'Speedy Dog', price: 600, emoji: '🐕', desc: 'Good boy!' },
     { id: 'r_dino', name: 'Dino', price: 2500, emoji: '🦖', desc: 'Roar!' },
+    /* ---- NEW (v14) ---- */
+    { id: 'r_robot', name: 'Robo Runner', price: 1200, emoji: '🤖', desc: 'Beep boop, go!' },
+    { id: 'r_wizard', name: 'Wizard', price: 1800, emoji: '🧙', desc: 'Runs on magic.' },
+    { id: 'r_zombie', name: 'Zombie', price: 2000, emoji: '🧟', desc: 'Slow? Never.' },
+    { id: 'r_genie', name: 'Genie', price: 4500, emoji: '🧞', rarity: 'rare', desc: 'Your wish is a fast run.' },
+    { id: 'r_unicorn', name: 'Unicorn', price: 8000, emoji: '🦄', rarity: 'epic', desc: 'Gallops through rainbows.' },
+    { id: 'r_dragon', name: 'Fire Dragon', price: 20000, emoji: '🐉', rarity: 'epic', desc: 'Breathes fire as it runs.' },
+    { id: 'r_alien', name: 'Alien', price: 45000, emoji: '👽', rarity: 'legendary', lvl: 35, desc: 'LEVEL 35 REWARD.' },
+  ] },
+  trail: { title: 'Run trails', emoji: '✨', items: [
+    { id: 't_none', name: 'No trail', price: 0, color: '#9aa4b2', fx: 'none', desc: 'Clean and simple.' },
+    { id: 't_spark', name: 'Sparkle', price: 300, color: '#ffe066', fx: 'spark', desc: 'Little golden sparks.' },
+    { id: 't_fire', name: 'Fire Trail', price: 900, color: '#ff6b35', fx: 'fire', desc: 'Leave flames behind.' },
+    { id: 't_ice', name: 'Frost Trail', price: 900, color: '#9be7ff', fx: 'ice', desc: 'Icy crystals.' },
+    { id: 't_neon', name: 'Neon Pulse', price: 1500, color: '#00e5ff', fx: 'neon', desc: 'Glowing neon streaks.' },
+    { id: 't_rainbow', name: 'Rainbow Road', price: 3500, color: '#ff4d6d', fx: 'rainbow', rarity: 'rare', desc: 'All the colours.' },
+    { id: 't_galaxy', name: 'Galaxy Dust', price: 9000, color: '#b794f4', fx: 'galaxy', rarity: 'epic', desc: 'Stardust follows you.' },
+    { id: 't_aura', name: 'Golden Aura', price: 50000, color: '#ffd700', fx: 'gold', rarity: 'legendary', lvl: 45, desc: 'LEVEL 45 REWARD.' },
   ] },
   snake: { title: 'Snake skins', emoji: '🐍', items: [
     { id: 'n_green', name: 'Green', price: 0, c1: '#57d6a0', c2: '#1b9c6b', desc: 'Starter.' },
@@ -186,6 +225,11 @@ const SHOP = {
     { id: 'n_fire', name: 'Fire', price: 800, c1: '#ffb347', c2: '#ff3d2e', desc: 'Hot!' },
     { id: 'n_rainbow', name: 'Rainbow', price: 1200, c1: 'rainbow', c2: '#fff', desc: 'Colours cycle.' },
     { id: 'n_gold', name: 'Golden', price: 2500, c1: '#ffe066', c2: '#e0a100', desc: 'Shiny.' },
+    /* ---- NEW (v14) ---- */
+    { id: 'n_lava', name: 'Lava', price: 1800, c1: '#ff9a3c', c2: '#c1121f', desc: 'Molten scales.' },
+    { id: 'n_toxic', name: 'Toxic', price: 3000, c1: '#b6ff3b', c2: '#2d6a4f', desc: 'Radioactive green.' },
+    { id: 'n_galaxy', name: 'Galaxy', price: 6000, c1: '#b794f4', c2: '#3a0ca3', rarity: 'epic', desc: 'Purple space snake.' },
+    { id: 'n_diamond', name: 'Diamond', price: 30000, c1: '#bff3ff', c2: '#38bdf8', rarity: 'legendary', lvl: 40, desc: 'LEVEL 40 REWARD.' },
   ] },
   piece: { title: 'Chess pieces', emoji: '♟️', items: [
     { id: 'p_classic', name: 'Classic', price: 0, w: '#ffffff', b: '#1a1a24', glow: '', desc: 'Starter set.' },
@@ -193,6 +237,11 @@ const SHOP = {
     { id: 'p_neon', name: 'Neon', price: 400, w: '#00e5ff', b: '#ff3d9a', glow: '1', desc: 'Glowing pieces.' },
     { id: 'p_gold', name: 'Royal Gold', price: 1000, w: '#ffe066', b: '#6a1b9a', glow: '1', desc: 'Gold vs purple.' },
     { id: 'p_ice', name: 'Ice & Fire', price: 1500, w: '#bfeaff', b: '#ff5a1f', glow: '1', desc: 'Frozen vs flames.' },
+    /* ---- NEW (v14) ---- */
+    { id: 'p_marble', name: 'Marble', price: 1200, w: '#f5f5f4', b: '#44403c', glow: '', desc: 'Museum quality.' },
+    { id: 'p_jade', name: 'Jade', price: 2800, w: '#bbf7d0', b: '#14532d', glow: '1', desc: 'Glowing green jade.' },
+    { id: 'p_flame', name: 'Obsidian Flame', price: 6500, w: '#fca5a5', b: '#111111', glow: '1', rarity: 'epic', desc: 'Red fire vs black glass.' },
+    { id: 'p_cosmic', name: 'Cosmic Set', price: 35000, w: '#c4b5fd', b: '#1e1b4b', glow: '1', rarity: 'legendary', lvl: 50, desc: 'LEVEL 50 REWARD.' },
   ] },
   ball: { title: 'Balls', emoji: '⚪', items: [
     { id: 'l_white', name: 'White', price: 0, color: '#ffffff', desc: 'Starter.' },
@@ -200,6 +249,11 @@ const SHOP = {
     { id: 'l_ice', name: 'Ice Ball', price: 300, color: '#9be7ff', desc: 'Frozen.' },
     { id: 'l_rainbow', name: 'Rainbow', price: 900, color: 'rainbow', desc: 'Colours cycle.' },
     { id: 'l_gold', name: 'Gold', price: 2000, color: '#ffd700', desc: 'Pure gold.' },
+    /* ---- NEW (v14) ---- */
+    { id: 'l_neon', name: 'Neon Green', price: 600, color: '#7cfc00', desc: 'Glows green.' },
+    { id: 'l_plasma', name: 'Plasma', price: 1800, color: '#d946ef', desc: 'Electric purple.' },
+    { id: 'l_diamond', name: 'Diamond', price: 5000, color: '#bff3ff', rarity: 'epic', desc: 'Sparkling ice-blue.' },
+    { id: 'l_cosmic', name: 'Cosmic Orb', price: 30000, color: '#a78bfa', rarity: 'legendary', lvl: 55, desc: 'LEVEL 55 REWARD.' },
   ] },
   dice: { title: 'Ludo dice', emoji: '🎲', items: [
     { id: 'd_classic', name: 'Classic', price: 0, bg: 'linear-gradient(135deg,#00e5ff,#ff3d9a)', fg: '#10061f', glow: '', desc: 'Starter dice.' },
@@ -208,6 +262,10 @@ const SHOP = {
     { id: 'd_neon', name: 'Neon Dice', price: 900, bg: '#10002b', fg: '#00e5ff', glow: '#00e5ff', desc: 'Glowing neon.' },
     { id: 'd_galaxy', name: 'Galaxy Dice', price: 1500, bg: '#3a0ca3', fg: '#ffd6ff', glow: '#b5179e', desc: 'Purple galaxy glow.' },
     { id: 'd_diamond', name: 'Diamond Dice', price: 2500, bg: '#bff3ff', fg: '#0077b6', glow: '#7ee8ff', desc: 'Legendary diamond.' },
+    /* ---- NEW (v14) ---- */
+    { id: 'd_emerald', name: 'Emerald Dice', price: 1200, bg: '#10b981', fg: '#064e3b', glow: '', desc: 'Deep green gem.' },
+    { id: 'd_obsidian', name: 'Obsidian Dice', price: 4000, bg: '#111827', fg: '#f87171', glow: '#ef4444', rarity: 'epic', desc: 'Black glass, red pips.' },
+    { id: 'd_cosmic', name: 'Cosmic Dice', price: 30000, bg: '#1e1b4b', fg: '#fde68a', glow: '#a78bfa', rarity: 'legendary', lvl: 65, desc: 'LEVEL 65 REWARD.' },
   ] },
   token: { title: 'Ludo tokens', emoji: '♟', items: [
     { id: 'k_classic', name: 'Classic', price: 0, ring: '#ffffff', dot: '#ffffff', desc: 'Starter tokens.' },
@@ -215,6 +273,10 @@ const SHOP = {
     { id: 'k_black', name: 'Shadow', price: 700, ring: '#0b0b0f', dot: '#8d99ae', desc: 'Dark outline.' },
     { id: 'k_neon', name: 'Neon', price: 1000, ring: '#00e5ff', dot: '#ff3d9a', desc: 'Neon glow ring.' },
     { id: 'k_royal', name: 'Royal', price: 1800, ring: '#ffd700', dot: '#6a1b9a', desc: 'Gold ring, purple jewel.' },
+    /* ---- NEW (v14) ---- */
+    { id: 'k_emerald', name: 'Emerald', price: 1100, ring: '#10b981', dot: '#6ee7b7', desc: 'Green gem tokens.' },
+    { id: 'k_crystal', name: 'Crystal', price: 3500, ring: '#67e8f9', dot: '#a5f3fc', rarity: 'rare', desc: 'Clear crystal glow.' },
+    { id: 'k_dragon', name: 'Dragon Scale', price: 35000, ring: '#ef4444', dot: '#fbbf24', rarity: 'legendary', lvl: 70, desc: 'LEVEL 70 REWARD.' },
   ] },
   cardback: { title: 'UNO card backs', emoji: '🃏', items: [
     { id: 'u_classic', name: 'Classic', price: 0, c1: '#e53935', c2: '#111111', desc: 'Starter back.' },
@@ -223,6 +285,11 @@ const SHOP = {
     { id: 'u_forest', name: 'Forest', price: 900, c1: '#80ed99', c2: '#0b3d20', desc: 'Green woods.' },
     { id: 'u_galaxy', name: 'Galaxy', price: 1500, c1: '#b794f4', c2: '#0a0020', desc: 'Purple space.' },
     { id: 'u_gold', name: 'Royal Gold', price: 2500, c1: '#ffd700', c2: '#4a2c00', desc: 'Legendary gold.' },
+    /* ---- NEW (v14) ---- */
+    { id: 'u_sakura', name: 'Sakura', price: 900, c1: '#f9a8d4', c2: '#831843', desc: 'Pink blossoms.' },
+    { id: 'u_lava', name: 'Lava', price: 1800, c1: '#fb923c', c2: '#450a0a', desc: 'Hot magma.' },
+    { id: 'u_diamond', name: 'Diamond', price: 5000, c1: '#a5f3fc', c2: '#0c4a6e', rarity: 'epic', desc: 'Icy diamond shine.' },
+    { id: 'u_cosmic', name: 'Cosmic Void', price: 30000, c1: '#c084fc', c2: '#020617', rarity: 'legendary', lvl: 80, desc: 'LEVEL 80 REWARD.' },
   ] },
   hero: { title: 'Devil heroes', emoji: '😈', items: [
     { id: 'h_shadow', name: 'Shadow', price: 0, color: '#1d2433', hat: '', desc: 'Starter hero.' },
@@ -232,8 +299,57 @@ const SHOP = {
     { id: 'h_pumpkin', name: 'Pumpkin', price: 1500, color: '#ff7f11', hat: '🎃', desc: 'Spooky orange.' },
     { id: 'h_ghost', name: 'Ghost', price: 2000, color: '#f1faee', hat: '👻', desc: 'Boo!' },
     { id: 'h_king', name: 'King', price: 3000, color: '#ffb703', hat: '👑', desc: 'Royal hero.' },
+    /* ---- NEW (v14) ---- */
+    { id: 'h_zombie', name: 'Zombie', price: 1200, color: '#6b8e23', hat: '🧟', desc: 'Undead hero.' },
+    { id: 'h_wizard', name: 'Wizard', price: 2400, color: '#6d28d9', hat: '🧙', desc: 'Casts jump spells.' },
+    { id: 'h_dragon', name: 'Dragon Knight', price: 6000, color: '#b91c1c', hat: '🐲', rarity: 'epic', desc: 'Fierce red knight.' },
+    { id: 'h_cosmic', name: 'Cosmic Hero', price: 40000, color: '#7c3aed', hat: '🌌', rarity: 'legendary', lvl: 85, desc: 'LEVEL 85 REWARD.' },
+  ] },
+  racket: { title: 'Rackets', emoji: '🏸', items: [
+    { id: 'rk_club', name: 'Club Racket', price: 0, color: '#60e8ff', reach: 1, power: 1, desc: 'Starter racket.' },
+    { id: 'rk_red', name: 'Red Smash', price: 400, color: '#ef4444', reach: 1.05, power: 1.05, desc: '+5% reach.' },
+    { id: 'rk_green', name: 'Carbon Green', price: 900, color: '#34d399', reach: 1.1, power: 1.08, desc: '+10% reach.' },
+    { id: 'rk_gold', name: 'Golden Pro', price: 2500, color: '#ffd700', reach: 1.18, power: 1.12, desc: '+18% reach. Pro level.' },
+    { id: 'rk_neon', name: 'Neon Blade', price: 5000, color: '#d946ef', reach: 1.25, power: 1.15, glow: 1, rarity: 'epic', desc: '+25% reach. Glows.' },
+    { id: 'rk_dragon', name: 'Dragon Fang', price: 12000, color: '#ff4500', reach: 1.32, power: 1.2, glow: 1, rarity: 'epic', desc: '+32% reach. Fiery.' },
+    { id: 'rk_galaxy', name: 'Galaxy Strike', price: 60000, color: '#a78bfa', reach: 1.42, power: 1.3, glow: 1, rarity: 'legendary', lvl: 90, desc: '+42% reach. LEVEL 90 REWARD.' },
+  ] },
+  shuttle: { title: 'Shuttles', emoji: '🪶', items: [
+    { id: 'sh_white', name: 'Classic', price: 0, color: '#ffffff', fx: 'none', desc: 'Standard shuttle.' },
+    { id: 'sh_yellow', name: 'Tournament', price: 300, color: '#ffe066', fx: 'none', desc: 'Bright yellow.' },
+    { id: 'sh_fire', name: 'Fire Shuttle', price: 900, color: '#ff6b35', fx: 'trail', desc: 'Flaming trail.' },
+    { id: 'sh_ice', name: 'Ice Shuttle', price: 900, color: '#9be7ff', fx: 'trail', desc: 'Frozen trail.' },
+    { id: 'sh_rainbow', name: 'Rainbow', price: 2500, color: '#ff4d6d', fx: 'rainbow', rarity: 'rare', desc: 'All the colours.' },
+    { id: 'sh_comet', name: 'Comet', price: 8000, color: '#fbbf24', fx: 'comet', rarity: 'epic', desc: 'Long blazing tail.' },
+    { id: 'sh_galaxy', name: 'Galaxy Shuttle', price: 40000, color: '#c084fc', fx: 'comet', rarity: 'legendary', lvl: 95, desc: 'LEVEL 95 REWARD.' },
+  ] },
+  disc: { title: 'C4 discs', emoji: '🔴', items: [
+    { id: 'dc_classic', name: 'Classic', price: 0, r: ['#ff9aae', '#ff2d55', '#a80027'], y: ['#fff3a8', '#ffd23f', '#b98600'], desc: 'Red & yellow.' },
+    { id: 'dc_ocean', name: 'Ocean', price: 500, r: ['#a5f3fc', '#06b6d4', '#0e7490'], y: ['#bbf7d0', '#22c55e', '#166534'], desc: 'Blue vs green.' },
+    { id: 'dc_candy', name: 'Candy', price: 900, r: ['#fbcfe8', '#ec4899', '#9d174d'], y: ['#fde68a', '#f59e0b', '#92400e'], desc: 'Sweet colours.' },
+    { id: 'dc_neon', name: 'Neon', price: 2000, r: ['#f0abfc', '#d946ef', '#701a75'], y: ['#a5f3fc', '#22d3ee', '#155e75'], rarity: 'rare', desc: 'Pink vs cyan glow.' },
+    { id: 'dc_gold', name: 'Gold & Silver', price: 6000, r: ['#fff7ae', '#ffd700', '#a16207'], y: ['#f8fafc', '#cbd5e1', '#64748b'], rarity: 'epic', desc: 'Precious metals.' },
+    { id: 'dc_cosmic', name: 'Cosmic', price: 30000, r: ['#ddd6fe', '#8b5cf6', '#3b0764'], y: ['#fecdd3', '#fb7185', '#881337'], rarity: 'legendary', lvl: 100, desc: 'LEVEL 100 REWARD.' },
+  ] },
+  xo: { title: 'X / O styles', emoji: '❌', items: [
+    { id: 'xo_classic', name: 'Classic', price: 0, x: '#ff4d9a', o: '#3de1ff', desc: 'Pink X, blue O.' },
+    { id: 'xo_fire', name: 'Fire & Ice', price: 500, x: '#ff6b35', o: '#9be7ff', desc: 'Hot vs cold.' },
+    { id: 'xo_lime', name: 'Lime & Violet', price: 900, x: '#b6ff3b', o: '#a78bfa', desc: 'Fresh combo.' },
+    { id: 'xo_gold', name: 'Gold & Silver', price: 2500, x: '#ffd700', o: '#e2e8f0', rarity: 'rare', desc: 'Shiny marks.' },
+    { id: 'xo_plasma', name: 'Plasma', price: 7000, x: '#39ff14', o: '#f472b6', rarity: 'epic', desc: 'Electric glow.' },
+  ] },
+  hammer: { title: 'Hammers', emoji: '🔨', items: [
+    { id: 'hm_wood', name: 'Wood Hammer', price: 0, emoji: '🔨', fx: '#ffffff', desc: 'Starter hammer.' },
+    { id: 'hm_bat', name: 'Baseball Bat', price: 400, emoji: '🏏', fx: '#ffd166', desc: 'Home run!' },
+    { id: 'hm_axe', name: 'Battle Axe', price: 1200, emoji: '🪓', fx: '#ff9f1c', desc: 'Chop chop.' },
+    { id: 'hm_sword', name: 'Hero Sword', price: 2500, emoji: '🗡️', fx: '#9be7ff', rarity: 'rare', desc: 'Slash the moles.' },
+    { id: 'hm_wand', name: 'Magic Wand', price: 6000, emoji: '🪄', fx: '#e879f9', rarity: 'epic', desc: 'Sparkly whacks.' },
+    { id: 'hm_trident', name: 'Golden Trident', price: 25000, emoji: '🔱', fx: '#ffd700', rarity: 'legendary', desc: 'Poseidon\'s power.' },
   ] },
 };
+/* Rarity: explicit it.rarity, otherwise worked out from the price. Level-reward items carry it.lvl. */
+const RARITY = { common: { n: 'COMMON', c: '#9aa4b2' }, rare: { n: 'RARE', c: '#38bdf8' }, epic: { n: 'EPIC', c: '#c084fc' }, legendary: { n: 'LEGENDARY', c: '#ffb82e' }, mythic: { n: 'MYTHIC', c: '#ff3d9a' } };
+const rarityOf = it => it.rarity || (it.price >= 60000 ? 'legendary' : it.price >= 5000 ? 'epic' : it.price >= 2500 ? 'rare' : 'common');
 const ALL_ITEMS = {};
 Object.keys(SHOP).forEach(s => SHOP[s].items.forEach(i => { i.slot = s; ALL_ITEMS[i.id] = i; }));
 
@@ -255,6 +371,10 @@ const GUN_PARTS = {
   g_rail: [[0,11,12,8,'k'],[12,9,30,12,'c'],[42,8,22,3,'m'],[42,19,22,3,'m'],[42,12,22,6,'g'],[18,12,16,2,'a'],[16,21,6,8,'k']],
   g_dragon: [[0,10,12,8,'k'],[12,8,26,11,'c'],[38,6,12,15,'a'],[50,9,12,9,'c'],[60,10,4,7,'g'],[44,3,6,4,'c'],[18,19,6,9,'k']],
   g_void: [[0,9,13,10,'k'],[13,8,32,10,'c'],[45,10,18,5,'m'],[22,3,14,5,'k'],[26,5,6,2,'g'],[20,11,20,2,'g'],[28,18,6,11,'k']],
+  g_frost: [[0,10,12,8,'k'],[12,9,30,9,'c'],[42,10,16,5,'m'],[58,11,6,3,'g'],[18,5,16,4,'a'],[22,18,6,10,'k'],[14,9,26,2,'a'],[30,3,6,3,'g']],
+  g_plasma: [[2,10,10,9,'k'],[12,7,26,14,'c'],[38,10,18,6,'m'],[56,9,8,8,'g'],[16,9,18,3,'g'],[16,15,18,3,'g'],[20,21,6,8,'k'],[26,3,8,4,'a']],
+  g_storm: [[0,10,12,9,'k'],[12,6,26,16,'c'],[38,5,22,4,'g'],[38,12,24,4,'g'],[38,19,22,4,'g'],[14,10,20,3,'a'],[22,22,6,8,'k'],[28,2,10,4,'a']],
+  g_nebula: [[0,9,12,12,'a'],[12,6,24,16,'c'],[36,8,12,5,'g'],[36,15,12,5,'g'],[48,9,16,3,'m'],[48,16,16,3,'m'],[16,9,16,3,'g'],[20,22,6,8,'k'],[14,3,10,4,'a'],[26,3,6,3,'g']],
   g_divine: [[0,9,13,11,'a'],[13,7,34,13,'c'],[47,9,16,7,'a'],[63,10,1,5,'g'],[22,3,16,4,'a'],[24,11,22,3,'g'],[26,20,7,9,'k'],[16,4,3,3,'g']],
 };
 const gunItem = g => (g && (ALL_ITEMS[g.id] || Object.values(ALL_ITEMS).find(i => i.slot === 'gun' && i.name === g.name))) || ALL_ITEMS.g_pistol;
@@ -290,6 +410,11 @@ function hatSVG(hat, col) {
     case '🐲': return '<path d="M20 12l-5-12 9 7zM40 12l5-12-9 7z" fill="#ffd166" stroke="#a66b00"/>';
     case '🔥': return '<path d="M20 12q-2-9 4-11-1 6 3 7 0-8 4-10 1 7 5 8 3-3 4-6 2 8-1 12z" fill="#ff7b00"/><path d="M25 12q0-5 5-7 1 4 4 7z" fill="#ffd166"/>';
     case '🥋': return R(18, 13, 24, 4, '#ffffff') + R(40, 13, 4, 10, '#ffffff');
+    case '⚔️': return '<path d="M20 12l20-12M40 12L20 0" stroke="#e2e8f0" stroke-width="3"/><rect x="18" y="13" width="24" height="4" fill="#7f1d1d"/>';
+    case '❄️': return '<path d="M20 15l5-9 5 6 5-8 5 11z" fill="#bae6fd" stroke="#7dd3fc"/>';
+    case '💀': return '<path d="M17 18q0-14 13-14t13 14z" fill="#1f1235"/><circle cx="25" cy="10" r="2" fill="#a78bfa"/><circle cx="35" cy="10" r="2" fill="#a78bfa"/>';
+    case '⚡': return '<path d="M30 -4l-9 14h7l-3 10 12-16h-8z" fill="#fde047" stroke="#ca8a04"/>';
+    case '🌌': return '<path d="M16 17q0-14 14-14t14 14l-4-3-4 3-6-4-6 4-4-3z" fill="#4c1d95"/><circle cx="24" cy="9" r="1.4" fill="#fff"/><circle cx="34" cy="7" r="1.1" fill="#fff"/><circle cx="38" cy="12" r="1.2" fill="#fbcfe8"/>';
     case '👻': return '';
     case '🦋': return '<path d="M17 20q-3-16 13-17t13 17q0 14 5 24-9-1-10-10l-2-8H24l-2 8q-1 9-10 10 5-10 5-24z" fill="#5b3a9e"/><text x="23" y="9" font-size="10">🦋</text>';
     default: return '<path d="M19 17q0-9 11-9t11 9q-6-5-11-4t-11 4z" fill="#4a2f1b"/>';
@@ -310,8 +435,13 @@ function personSVG(it, h) {
     hatSVG(hat, col) + '</g></svg>';
 }
 const pip = (x, y) => `<circle cx="${x}" cy="${y}" r="3.2" fill="currentColor"/>`;
+const racketSVG = it => `<svg viewBox="0 0 60 84" height="64" style="filter:drop-shadow(0 0 ${it.glow ? 9 : 3}px ${it.color}aa)"><g transform="rotate(28 30 42)"><rect x="27.5" y="44" width="5" height="34" rx="2.5" fill="#3b3b47"/><rect x="26" y="62" width="8" height="15" rx="3" fill="${it.color}"/><path d="M30 46L21 34M30 46L39 34" stroke="${it.color}" stroke-width="2.6"/><ellipse cx="30" cy="22" rx="15" ry="20" fill="rgba(255,255,255,.08)" stroke="${it.color}" stroke-width="4"/><g stroke="#ffffff99" stroke-width=".8"><path d="M30 3v38M22 6v32M38 6v32M16 14h28M15 22h30M16 30h28"/></g></g></svg>`;
+const shuttleSVG = it => `<svg viewBox="0 0 50 60" height="58" style="filter:drop-shadow(0 0 6px ${it.color}99)"><path d="M25 38L8 6q17-7 34 0z" fill="${it.color === '#ff4d6d' ? '#fff' : it.color}" fill-opacity=".92" stroke="#0b0b12" stroke-width="1.2"/><path d="M25 38L16 7M25 38L25 6M25 38L34 7" stroke="#0b0b1255" stroke-width="1"/><ellipse cx="25" cy="42" rx="9" ry="8" fill="#f8e7c0" stroke="#0b0b12" stroke-width="1.2"/></svg>`;
+const discSVG = c => `<svg viewBox="0 0 50 50" height="46"><defs><radialGradient id="dg${c[1].slice(1)}" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="${c[0]}"/><stop offset=".55" stop-color="${c[1]}"/><stop offset="1" stop-color="${c[2]}"/></radialGradient></defs><circle cx="25" cy="25" r="21" fill="url(#dg${c[1].slice(1)})"/><circle cx="25" cy="25" r="14" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="2"/></svg>`;
+const xoSVG = it => `<svg viewBox="0 0 110 54" height="50"><g stroke="${it.x}" stroke-width="7" stroke-linecap="round" style="filter:drop-shadow(0 0 4px ${it.x})"><path d="M8 8l38 38M46 8L8 46"/></g><circle cx="82" cy="27" r="19" fill="none" stroke="${it.o}" stroke-width="7" style="filter:drop-shadow(0 0 4px ${it.o})"/></svg>`;
+const trailSVG = it => `<svg viewBox="0 0 90 40" height="40">` + [0, 1, 2, 3, 4, 5].map(i => `<circle cx="${12 + i * 14}" cy="${20 + Math.sin(i * 1.4) * 8}" r="${3 + i * .9}" fill="${it.fx === 'rainbow' ? `hsl(${i * 55},90%,60%)` : it.color}" opacity="${.25 + i * .14}"/>`).join('') + `</svg>`;
 function figure(it) {
-  const s = it.slot, bgc = it.color || it.c1 || it.ring || it.w || '#7c5cff';
+  const s = it.slot, bgc = it.color || it.c1 || it.ring || it.w || (it.r && it.r[1]) || it.x || '#7c5cff';
   let svg = '';
   if (s === 'gun') svg = gunSVG(it, 46);
   else if (s === 'outfit' || s === 'hero') svg = personSVG(it, 68);
@@ -323,9 +453,30 @@ function figure(it) {
   else if (s === 'dice') svg = `<div style="width:52px;height:52px;border-radius:12px;background:${it.bg};color:${it.fg};display:grid;place-items:center;${it.glow ? 'box-shadow:0 0 16px ' + it.glow : 'box-shadow:0 3px 8px #0006'}"><svg viewBox="0 0 30 30" width="38" height="38">${pip(7, 7)}${pip(23, 7)}${pip(15, 15)}${pip(7, 23)}${pip(23, 23)}</svg></div>`;
   else if (s === 'token') svg = `<svg viewBox="0 0 40 52" height="54" style="filter:drop-shadow(0 0 4px ${it.ring}aa)"><ellipse cx="20" cy="46" rx="14" ry="5" fill="${it.ring}"/><path d="M12 44q1-16 8-16t8 16z" fill="${it.dot}" stroke="${it.ring}" stroke-width="2.5"/><circle cx="20" cy="16" r="10" fill="${it.dot}" stroke="${it.ring}" stroke-width="3"/><circle cx="17" cy="13" r="3" fill="#fff8"/></svg>`;
   else if (s === 'cardback') svg = `<svg viewBox="0 0 44 62" height="60" style="filter:drop-shadow(0 3px 5px #0007)"><rect x="2" y="2" width="40" height="58" rx="6" fill="${it.c2}" stroke="#fff" stroke-width="2"/><ellipse cx="22" cy="31" rx="15" ry="22" fill="${it.c1}" transform="rotate(25 22 31)"/><text x="22" y="37" text-anchor="middle" font-size="15" font-weight="900" fill="#fff" stroke="#000" stroke-width=".8" font-family="Arial Black,sans-serif">UNO</text></svg>`;
+  else if (s === 'racket') svg = racketSVG(it);
+  else if (s === 'shuttle') svg = shuttleSVG(it);
+  else if (s === 'disc') svg = discSVG(it.r) + discSVG(it.y);
+  else if (s === 'xo') svg = xoSVG(it);
+  else if (s === 'trail') svg = trailSVG(it);
   else if (it.emoji) svg = `<div style="font-size:42px;line-height:1;filter:drop-shadow(0 3px 4px #0007)">${it.emoji}</div>`;
   else svg = `<div class="sw" style="background:${it.color || '#888'}"></div>`;
   return `<div class="fig" style="background:radial-gradient(circle at 50% 60%,${bgc}33,transparent 70%)">${svg}</div>`;
+}
+
+/* ------------------------------ level reward items (every 5th level) ------------------------------ */
+// Different kinds of items: trails, guns, birds, cars, outfits, runners, snakes, chess sets, balls, dice, tokens, cards, heroes, rackets, shuttles, discs.
+const LEVEL_ITEMS = { 5: 't_fire', 10: 'g_ar', 15: 'b_ghost', 20: 'c_royal', 25: 'g_storm', 30: 'o_thunder', 35: 'r_alien', 40: 'n_diamond', 45: 't_aura', 50: 'p_cosmic',
+  55: 'l_cosmic', 60: 'g_nebula', 65: 'd_cosmic', 70: 'k_dragon', 75: 'o_cosmos', 80: 'u_cosmic', 85: 'h_cosmic', 90: 'rk_galaxy', 95: 'sh_galaxy', 100: 'dc_cosmic' };
+function grantLevelItems(upto) {
+  const got = [];
+  Object.keys(LEVEL_ITEMS).map(Number).sort((a, b) => a - b).forEach(lv => {
+    if (lv > upto || db().levelRewards['i' + lv]) return;
+    db().levelRewards['i' + lv] = true;
+    const it = ALL_ITEMS[LEVEL_ITEMS[lv]]; if (!it) return;
+    if (db().own[it.id]) { db().coins = Math.min(MAXC, db().coins + 500); return; }   // already owned -> 500 coins instead
+    db().own[it.id] = 1; got.push(it);
+  });
+  return got;
 }
 
 /* ------------------------------ core API ------------------------------ */
@@ -346,18 +497,21 @@ const Az = window.Az = {
       if (db().levelRewards[lv]) continue;
       db().levelRewards[lv] = true;
       db().coins = Math.min(MAXC, db().coins + 100);
-
-      if (lv % 5 === 0) {
-        const free = Object.values(SHOP).flatMap(s => s.items).find(it => !db().own[it.id]);
-        if (free) { db().own[free.id] = 1; db().lastLevelItem = free.name; }
-      }
     }
+    const items = grantLevelItems(after);
     save(); Az.refresh();
-    if (after > before) Az.toast('🎉 Level ' + after + '! Reward: +100 coins' + (after % 5 === 0 && db().lastLevelItem ? ' + free ' + db().lastLevelItem : ''), 4500);
+    if (after > before) Az.toast('🎉 Level ' + after + '! +100 coins' + (items.length ? ' + 🎁 ' + items.map(i => i.name).join(', ') : ''), 4500);
   },
+  syncLevelItems() {          // give any level-reward item the player already earned (also covers players from older versions)
+    const got = grantLevelItems(Az.plvl());
+    if (got.length) { save(); Az.refresh(); Az.toast('🎁 Level reward unlocked: ' + got.map(i => i.name).join(', '), 4500); }
+    return got;
+  },
+  levelItem: lv => ALL_ITEMS[LEVEL_ITEMS[lv]] || null,
+  rarity: it => RARITY[rarityOf(it)],
   plvl: () => Math.floor(Math.sqrt(db().xp / 40)) + 1,
   plProgress() { const L = Az.plvl(), a = 40 * (L - 1) * (L - 1), b = 40 * L * L; return { lvl: L, cur: db().xp - a, need: b - a }; },
-  rewardPreview(from = Az.plvl(), count = 5) { return Array.from({length:count},(_,i)=>{const lv=from+i;return {level:lv,coins:100,item:lv%5===0,unlocked:!!db().levelRewards[lv]};}); },
+  rewardPreview(from = Az.plvl(), count = 5) { return Array.from({length:count},(_,i)=>{const lv=from+i;return {level:lv,coins:100,item:Az.levelItem(lv),unlocked:!!db().levelRewards[lv]};}); },
 
   mailCount: () => db().mail.filter(m => !m.claimed && !m.read).length,
   markMailRead(i) { const m=db().mail[i]; if(!m || m.claimed || m.read) return false; m.read=true; m.readAt=Date.now(); save(); Az.refresh(); return true; },
@@ -392,11 +546,11 @@ const Az = window.Az = {
   owned: id => !!(ALL_ITEMS[id] && (ALL_ITEMS[id].price === 0 || db().own[id])),
   eq(slot) { const it = SHOP[slot].items, id = db().eq[slot]; return (id && Az.owned(id) && ALL_ITEMS[id]) || it[0]; },
   equip(id) { if (!Az.owned(id)) return false; db().eq[ALL_ITEMS[id].slot] = id; save(); return true; },
-  buy(id) { const it = ALL_ITEMS[id]; if (!it || Az.owned(id) || Az.coins() < it.price) return false; db().coins -= it.price; db().own[id] = 1; db().eq[it.slot] = id; save(); Az.refresh(); return true; },
+  buy(id) { const it = ALL_ITEMS[id]; if (!it || it.lvl || Az.owned(id) || Az.coins() < it.price) return false; db().coins -= it.price; db().own[id] = 1; db().eq[it.slot] = id; save(); Az.refresh(); return true; },
 
   luckySpin() {
     const cost=100; if(Az.coins()<cost){Az.toast('Not enough Gold Coins. Need 100 coins.');return null;}
-    const pool=Object.values(SHOP).flatMap(s=>s.items).filter(it=>it&&it.id&&!Az.owned(it.id));
+    const pool=Object.values(SHOP).flatMap(s=>s.items).filter(it=>it&&it.id&&!it.lvl&&!Az.owned(it.id));
     db().coins-=cost; let reward;
     if(pool.length && Math.random()<.72){reward=pool[Math.floor(Math.random()*pool.length)];db().own[reward.id]=1;db().eq[reward.slot]=reward.id;}
     else {const coins=[50,100,150,250][Math.floor(Math.random()*4)];db().coins=Math.min(MAXC,db().coins+coins);reward={name:coins+' Gold Coins',slot:'coins',coins};}
@@ -426,6 +580,7 @@ const Az = window.Az = {
     document.querySelectorAll('[data-az=coins]').forEach(e => e.textContent = Az.coins());
     document.querySelectorAll('[data-az=plvl]').forEach(e => e.textContent = Az.plvl());
     document.querySelectorAll('[data-az=name]').forEach(e => e.textContent = Az.name());
+    try { setLoginBtn(); } catch (e) {}
     document.querySelectorAll('[data-az=avatar]').forEach(e => Az.avatarFill(e));
     document.querySelectorAll('[data-az=uid]').forEach(e => e.textContent = Az.uid());
     const mc = $('#mailcount'); if (mc) mc.textContent = Az.mailCount() ? '(' + Az.mailCount() + ')' : '';
@@ -462,7 +617,8 @@ Az.showVs = function (n) {
 document.addEventListener('az-peer-emoji',e=>Az.toast((e.detail.name||'Player')+' '+e.detail.emoji,1800));
 
 Az.uid = () => db().uid;
-Az.name = () => db().name || ('Player-' + db().uid.slice(-4));
+// Player's own name (if they set one) is the ONLY name shown. Gmail's name is used only while the player has not chosen a name.
+Az.name = () => (db().nameSet && db().name) ? db().name : ((fbUser && Az.cleanName(fbUser.displayName)) || db().name || ('Player-' + db().uid.slice(-4)));
 Az.cleanName = n => String(n || '').replace(/[\u0000-\u001f<>&"'`\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, 14);
 Az.setName = function (n) {
   n = Az.cleanName(n); if (n.length < 2) return false;
@@ -501,6 +657,7 @@ Az.profile = function (first) {
 
 /* ------------------------------ shop modal ------------------------------ */
 Az.shop = function (slots, startSlot) {
+  if (!document.getElementById('azrarcss')) { const st = document.createElement('style'); st.id = 'azrarcss'; st.textContent = '.azrar{display:inline-block;font-size:9px;font-weight:800;letter-spacing:1px;padding:2px 8px;border-radius:99px;border:1px solid;margin:4px 0 2px}.azitem small{display:block;margin:2px 0 4px}'; document.head.appendChild(st); }
   slots = ((slots && slots.length) ? slots : Object.keys(SHOP)).filter(k => SHOP[k]);
   if (!slots.length) slots = Object.keys(SHOP);
   let cur = startSlot && slots.includes(startSlot) ? startSlot : slots[0];
@@ -511,8 +668,10 @@ Az.shop = function (slots, startSlot) {
     const items = SHOP[cur].items.map(it => {
       const own = Az.owned(it.id), eq = Az.eq(cur).id === it.id;
       const pv = `<div class="pv">${figure(it)}</div>`;
-      const btn = eq ? '<button class="azbtn sm ghost" disabled>✔ Equipped</button>' : own ? `<button class="azbtn sm" data-eq="${it.id}">Equip</button>` : `<button class="azbtn sm" data-buy="${it.id}" ${Az.coins() < it.price ? 'disabled' : ''}><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold A coin"> ${it.price}</button>`;
-      return `<div class="azitem ${eq ? 'eq' : ''}">${pv}<b>${it.name}</b><small>${it.desc || ''}</small>${btn}</div>`;
+      const btn = (!own && it.lvl) ? ('<button class="azbtn sm ghost" disabled>🔒 Level ' + it.lvl + ' reward</button>') : eq ? '<button class="azbtn sm ghost" disabled>✔ Equipped</button>' : own ? `<button class="azbtn sm" data-eq="${it.id}">Equip</button>` : `<button class="azbtn sm" data-buy="${it.id}" ${Az.coins() < it.price ? 'disabled' : ''}><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold A coin"> ${it.price}</button>`;
+      const rr = Az.rarity(it), rk = rarityOf(it);
+      const badge = `<span class="azrar" style="color:${rr.c};border-color:${rr.c}66">${it.lvl ? '🏆 ' : rk === 'common' ? '' : '💎 '}${rr.n}</span>`;
+      return `<div class="azitem ${eq ? 'eq' : ''}" style="${rk === 'common' ? '' : 'border-color:' + rr.c + '88;box-shadow:0 0 14px -6px ' + rr.c}">${pv}${badge}<b>${it.name}</b><small>${it.desc || ''}</small>${btn}</div>`;
     }).join('');
     $('#shopin', m).innerHTML = `<h2>🛒 Shop</h2><p class="sub">You have <b style="color:var(--a4)"><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold A coin"> ${Az.coins()}</b> coins. Buy items with coins!</p><div class="azrow">${tabs}</div><div class="azshopgrid">${items}</div><div class="azrow c" style="margin-top:14px"><button class="azbtn ghost" id="shopx">Close</button></div>`;
    } catch (err) { $('#shopin', m).innerHTML = '<h2>🛒 Shop</h2><p class="sub">Could not load the shop: ' + String(err && err.message || err).replace(/[<>&]/g, '') + '</p><div class="azrow c"><button class="azbtn ghost" id="shopx">Close</button></div>'; }
@@ -573,6 +732,7 @@ const gdPath = uid => 'users/' + uid + '/gameData';
 
 function accountChanged() {            // tell the page (home screen) to repaint everything for the new account
   try { Az.applyTheme(db().theme); } catch (e) {}
+  try { Az.syncLevelItems(); } catch (e) {}
   Az.refresh && Az.refresh();
   if (typeof drawTop === 'function') { try { drawTop(); } catch (e) {} }
   try { Az.ownerBtn && Az.ownerBtn(); } catch (e) {}
@@ -580,7 +740,7 @@ function accountChanged() {            // tell the page (home screen) to repaint
 }
 function setLoginBtn() {
   const b = document.getElementById('azlogin'); if (!b) return;
-  b.textContent = fbUser ? '👤 ' + String(fbUser.displayName || fbUser.email || fbUser.phoneNumber || 'Me').split(' ')[0].slice(0, 8) : '👤 Guest / Login';
+  b.textContent = fbUser ? '👤 ' + String((db().nameSet && db().name) ? db().name : (fbUser.displayName || fbUser.email || fbUser.phoneNumber || 'Me')).split(' ')[0].slice(0, 8) : '👤 Guest / Login';
 }
 function doPush() {                    // write the CURRENT account's data to its own cloud node
   if (!fbUser || !fbDb || cloudUid !== fbUser.uid || !D) return Promise.resolve(false);
@@ -998,6 +1158,7 @@ function init() {
   Az.ownerBtn();
 
   Az.refresh();
+  try { Az.syncLevelItems(); } catch (e) {}
   if (!LS.get('az_login')) askNameIfNeeded();   // logged-in accounts: asked only after their cloud data is loaded
   document.dispatchEvent(new Event('az-ready'));
 }
