@@ -123,7 +123,7 @@ a{color:inherit}
   <div class="azmsg" id="msg" style="min-height:20px;font-size:13px">Team deathmatch — first team to the kill target wins. You respawn after 3s.</div>
   <div class="azctl"><button class="azbtn ghost sm" id="rst">🔄 Restart</button></div>
 </main>
-<script src="az.js?v=21"></script>
+<script src="az.js?v=22"></script>
 <script>
 /* Top-down shooter engine for Zone Survivor (battle royale) and Arena Strike (team deathmatch).
    Shooter.run({cv, mode:'br'|'arena', level, diff, hud(fn), end(fn)}) -> {stop(), S} */
@@ -157,7 +157,7 @@ function run(o){
   function mkGun(g){return{name:g.name,color:g.color,dmg:g.dmg,rate:g.rate,pellets:g.pellets,spread:g.spread,speed:g.speed,mag:g.mag||Math.max(5,Math.round(g.rate*3.5)),range:g.range||(g.speed>15?950:520)};}
   function mk(o2){const e=Object.assign({x:0,y:0,r:16,vx:0,vy:0,ang:0,cool:0,reload:0,armor:0,kills:0,alive:true,dead:0,boost:0,inv:0,tgt:null,think:0,goal:null,react:0,stuck:0,lastp:{x:0,y:0},sf:1+rng()*2,id:S.ents.length},o2);e.maxhp=e.hp;e.ammo=e.gun.mag;return e;}
   function spawnPlayer(){const p=br?freeSpot(300,300,WORLD-300,WORLD-300):freeSpot(60,WORLD/2-250,220,WORLD/2+250);return p;}
-  const P=mk({player:true,team:br?0:0,hp:outfit.hp,color:outfit.color,hat:outfit.hat,gun:mkGun(pg),name:Az.name(),...spawnPlayer()});P.inv=2.5;S.ents.push(P);S.P=P;
+  const P=mk({player:true,team:br?0:0,hp:outfit.hp+Az.perk().hp,color:outfit.color,hat:outfit.hat,gun:mkGun(pg),name:Az.name(),...spawnPlayer()});P.inv=2.5;S.ents.push(P);S.P=P;
   const nBots=net?0:br?Math.min(39,9+Math.floor(L*.3)):Math.min(7,3+Math.floor(L/22));
   const botHp=Math.round((55+L*.9)*Az.pick(D,.8,1,1.2)),botErr=Math.max(.025,(.34-L*.0029))*Az.pick(D,1.5,1,.7),botDmg=(.55+L*.0075)*dm;
   function botGun(){const tier=Math.min(5,Math.floor(rng()*(1.2+L/18)));return mkGun(guns[tier]);}

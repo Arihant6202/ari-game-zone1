@@ -119,6 +119,14 @@ const PLACES = [
 
 /* ------------------------------ shop catalog ------------------------------ */
 const SHOP = {
+  char: { title: 'Characters', emoji: '🧑‍🎤', items: [
+    { id: 'ch_arnav', name: 'Arnav', price: 0, color: '#3a86ff', look: { skin: '#f1c27d', hair: '#2b1b12', hs: 'short', acc: 'cap' }, perk: { xp: .05 }, desc: 'Starter buddy. Backwards-cap rookie. +5% XP.' },
+    { id: 'ch_atharv', name: 'Atharv', price: 3500, color: '#ff9f1c', look: { skin: '#e8b58a', hair: '#111', hs: 'spiky', acc: 'band' }, perk: { coin: .08 }, desc: 'Fast hustler. +8% Gold from every game.' },
+    { id: 'ch_sahil', name: 'Sahil', price: 8000, color: '#10b981', look: { skin: '#f1c27d', hair: '#5a3a1a', hs: 'side', acc: 'glasses' }, perk: { coin: .05, luck: .03 }, rarity: 'rare', desc: 'Smart & lucky. +5% Gold, +3% Lucky Spin item chance.' },
+    { id: 'ch_dhiraj', name: 'Dhiraj', price: 15000, color: '#64748b', look: { skin: '#d9a066', hair: '#1a1a1a', hs: 'buzz', acc: 'beard' }, perk: { hp: 40, xp: .05 }, rarity: 'epic', lvl: 12, desc: 'Iron guard. +40 HP in shooters, +5% XP. LEVEL 12 REWARD.' },
+    { id: 'ch_himanshu', name: 'Himanshu', price: 25000, color: '#a855f7', look: { skin: '#f1c27d', hair: '#3b2314', hs: 'curly', acc: 'phones' }, perk: { xp: .15, coin: .05 }, rarity: 'epic', spin: true, desc: 'Music-loving brain. +15% XP, +5% Gold. LUCKY SPIN ONLY.' },
+    { id: 'ch_arihant', name: 'Arihant', price: 150000, color: '#facc15', look: { skin: '#f1c27d', hair: '#0b0b0f', hs: 'swoop', acc: 'crown', cape: 1 }, perk: { coin: .12, xp: .12, hp: 50, luck: .03 }, rarity: 'mythic', lvl: 77, desc: 'The Founder. +12% Gold & XP, +50 HP, +3% luck. LEVEL 77 REWARD (free for the owner ID).' },
+  ] },
   gun: { title: 'Guns', emoji: '🔫', items: [
     { id: 'g_pistol', name: 'Pistol', price: 0, color: '#ffd166', dmg: 20, rate: 3, pellets: 1, spread: .04, speed: 9, desc: 'Starter. Balanced.' },
     { id: 'g_smg', name: 'SMG Viper', price: 400, color: '#4cc9f0', dmg: 12, rate: 10, pellets: 1, spread: .14, speed: 9, desc: 'Very fast fire, low damage.' },
@@ -358,6 +366,9 @@ const RARITY = { common: { n: 'COMMON', c: '#9aa4b2' }, rare: { n: 'RARE', c: '#
 const rarityOf = it => it.rarity || (it.price >= 60000 ? 'legendary' : it.price >= 5000 ? 'epic' : it.price >= 2500 ? 'rare' : 'common');
 const ALL_ITEMS = {};
 Object.keys(SHOP).forEach(s => SHOP[s].items.forEach(i => { i.slot = s; ALL_ITEMS[i.id] = i; }));
+GAMES.forEach(g => { if (g.shop.indexOf('char') < 0) g.shop.push('char'); });          // every game can use a character
+const USED = {}; GAMES.forEach(g => g.shop.forEach(k => USED[k] = 1));                   // slots no game uses (old Spaceships) are hidden from shop + Lucky Spin
+const perkText = p => [p.coin && '+' + Math.round(p.coin * 100) + '% Gold', p.xp && '+' + Math.round(p.xp * 100) + '% XP', p.hp && '+' + p.hp + ' HP', p.luck && '+' + Math.round(p.luck * 100) + '% spin luck'].filter(Boolean).join(' · ');
 
 /* ------------------------------ figures: pictures for shop items + in-game gun skins ------------------------------ */
 const hx = c => { c = String(c || '#888').replace('#', ''); if (c.length === 3) c = c.split('').map(x => x + x).join(''); const n = parseInt(c, 16); return isNaN(n) ? [136, 136, 136] : [n >> 16 & 255, n >> 8 & 255, n & 255]; };
@@ -440,6 +451,31 @@ function personSVG(it, h) {
     `<circle cx="30" cy="21" r="11" fill="${headCol}"/><circle cx="26" cy="21" r="1.6" fill="${eye}"/><circle cx="34" cy="21" r="1.6" fill="${eye}"/><path d="M27 26q3 2 6 0" stroke="#7a3b1e" stroke-width="1.2" fill="none"/>` +
     hatSVG(hat, col) + '</g></svg>';
 }
+
+/* ---- Characters (Arihant, Atharv, Arnav, Dhiraj, Sahil, Himanshu) ---- */
+function charSVG(it, h) {
+  const L = it.look || {}, skin = L.skin || '#f1c27d', hc = L.hair || '#222', col = it.color || '#4cc9f0', dk = shade(col, .55);
+  const hs = { short: `<path d="M19 19q0-11 11-11t11 11q-5-5-11-4t-11 4z" fill="${hc}"/>`,
+    spiky: `<path d="M19 19l1-10 5 5 5-9 5 9 5-5 1 10q-5-5-11-4t-11 4z" fill="${hc}"/>`,
+    side: `<path d="M19 19q0-12 12-11t10 11q-3-6-9-5-6 0-13 5z" fill="${hc}"/><path d="M19 19q2-8 11-8" stroke="${shade(hc, 1.5)}" fill="none"/>`,
+    buzz: `<path d="M19 17q0-9 11-9t11 9q-5-3-11-3t-11 3z" fill="${hc}" opacity=".85"/>`,
+    curly: [[21, 12, 5], [30, 9, 6], [39, 12, 5], [19, 18, 3.5], [41, 18, 3.5]].map(c => `<circle cx="${c[0]}" cy="${c[1]}" r="${c[2]}" fill="${hc}"/>`).join(''),
+    swoop: `<path d="M18 20q-2-13 12-13 13 0 12 13-3-8-10-8-5 0-9 3-3 2-5 5z" fill="${hc}"/><path d="M24 10q6-2 12 1" stroke="#facc15" stroke-width="1.6" fill="none"/>` }[L.hs] || '';
+  const acc = { cap: `<path d="M18 16a12 9 0 0 1 24 0z" fill="#e63946"/><rect x="11" y="15" width="13" height="3" rx="1.5" fill="#b91c2c"/>`,
+    band: `<rect x="19" y="12" width="22" height="3.5" fill="#fff"/><circle cx="30" cy="13.7" r="1.6" fill="#e63946"/>`,
+    glasses: `<circle cx="26" cy="21" r="3.6" fill="#ffffff22" stroke="#111" stroke-width="1.2"/><circle cx="34" cy="21" r="3.6" fill="#ffffff22" stroke="#111" stroke-width="1.2"/><path d="M29.6 21h.8" stroke="#111"/>`,
+    beard: `<path d="M20 23q0 11 10 11t10-11q-4 5-10 5t-10-5z" fill="${hc}"/>`,
+    phones: `<path d="M18 21a12 12 0 0 1 24 0" stroke="#222" stroke-width="2.6" fill="none"/><rect x="15" y="19" width="4.5" height="8" rx="2" fill="#a855f7"/><rect x="40.5" y="19" width="4.5" height="8" rx="2" fill="#a855f7"/>`,
+    crown: `<path d="M19 12l3-10 4 7 4-9 4 9 4-7 3 10z" fill="#ffd700" stroke="#b8860b"/>` }[L.acc] || '';
+  const cape = L.cape ? `<path d="M18 30l-9 38h42l-9-38z" fill="#7f1d1d"/>` : '';
+  const chain = L.cape ? `<path d="M23 32q7 9 14 0" stroke="#ffd700" stroke-width="2" fill="none"/>` : '';
+  return `<svg viewBox="-6 -12 72 96" height="${h || 68}" style="filter:drop-shadow(0 2px 4px #0008)"><g>${cape}` +
+    `<rect x="22" y="52" width="7" height="20" rx="2" fill="#1f2937"/><rect x="31" y="52" width="7" height="20" rx="2" fill="#1f2937"/><rect x="20" y="70" width="10" height="6" rx="2" fill="#f8fafc"/><rect x="30" y="70" width="10" height="6" rx="2" fill="#f8fafc"/>` +
+    `<rect x="18" y="30" width="24" height="25" rx="5" fill="${col}"/><rect x="18" y="48" width="24" height="3" fill="${dk}"/>${chain}` +
+    `<text x="30" y="46" text-anchor="middle" font-size="11" font-weight="800" fill="#ffffffcc" font-family="Orbitron,Arial,sans-serif">${esc(String(it.name || '?').charAt(0))}</text>` +
+    `<rect x="9" y="31" width="9" height="21" rx="4" fill="${col}"/><rect x="42" y="31" width="9" height="21" rx="4" fill="${col}"/><circle cx="13.5" cy="53" r="4" fill="${skin}"/><circle cx="46.5" cy="53" r="4" fill="${skin}"/>` +
+    `<circle cx="30" cy="21" r="11" fill="${skin}"/>${hs}<circle cx="26" cy="21" r="1.6" fill="#1b1b1b"/><circle cx="34" cy="21" r="1.6" fill="#1b1b1b"/><path d="M27 26q3 2 6 0" stroke="#7a3b1e" stroke-width="1.2" fill="none"/>${acc}</g></svg>`;
+}
 const pip = (x, y) => `<circle cx="${x}" cy="${y}" r="3.2" fill="currentColor"/>`;
 const racketSVG = it => `<svg viewBox="0 0 60 84" height="64" style="filter:drop-shadow(0 0 ${it.glow ? 9 : 3}px ${it.color}aa)"><g transform="rotate(28 30 42)"><rect x="27.5" y="44" width="5" height="34" rx="2.5" fill="#3b3b47"/><rect x="26" y="62" width="8" height="15" rx="3" fill="${it.color}"/><path d="M30 46L21 34M30 46L39 34" stroke="${it.color}" stroke-width="2.6"/><ellipse cx="30" cy="22" rx="15" ry="20" fill="rgba(255,255,255,.08)" stroke="${it.color}" stroke-width="4"/><g stroke="#ffffff99" stroke-width=".8"><path d="M30 3v38M22 6v32M38 6v32M16 14h28M15 22h30M16 30h28"/></g></g></svg>`;
 const shuttleSVG = it => `<svg viewBox="0 0 50 60" height="58" style="filter:drop-shadow(0 0 6px ${it.color}99)"><path d="M25 38L8 6q17-7 34 0z" fill="${it.color === '#ff4d6d' ? '#fff' : it.color}" fill-opacity=".92" stroke="#0b0b12" stroke-width="1.2"/><path d="M25 38L16 7M25 38L25 6M25 38L34 7" stroke="#0b0b1255" stroke-width="1"/><ellipse cx="25" cy="42" rx="9" ry="8" fill="#f8e7c0" stroke="#0b0b12" stroke-width="1.2"/></svg>`;
@@ -451,6 +487,7 @@ function figure(it) {
   let svg = '';
   if (s === 'gun') svg = gunSVG(it, 46);
   else if (s === 'outfit' || s === 'hero') svg = personSVG(it, 68);
+  else if (s === 'char') svg = charSVG(it, 74);
   else if (s === 'car') svg = `<svg viewBox="0 0 90 44" height="46"><ellipse cx="45" cy="40" rx="36" ry="3" fill="#0006"/><path d="M6 30l4-10q2-5 8-6l14-2 12-8q3-2 8-2h12q6 0 9 5l6 12 5 2q4 1 4 6v4H6z" transform="translate(-4 4) scale(.95)" fill="${it.color}" stroke="#0b0b12" stroke-width="1.4"/><path d="M34 13l10-6h14l7 7-5 3H34z" fill="#bfe9ff" stroke="#0b0b12" stroke-width="1"/><rect x="20" y="30" width="52" height="2" fill="${shade(it.color, 1.5)}"/><circle cx="24" cy="36" r="7" fill="#15151d"/><circle cx="24" cy="36" r="3" fill="#aab"/><circle cx="68" cy="36" r="7" fill="#15151d"/><circle cx="68" cy="36" r="3" fill="#aab"/></svg>`;
   else if (s === 'ship') svg = `<svg viewBox="0 0 70 70" height="62" style="filter:drop-shadow(0 0 6px ${it.color}99)"><path d="M35 4l9 28 20 20-4 8-18-8-7 12-7-12-18 8-4-8 20-20z" fill="${it.color}" stroke="#0b0b12" stroke-width="1.4"/><ellipse cx="35" cy="30" rx="5" ry="9" fill="#d7f6ff"/><path d="M30 62l5 8 5-8z" fill="#ff9f1c"/><path d="M33 62l2 6 2-6z" fill="#fff3b0"/></svg>`;
   else if (s === 'snake') { const g = it.c1 === 'rainbow' ? null : it.c1, g2 = it.c2; const cols = i => g ? shade(g, .75 + i * .06) : `hsl(${i * 50},90%,58%)`; svg = '<svg viewBox="0 0 100 50" height="50">' + [0, 1, 2, 3, 4, 5].map(i => `<circle cx="${12 + i * 14}" cy="${30 + Math.sin(i * 1.3) * 11}" r="${8 - i * .2}" fill="${cols(i)}" stroke="${g2}" stroke-width="1.5"/>`).join('') + `<circle cx="92" cy="${30 + Math.sin(7.8) * 11}" r="9" fill="${g || '#ffd54a'}" stroke="${g2}" stroke-width="1.5"/><circle cx="95" cy="${27 + Math.sin(7.8) * 11}" r="2" fill="#111"/><path d="M99 ${31 + Math.sin(7.8) * 11}l6 2" stroke="#e63946" stroke-width="1.5"/></svg>`; }
@@ -471,7 +508,7 @@ function figure(it) {
 
 /* ------------------------------ level reward items (every 5th level) ------------------------------ */
 // Different kinds of items: trails, guns, birds, cars, outfits, runners, snakes, chess sets, balls, dice, tokens, cards, heroes, rackets, shuttles, discs.
-const LEVEL_ITEMS = { 5: 't_fire', 10: 'g_ar', 15: 'b_ghost', 20: 'c_royal', 25: 'g_storm', 30: 'o_thunder', 35: 'r_alien', 40: 'n_diamond', 45: 't_aura', 50: 'p_cosmic',
+const LEVEL_ITEMS = { 5: 't_fire', 12: 'ch_dhiraj', 77: 'ch_arihant', 10: 'g_ar', 15: 'b_ghost', 20: 'c_royal', 25: 'g_storm', 30: 'o_thunder', 35: 'r_alien', 40: 'n_diamond', 45: 't_aura', 50: 'p_cosmic',
   55: 'l_cosmic', 60: 'g_nebula', 65: 'd_cosmic', 70: 'k_dragon', 75: 'o_cosmos', 80: 'u_cosmic', 85: 'h_cosmic', 90: 'rk_galaxy', 95: 'sh_galaxy', 100: 'dc_cosmic' };
 function grantLevelItems(upto) {
   const got = [];
@@ -549,22 +586,25 @@ const Az = window.Az = {
 
   /* shop */
   items: slot => SHOP[slot] ? SHOP[slot].items : [],
-  owned: id => !!(ALL_ITEMS[id] && (ALL_ITEMS[id].price === 0 || db().own[id])),
+  owned: id => !!(ALL_ITEMS[id] && (ALL_ITEMS[id].price === 0 || db().own[id] || (id === 'ch_arihant' && String(db().uid) === OWNER_ID))),
   eq(slot) { const it = SHOP[slot].items, id = db().eq[slot]; return (id && Az.owned(id) && ALL_ITEMS[id]) || it[0]; },
   equip(id) { if (!Az.owned(id)) return false; db().eq[ALL_ITEMS[id].slot] = id; save(); return true; },
-  buy(id) { const it = ALL_ITEMS[id]; if (!it || it.lvl || Az.owned(id) || Az.coins() < it.price) return false; db().coins -= it.price; db().own[id] = 1; db().eq[it.slot] = id; save(); Az.refresh(); return true; },
+  buy(id) { const it = ALL_ITEMS[id]; if (!it || it.lvl || it.spin || Az.owned(id) || Az.coins() < it.price) return false; db().coins -= it.price; db().own[id] = 1; db().eq[it.slot] = id; save(); Az.refresh(); return true; },
 
+  char() { return Az.eq('char'); },
+  perk() { const p = (Az.eq('char') || {}).perk || {}; return { coin: +p.coin || 0, xp: +p.xp || 0, hp: +p.hp || 0, luck: +p.luck || 0 }; },
+  perkText: p => perkText(p || Az.perk()),
   /* Lucky Spin: first spin costs 2000 Gold, every next spin costs 100 more, capped at 10000. Items are rarer than Gold but do drop. */
   SPIN_BASE: 2000, SPIN_STEP: 100, SPIN_MAX: 10000, ITEM_CHANCE: 0.18,
   spinCost() { return Math.min(Az.SPIN_MAX, Az.SPIN_BASE + Az.SPIN_STEP * (db().spins || 0)); },
   luckySpin() {
     const cost = Az.spinCost();
     if (Az.coins() < cost) { Az.toast('Not enough Gold. This spin costs ' + cost + '.'); return null; }
-    const pool = Object.values(SHOP).flatMap(s => s.items).filter(it => it && it.id && !it.lvl && it.price > 0 && !Az.owned(it.id));
+    const pool = Object.values(SHOP).flatMap(s => s.items).filter(it => it && it.id && USED[it.slot] && !it.lvl && it.price > 0 && !Az.owned(it.id));
     db().coins -= cost; db().spins = (db().spins || 0) + 1;
     const wpick = (arr, wf) => { let t = arr.reduce((a, x) => a + wf(x), 0), r = Math.random() * t; for (const x of arr) { r -= wf(x); if (r < 0) return x; } return arr[arr.length - 1]; };
     let reward;
-    if (pool.length && Math.random() < Az.ITEM_CHANCE) {     // ~18% chance to win an item
+    if (pool.length && Math.random() < Az.ITEM_CHANCE + Az.perk().luck) {     // ~18% chance to win an item
       const RW = { common: 62, rare: 26, epic: 9, legendary: 3, mythic: 0.5 };
       const it = wpick(pool, x => RW[rarityOf(x)] || 1);
       db().own[it.id] = 1; db().eq[it.slot] = it.id;
@@ -585,7 +625,7 @@ const Az = window.Az = {
     const cost = Az.spinCost();
     if (Az.coins() < cost) { Az.toast('Not enough Gold. This spin costs ' + cost + '.', 3000); return; }
     const r = Az.luckySpin(); if (!r) return;
-    const all = Object.values(SHOP).flatMap(s => s.items).filter(i => i && i.id);
+    const all = Object.values(SHOP).flatMap(s => s.items).filter(i => i && i.id && USED[i.slot]);
     const m = Az.modal('<div id="spinin" style="text-align:center"></div>', { sticky: true });
     const box = $('#spinin', m);
     let n = 0;
@@ -713,8 +753,8 @@ Az.profile = function (first) {
 /* ------------------------------ shop modal ------------------------------ */
 Az.shop = function (slots, startSlot) {
   if (!document.getElementById('azrarcss')) { const st = document.createElement('style'); st.id = 'azrarcss'; st.textContent = '.azrar{display:inline-block;font-size:9px;font-weight:800;letter-spacing:1px;padding:2px 8px;border-radius:99px;border:1px solid;margin:4px 0 2px}.azitem small{display:block;margin:2px 0 4px}'; document.head.appendChild(st); }
-  slots = ((slots && slots.length) ? slots : Object.keys(SHOP)).filter(k => SHOP[k]);
-  if (!slots.length) slots = Object.keys(SHOP);
+  slots = ((slots && slots.length) ? slots : Object.keys(SHOP)).filter(k => SHOP[k] && USED[k]);
+  if (!slots.length) slots = Object.keys(SHOP).filter(k => USED[k]);
   let cur = startSlot && slots.includes(startSlot) ? startSlot : slots[0];
   const m = Az.modal('<div id="shopin"></div>');
   function draw() {
@@ -723,7 +763,7 @@ Az.shop = function (slots, startSlot) {
     const items = SHOP[cur].items.map(it => {
       const own = Az.owned(it.id), eq = Az.eq(cur).id === it.id;
       const pv = `<div class="pv">${figure(it)}</div>`;
-      const btn = (!own && it.lvl) ? ('<button class="azbtn sm ghost" disabled>🔒 Level ' + it.lvl + ' reward</button>') : eq ? '<button class="azbtn sm ghost" disabled>✔ Equipped</button>' : own ? `<button class="azbtn sm" data-eq="${it.id}">Equip</button>` : `<button class="azbtn sm" data-buy="${it.id}" ${Az.coins() < it.price ? 'disabled' : ''}><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold A coin"> ${it.price}</button>`;
+      const btn = (!own && it.spin) ? '<button class="azbtn sm ghost" disabled>🎡 Lucky Spin only</button>' : (!own && it.lvl) ? ('<button class="azbtn sm ghost" disabled>🔒 Level ' + it.lvl + ' reward</button>') : eq ? '<button class="azbtn sm ghost" disabled>✔ Equipped</button>' : own ? `<button class="azbtn sm" data-eq="${it.id}">Equip</button>` : `<button class="azbtn sm" data-buy="${it.id}" ${Az.coins() < it.price ? 'disabled' : ''}><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold A coin"> ${it.price}</button>`;
       const rr = Az.rarity(it), rk = rarityOf(it);
       const badge = `<span class="azrar" style="color:${rr.c};border-color:${rr.c}66">${it.lvl ? '🏆 ' : rk === 'common' ? '' : '💎 '}${rr.n}</span>`;
       return `<div class="azitem ${eq ? 'eq' : ''}" style="${rk === 'common' ? '' : 'border-color:' + rr.c + '88;box-shadow:0 0 14px -6px ' + rr.c}">${pv}${badge}<b>${it.name}</b><small>${it.desc || ''}</small>${btn}</div>`;
@@ -1122,7 +1162,7 @@ Az.start = function (cfg) {
     let play;
     if (st.mode === 'online') play = `<div class="azlbl">Online room</div><div class="azrow c"><button class="azbtn" id="mk">➕ Create room</button><span style="align-self:center;color:var(--muted)">or</span><input class="azinput" id="jc" maxlength="4" placeholder="CODE"><button class="azbtn ghost" id="jn">Join</button></div><div class="azerr" id="neterr"></div><div id="netinfo"></div>`;
     else play = `<div class="azrow c" style="margin-top:18px"><button class="azbtn" id="go" style="font-size:17px;padding:13px 34px">▶ Play</button></div>`;
-    $('#stin', m).innerHTML = `<div class="azbig">${g.emoji}</div><h2 style="text-align:center">${g.name}</h2><p class="sub" style="text-align:center">${g.desc}</p>${modes}${diff}${lvl}${extra}${play}<div class="azrow c" style="margin-top:14px"><a class="azbtn ghost sm" href="${BASE}index.html">🏠 Home</a><button class="azbtn ghost sm" id="sh">🛒 Shop</button></div>`;
+    $('#stin', m).innerHTML = `<div class="azbig">${g.emoji}</div><h2 style="text-align:center">${g.name}</h2><p class="sub" style="text-align:center">${g.desc}</p><div class="azrow c" style="gap:8px;align-items:center;margin:4px 0 8px"><span style="display:inline-flex">${charSVG(Az.char(), 52)}</span><span style="font-size:12px;color:var(--muted);text-align:left">🧑 <b style="color:inherit">${esc(Az.char().name)}</b><br>${esc(perkText(Az.perk()) || 'No bonus')}</span><button class="azbtn ghost sm" id="chg">Change</button></div>${modes}${diff}${lvl}${extra}${play}<div class="azrow c" style="margin-top:14px"><a class="azbtn ghost sm" href="${BASE}index.html">🏠 Home</a><button class="azbtn ghost sm" id="sh">🛒 Shop</button></div>`;
   }
   function online(kind, jcode) {
     const err = t => { const e = $('#neterr', m); if (e) e.textContent = t; };
@@ -1162,6 +1202,7 @@ Az.start = function (cfg) {
     else if (t.dataset.ex) { st.extra[t.dataset.ex] = t.dataset.v; draw(); }
     else if (t.id === 'go') begin({ mode: st.mode, diff: st.diff, level: st.mode === 'single' ? st.level : 1, extra: st.extra, net: null, seed: Math.floor(Math.random() * 1e9), host: true });
     else if (t.id === 'sh') Az.shop(g.shop.length ? g.shop : null);
+    else if (t.id === 'chg') { const sm = Az.shop(['char']); const iv = setInterval(() => { if (!document.body.contains(sm)) { clearInterval(iv); draw(); } }, 400); }
     else if (t.id === 'mk') online('host');
     else if (t.id === 'jn') online('join', $('#jc', m).value);
   });
@@ -1173,8 +1214,9 @@ Az.start = function (cfg) {
    base = coins for a normal win at level 1 (Az scales by difficulty and level). */
 Az.finish = function (r) {
   const g = Az.game(r.game), lvl = r.level || 1, dm = Az.diffMul(r.diff || 'medium');
-  const coins = Math.round(COIN_RATE * (r.base || 0) * dm * (1 + lvl * .04) * (r.won ? 1 : .25));
-  const xp = Math.round(coins * .6 + (r.won ? 15 : 3));
+  const pk = Az.perk(), ch = Az.char();
+  const coins = Math.round(COIN_RATE * (r.base || 0) * dm * (1 + lvl * .04) * (r.won ? 1 : .25) * (1 + pk.coin));
+  const xp = Math.round((coins * .6 + (r.won ? 15 : 3)) * (1 + pk.xp));
   Az.addCoins(coins); Az.addXp(xp);
   let note = '', newBest = false;
   if (r.score != null) newBest = Az.setBest(g.id, r.score);
@@ -1184,6 +1226,7 @@ Az.finish = function (r) {
     note = `<p style="text-align:center;color:var(--a3)">🔓 Level ${lvl + 1} unlocked!${a.name !== b.name ? `<br>📍 New place: ${b.emoji} <b>${b.name}</b>` : ''}</p>`;
   }
   if (r.won && lvl >= g.max && r.progress !== false) note = '<p style="text-align:center;color:var(--a4)">👑 MAX LEVEL! You are a legend!</p>';
+  if (pk.coin || pk.xp) note += `<p style="text-align:center;color:var(--muted);font-size:12px;margin:4px 0">🧑 ${esc(ch.name)} bonus: ${esc(perkText(pk))}</p>`;
   Az.sfx(r.won ? 'win' : 'lose');
   const m = Az.modal(`<div class="azbig">${r.won ? '🏆' : '💥'}</div><h2 style="text-align:center">${r.title || (r.won ? 'You Win!' : 'Game Over')}</h2><p class="sub" style="text-align:center">${r.sub || ''}</p>
     <div class="azstat"><div><b>+${coins}</b><small><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="A gold coin"> coins</small></div><div><b>+${xp}</b><small>⭐ XP</small></div>${r.score != null ? `<div><b>${r.score}</b><small>${newBest ? '🎉 New best!' : 'score'}</small></div>` : ''}</div>${note}

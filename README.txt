@@ -65,3 +65,23 @@ TESTING PERFORMED:
 - Updated PWA app icons and browser icons using the supplied ARI gold-and-black logo.
 - Bumped site asset cache versions to v20 so installed PWA refreshes its branding and game files.
 - Online multiplayer requires both players to have internet access and PeerJS connectivity; test with two devices before announcing it as production-ready.
+
+
+--- VERSION 22 UPDATE NOTES ---
+NEW: CHARACTERS (shop tab "Characters", also on the Shop page and in Profile)
+- Arnav    : starter (free)            +5% XP
+- Atharv   : buy for 3,500 Gold         +8% Gold from games
+- Sahil    : buy for 8,000 Gold         +5% Gold, +3% Lucky Spin item chance
+- Dhiraj   : Level 12 reward (cannot be bought)   +40 HP in shooters, +5% XP
+- Himanshu : Lucky Spin only (cannot be bought)   +15% XP, +5% Gold
+- Arihant  : Level 77 reward (the Founder; free for the owner ID 97835276)   +12% Gold & XP, +50 HP, +3% luck
+- The equipped character's bonus applies in every game (result screen shows it). The start screen of every game shows your character with a "Change" button.
+
+BUG FIXES
+- Memory Match: matched cards showed the text "null"; levels/difficulty now change the card count and move limit.
+- Color Dash: was only a plain quiz (no colours, no timer, ignored level/difficulty). Rebuilt as a Stroop-style game: tap the INK colour, timer bar, 3 lives, speed depends on level/difficulty.
+- Tap Rush: the target never moved, the win goal ignored level/difficulty, and pressing Play twice stacked timers. Rebuilt with a moving target, misses cost points, and a single timer.
+- Lucky Spin could award "Spaceship" items although no game uses them (and the full shop showed an empty Spaceships tab). Unused shop slots are now hidden everywhere.
+- Cache version bumped to az.js?v=22 so installed apps load the new files.
+
+KNOWN LIMIT (not fixed, needs a server): all coins/items live in the player's own Firebase node, so a technical player can edit their own balance with browser DevTools. Real protection needs Cloud Functions.
