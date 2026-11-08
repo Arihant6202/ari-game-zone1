@@ -52,9 +52,8 @@ function normalize(d) {
   if (!d || typeof d !== 'object') d = {};
   const obj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
   d.coins = (typeof d.coins === 'number' && isFinite(d.coins) && d.coins >= 0) ? d.coins : (d.coins == null ? 150 : 0);
-  d.diamonds = (typeof d.diamonds === 'number' && isFinite(d.diamonds) && d.diamonds >= 0) ? d.diamonds : 0;
   d.starter49019468 = !!d.starter49019468;
-  if (String(d.uid || '') === '49019468' && !d.starter49019468) { d.coins = 100000; d.diamonds = 10000; d.starter49019468 = true; }
+  if (String(d.uid || '') === '49019468' && !d.starter49019468) { d.coins = 100000; d.starter49019468 = true; }
   d.xp = (typeof d.xp === 'number' && isFinite(d.xp) && d.xp > 0) ? d.xp : 0;
   d.lv = obj(d.lv); d.best = obj(d.best); d.own = obj(d.own); d.eq = obj(d.eq); d.levelRewards = obj(d.levelRewards); d.mail = Array.isArray(d.mail) ? d.mail : [];
   d.theme = d.theme || 'neon'; d.diff = d.diff || 'medium'; d.sound = d.sound !== false; d.daily = d.daily || '';
@@ -92,6 +91,8 @@ const GAMES = [
   { id: 'mole', file: 'whack-a-mole.html', name: 'Whack-a-Mole', emoji: '🐹', cat: 'Fun', max: 100, modes: ['single'], shop: [], desc: 'Tap the moles fast, avoid bombs and grab golden moles.' },
   { id: 'leveldevil', file: 'level-devil.html', name: 'Level Devil', emoji: '😈', cat: 'Platformer', max: 20, modes: ['single', 'online'], shop: ['hero'], desc: 'A tricky platform challenge with hidden surprises and 20 stages. Race a friend online to the door!' },
   { id: 'uno', file: 'uno.html', name: 'UNO', emoji: '🃏', cat: 'Cards', max: 1, modes: ['single', 'local', 'online'], shop: ['cardback'], desc: 'Classic colour-and-number card game: vs computer bots, pass-and-play, or online 1v1 with a friend.' },
+  { id: 'runner', file: 'runner.html', name: 'Neon Runner', emoji: '🏃', cat: 'Arcade', max: 100, modes: ['single'], shop: ['hero'], desc: 'Jump over obstacles, collect coins and survive increasingly fast stages.' },
+  { id: 'badminton', file: 'badminton.html', name: 'Badminton Rally', emoji: '🏸', cat: 'Sports', max: 100, modes: ['single'], shop: [], desc: 'Time your shots, keep the shuttle in play and beat the target rally score.' },
 ];
 
 /* ------------------------------ places (change as levels go up) ------------------------------ */
@@ -335,8 +336,6 @@ const Az = window.Az = {
   set: (k, v) => { db()[k] = v; save(); },
 
   coins: () => db().coins,
-  diamonds: () => db().diamonds,
-  addDiamonds(n) { db().diamonds = Math.max(0, db().diamonds + Math.round(n)); save(); Az.refresh(); },
   addCoins(n) { db().coins = Math.max(0, db().coins + Math.round(n)); save(); Az.refresh(); },
   xp: () => db().xp,
   addXp(n) {
@@ -358,6 +357,7 @@ const Az = window.Az = {
   },
   plvl: () => Math.floor(Math.sqrt(db().xp / 40)) + 1,
   plProgress() { const L = Az.plvl(), a = 40 * (L - 1) * (L - 1), b = 40 * L * L; return { lvl: L, cur: db().xp - a, need: b - a }; },
+  rewardPreview(from = Az.plvl(), count = 5) { return Array.from({length:count},(_,i)=>{const lv=from+i;return {level:lv,coins:100,item:lv%5===0,unlocked:!!db().levelRewards[lv]};}); },
 
   mailCount: () => db().mail.filter(m => !m.claimed).length,
   claimMail(i) {
@@ -370,7 +370,7 @@ const Az = window.Az = {
     const m = Az.modal('<div id="azmailbox"></div>');
     const draw = () => {
       const list = db().mail.slice().reverse();
-      const rows = list.length ? list.map((v,j) => { const i=db().mail.length-1-j; return `<div class="azitem"><b>🎁 ${v.title || 'Gift from Ari Game Zone'}</b><small><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="A gold coin"> ${v.coins||0} coins</small>${v.claimed?'<span class="azpill">✅ Claimed</span>':`<button class="azbtn sm" data-claim="${i}">Claim reward</button>`}</div>`; }).join('') : '<p class="sub">No messages yet. Gifts from the developer will appear here.</p>';
+      const rows = list.length ? list.map((v,j) => { const i=db().mail.length-1-j; return `<div class="azitem"><b>✉️ ${esc(v.title || 'Message from Ari Game Zone')}</b>${v.message?`<p class="sub">${esc(v.message)}</p>`:''}<small>${v.coins?`🪙 ${v.coins} Gold Coins`:'Game update / announcement'}</small>${v.claimed?'<span class="azpill">✅ Claimed / Read</span>':(v.coins>0?`<button class="azbtn sm" data-claim="${i}">Claim reward</button>`:'<span class="azpill">📨 Read</span>')}</div>`; }).join('') : '<p class="sub">No messages yet. Gifts and updates will appear here.</p>';
       document.getElementById('azmailbox').innerHTML = `<h2>✉️ Mail</h2><p class="sub">Claim gifts sent to your Player ID.</p><div class="azshopgrid">${rows}</div><div class="azrow c"><button class="azbtn ghost" id="mailclose">Close</button></div>`;
     };
     m.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.claim!==undefined){Az.claimMail(+b.dataset.claim);draw();}if(b.id==='mailclose')m.close();});
@@ -393,6 +393,14 @@ const Az = window.Az = {
   equip(id) { if (!Az.owned(id)) return false; db().eq[ALL_ITEMS[id].slot] = id; save(); return true; },
   buy(id) { const it = ALL_ITEMS[id]; if (!it || Az.owned(id) || Az.coins() < it.price) return false; db().coins -= it.price; db().own[id] = 1; db().eq[it.slot] = id; save(); Az.refresh(); return true; },
 
+  luckySpin() {
+    const cost=100; if(Az.coins()<cost){Az.toast('Not enough Gold Coins. Need 100 coins.');return null;}
+    const pool=Object.values(SHOP).flatMap(s=>s.items).filter(it=>it&&it.id&&!Az.owned(it.id));
+    db().coins-=cost; let reward;
+    if(pool.length && Math.random()<.72){reward=pool[Math.floor(Math.random()*pool.length)];db().own[reward.id]=1;db().eq[reward.slot]=reward.id;}
+    else {const coins=[50,100,150,250][Math.floor(Math.random()*4)];db().coins=Math.min(MAXC,db().coins+coins);reward={name:coins+' Gold Coins',slot:'coins',coins};}
+    save();Az.refresh();Az.toast('🎉 Lucky Reward: '+reward.name,3500);return reward;
+  },
   /* utils */
   rng(seed) { let a = (seed >>> 0) || 1; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; },
   toast(msg, ms) { if (!msg) return; const old = document.querySelector('.aztoast'); if (old) { if (old.textContent === msg) return; old.remove(); } const t = el('div', 'aztoast', msg); document.body.appendChild(t); setTimeout(() => t.remove(), ms || 2200); },
@@ -446,7 +454,9 @@ Az.showVs = function (n) {
   const me = { name: Az.name(), photo: Az.photo() }, op = n.peer, L = n.host ? me : op, R = n.host ? op : me; v.textContent = '';
   const side = (p, right) => { const s = document.createElement('span'); s.className = 'azvsp'; const a = document.createElement('span'); a.className = 'azav'; Az.avatarFill(a, p.photo, '🙂'); const b = document.createElement('b'); b.textContent = p.name; if (right) s.append(b, a); else s.append(a, b); return s; };
   const mid = document.createElement('i'); mid.textContent = 'vs'; v.append(side(L, false), mid, side(R, true));
+  if(n.sendEmoji && !document.getElementById('azemojis')){const e=document.createElement('div');e.id='azemojis';e.className='azrow c';e.style.cssText='width:100%;margin:6px 0;';e.innerHTML=['😀','😂','🔥','👏','😎','❤️'].map(x=>`<button class=\"azbtn-i\" type=\"button\" data-emoji=\"${x}\">${x}</button>`).join('');v.insertAdjacentElement('afterend',e);e.addEventListener('click',ev=>{const b=ev.target.closest('[data-emoji]');if(b){n.sendEmoji(b.dataset.emoji);Az.toast('You sent '+b.dataset.emoji);}});}
 };
+document.addEventListener('az-peer-emoji',e=>Az.toast((e.detail.name||'Player')+' '+e.detail.emoji,1800));
 
 Az.uid = () => db().uid;
 Az.name = () => db().name || ('Player-' + db().uid.slice(-4));
@@ -533,13 +543,14 @@ function mkNet(conn, isHost) {
   const n = {
     host: isHost, open: true, _start: null,
     send(o) { try { conn.send(o); } catch (e) {} },
+    sendEmoji(emoji) { try { conn.send({__az:'emoji',emoji:String(emoji||'').slice(0,8),name:Az.name()}); } catch(e){} },
     on(f) { fn = f; q.splice(0).forEach(f); },
     onclose(f) { cl = f; if (!n.open) f(); },
     close() { try { conn.close(); } catch (e) {} },
   };
   const hello = () => { try { conn.send({ __az: 'hello', name: Az.name(), uid: Az.uid(), photo: Az.photo() }); } catch (e) {} };
   if (conn.open) hello(); else conn.on('open', hello);
-  conn.on('data', d => { if (d && d.__az === 'hello') { n.peer = { name: Az.cleanName(d.name) || 'Player', uid: String(d.uid || '').replace(/\D/g, '').slice(0, 10), photo: (typeof d.photo === 'string' && d.photo.indexOf('data:image/') === 0 && d.photo.length < 30000) ? d.photo : '' }; Az.showVs && Az.showVs(n); return; } if (d && d.__az === 'start') { n._start && n._start(d); return; } if (fn) fn(d); else q.push(d); });
+  conn.on('data', d => { if (d && d.__az === 'emoji') { document.dispatchEvent(new CustomEvent('az-peer-emoji',{detail:{emoji:String(d.emoji||'🙂').slice(0,8),name:Az.cleanName(d.name)||'Player'}})); return; } if (d && d.__az === 'hello') { n.peer = { name: Az.cleanName(d.name) || 'Player', uid: String(d.uid || '').replace(/\D/g, '').slice(0, 10), photo: (typeof d.photo === 'string' && d.photo.indexOf('data:image/') === 0 && d.photo.length < 30000) ? d.photo : '' }; Az.showVs && Az.showVs(n); return; } if (d && d.__az === 'start') { n._start && n._start(d); return; } if (fn) fn(d); else q.push(d); });
   const gone = () => { if (n.open) { n.open = false; cl && cl(); } };
   conn.on('close', gone); conn.on('error', gone);
   return n;
@@ -634,8 +645,8 @@ function startGrants(u) {
       if (seenGrants[id]) return; seenGrants[id] = 1; const g = v[id];
       ref.child(id).remove().then(() => {
         if (g && typeof g.coins === 'number' && fbUser && fbUser.uid === u.uid) {
-          db().mail.push({ title: g.title || 'Gift from Ari Game Zone', coins: Math.round(+g.coins||0), mode: g.mode || 'add', ts: g.ts || Date.now(), claimed: false });
-          save(); Az.toast('✉️ New mail received! Open Mail to claim your gift.', 4500);
+          db().mail.push({ title: g.title || 'Gift from Ari Game Zone', message: String(g.message || '').slice(0,240), coins: Math.max(0,Math.round(+g.coins||0)), mode: 'add', ts: g.ts || Date.now(), claimed: !(+g.coins>0) });
+          save(); Az.toast('✉️ New mail received! Open Mail to read or claim it.', 4500);
           document.dispatchEvent(new Event('az-mail'));
         }
       }).catch(() => { delete seenGrants[id]; });
@@ -665,37 +676,32 @@ function postLogin(u, seq) {
 Az.isOwner = () => String(db().uid) === OWNER_UID;
 Az.devSetCoins = function (n) { if (!Az.isOwner()) return false; n = Math.round(+n); if (!isFinite(n)) return false; db().coins = Math.max(0, Math.min(MAXC, n)); save(); Az.refresh(); return true; };
 Az.devAddCoins = function (n) { n = Math.round(+n); return isFinite(n) && Az.devSetCoins(db().coins + n); };
-Az.devSetDiamonds = function (n) { if (!Az.isOwner()) return false; n = Math.round(+n); if (!isFinite(n)) return false; db().diamonds = Math.max(0, Math.min(MAXC, n)); save(); Az.refresh(); return true; };
-Az.devAddDiamonds = function (n) { n = Math.round(+n); return isFinite(n) && Az.devSetDiamonds(db().diamonds + n); };
-Az.devGive = function (gid, amount, mode) {
-  return Promise.resolve().then(() => {
-    if (!Az.isOwner()) throw new Error('This is only for owner ID ' + OWNER_UID + '.');
-    if (!fbUser || !fbDb) throw new Error('Log in with Google/Phone first.');
-    if (!Az.ownerOK) throw new Error('Owner not verified. Publish the new database.rules.json and log in with the owner Gmail (see ADMIN-SETUP.txt).');
-    gid = String(gid || '').replace(/\D/g, ''); amount = Math.round(+amount);
-    if (!/^\d{8}$/.test(gid)) throw new Error('Player ID must be 8 digits.');
-    if (!isFinite(amount) || Math.abs(amount) > 1e9) throw new Error('Enter a valid coin amount.');
-    return fbDb.ref('uidIndex/' + gid).once('value').then(s => {
-      const t = s.val(); if (!t) throw new Error('No account found for this Player ID. That player must log in and open the game once.');
-      return fbDb.ref('adminGrants/' + t).push({ coins: amount, diamonds: 0, mode: mode === 'set' ? 'set' : 'add', diamondMode: 'add', ts: firebase.database.ServerValue.TIMESTAMP }).then(() => gid);
-    });
-  });
-};
-Az.devGiveMail = function (gid, coins, diamonds) {
+Az.devGiveMail = function (gid, coins, title='Gift from Ari Game Zone', message='') {
   return Promise.resolve().then(() => {
     if (!Az.isOwner()) throw new Error('This is only for the owner account.');
     if (!fbUser || !fbDb) throw new Error('Log in with Google/Phone first.');
     if (!Az.ownerOK) throw new Error('Owner not verified. Publish database.rules.json in Firebase.');
-    gid = String(gid || '').replace(/\\D/g, '');
-    coins = Math.round(+coins || 0); diamonds = Math.round(+diamonds || 0);
-    if (!/^\\d{8}$/.test(gid)) throw new Error('Player ID must be 8 digits.');
-    if (!isFinite(coins) || !isFinite(diamonds) || coins < 0 || diamonds < 0 || coins > 1e9 || diamonds > 1e9) throw new Error('Enter valid positive amounts.');
+    gid = String(gid || '').replace(/\D/g, ''); coins = Math.round(+coins || 0);
+    title = String(title||'Game Zone Mail').slice(0,60); message = String(message||'').slice(0,240);
+    if (!/^\d{8}$/.test(gid)) throw new Error('Player ID must be 8 digits.');
+    if (!isFinite(coins) || coins < 0 || coins > 1e9) throw new Error('Enter a valid positive coin amount.');
     return fbDb.ref('uidIndex/' + gid).once('value').then(s => {
       const target=s.val(); if(!target) throw new Error('Player not found. They must log in once.');
-      return fbDb.ref('adminGrants/' + target).push({ coins, diamonds, mode:'add', diamondMode:'add', title:'Gift from Ari Game Zone', ts:firebase.database.ServerValue.TIMESTAMP }).then(()=>gid);
+      return fbDb.ref('adminGrants/' + target).push({ coins, title, message, ts:firebase.database.ServerValue.TIMESTAMP }).then(()=>gid);
     });
   });
 };
+Az.devBroadcastMail = function(coins,title,message){
+  return Promise.resolve().then(async()=>{
+    if(!Az.isOwner()||!fbUser||!fbDb||!Az.ownerOK) throw new Error('Owner login and Firebase owner permission are required.');
+    coins=Math.max(0,Math.min(1e9,Math.round(+coins||0))); title=String(title||'Ari Game Zone Bonus').slice(0,60); message=String(message||'').slice(0,240);
+    const snap=await fbDb.ref('uidIndex').once('value'), ids=snap.val()||{}, targets=[...new Set(Object.values(ids).filter(x=>typeof x==='string'&&x))];
+    if(!targets.length) throw new Error('No registered Player IDs found.');
+    const batch={}; targets.forEach(uid=>{const key=fbDb.ref('adminGrants/'+uid).push().key;batch['adminGrants/'+uid+'/'+key]={coins,title,message,ts:firebase.database.ServerValue.TIMESTAMP};});
+    await fbDb.ref().update(batch); return targets.length;
+  });
+};
+
 Az.ownerBtn = function () {       // home-page button: visible ONLY on the owner ID
   const cb = document.getElementById('admincoins'); if (!cb) return;
   if (!Az.isOwner()) { cb.style.display = 'none'; cb.onclick = null; return; }
@@ -972,11 +978,12 @@ function init() {
   document.body.prepend(bg);
   const gid = document.body.dataset.game, g = gid && Az.game(gid);
   if (g || document.body.dataset.bar) {
-    const bar = el('div', 'azbar', `<a class="azhome" href="${BASE}index.html" title="Home">🏠</a><div class="aztitle">${g ? g.emoji + ' ' + g.name : 'Ari Game Zone'}</div><div class="azbadges"><span class="azpill" id="azlv">${g ? 'Lv ' + Az.level(gid) : ''}</span><span class="azpill coin" id="azcoins"><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="A gold coin"> ${Az.coins()}</span>${g ? '<button class="azbtn-i" id="azshopb" title="Shop">🛒</button>' : ''}<button class="azbtn-i" id="azsnd" title="Sound">${db().sound ? '🔊' : '🔇'}</button><button class="azbtn-i" id="azprof" title="Profile">🆔</button><button class="azbtn-i" id="azthm" title="Theme">🎨</button></div>`);
+    const bar = el('div', 'azbar', `<a class="azhome" href="${BASE}index.html" title="Home">🏠</a><div class="aztitle">${g ? g.emoji + ' ' + g.name : 'Ari Game Zone'}</div><div class="azbadges"><span class="azpill" id="azlv">${g ? 'Lv ' + Az.level(gid) : ''}</span><span class="azpill coin" id="azcoins"><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="A gold coin"> ${Az.coins()}</span>${g ? '<button class="azbtn-i" id="azshopb" title="Shop">🛒</button>' : ''}<button class="azbtn-i" id="azmailtop" title="Mail">✉️${Az.mailCount()? '•':''}</button><button class="azbtn-i" id="azsnd" title="Sound">${db().sound ? '🔊' : '🔇'}</button><button class="azbtn-i" id="azprof" title="Profile">🆔</button><button class="azbtn-i" id="azthm" title="Theme">🎨</button></div>`);
     document.body.insertBefore(bar, bg.nextSibling);
     bar.addEventListener('click', e => {
       const t = e.target.closest('button'); if (!t) return;
       if (t.id === 'azshopb') Az.shop(g.shop.length ? g.shop : null);
+      else if (t.id === 'azmailtop') Az.mailbox();
       else if (t.id === 'azsnd') { db().sound = !db().sound; save(); t.textContent = db().sound ? '🔊' : '🔇'; }
       else if (t.id === 'azthm') Az.cycleTheme();
       else if (t.id === 'azprof') Az.profile();

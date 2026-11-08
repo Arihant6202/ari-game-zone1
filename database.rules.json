@@ -16,14 +16,15 @@
       "$gameUid": {
         ".read": "auth != null && (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true)",
         ".write": "auth != null && newData.isString() && newData.val() === auth.uid && $gameUid.matches(/^[0-9]{8}$/) && (($gameUid === '97835276' && (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true)) || ($gameUid !== '97835276' && (!data.exists() || data.val() === auth.uid)))"
-      }
+      },
+      ".read": "auth != null && (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true)"
     },
     "adminGrants": {
       "$target": {
         ".read": "auth != null && (auth.uid === $target || (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true))",
         "$grantId": {
           ".write": "auth != null && ((auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true) || (auth.uid === $target && !newData.exists()))",
-          ".validate": "!newData.exists() || (newData.hasChildren(['coins', 'ts']) && newData.child('coins').isNumber() && newData.child('coins').val() >= -1000000000 && newData.child('coins').val() <= 1000000000 && (!newData.child('diamonds').exists() || (newData.child('diamonds').isNumber() && newData.child('diamonds').val() >= -1000000000 && newData.child('diamonds').val() <= 1000000000)))"
+          ".validate": "!newData.exists() || (newData.hasChildren(['coins', 'ts']) && newData.child('coins').isNumber() && newData.child('coins').val() >= 0 && newData.child('coins').val() <= 1000000000 && (!newData.child('title').exists() || newData.child('title').isString()) && (!newData.child('message').exists() || newData.child('message').isString()))"
         }
       }
     }

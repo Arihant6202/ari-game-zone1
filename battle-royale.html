@@ -123,7 +123,7 @@ a{color:inherit}
   <div class="azmsg" id="msg" style="min-height:20px;font-size:13px">Loot crates 🩹🛡️⚡🔫 · stay inside the blue zone · last one alive wins</div>
   <div class="azctl"><button class="azbtn ghost sm" id="rst">🔄 Restart</button><button class="azbtn ghost sm" id="gfx">🎨 Graphics</button></div>
 </main>
-<script src="az.js?v=9"></script>
+<script src="az.js?v=12"></script>
 <script>
 /* Top-down shooter engine for Zone Survivor (battle royale) and Arena Strike (team deathmatch).
    Shooter.run({cv, mode:'br'|'arena', level, diff, hud(fn), end(fn)}) -> {stop(), S} */
@@ -157,7 +157,7 @@ function run(o){
   function mkGun(g){return{name:g.name,color:g.color,dmg:g.dmg,rate:g.rate,pellets:g.pellets,spread:g.spread,speed:g.speed,mag:g.mag||Math.max(5,Math.round(g.rate*3.5)),range:g.range||(g.speed>15?950:520)};}
   function mk(o2){const e=Object.assign({x:0,y:0,r:16,vx:0,vy:0,ang:0,cool:0,reload:0,armor:0,kills:0,alive:true,dead:0,boost:0,inv:0,tgt:null,think:0,goal:null,react:0,stuck:0,lastp:{x:0,y:0},sf:1+rng()*2,id:S.ents.length},o2);e.maxhp=e.hp;e.ammo=e.gun.mag;return e;}
   function spawnPlayer(){const p=br?freeSpot(300,300,WORLD-300,WORLD-300):freeSpot(60,WORLD/2-250,220,WORLD/2+250);return p;}
-  const P=mk({player:true,team:br?0:0,hp:outfit.hp,color:outfit.color,hat:outfit.hat,gun:mkGun(pg),name:'You',...spawnPlayer()});P.inv=2.5;S.ents.push(P);S.P=P;
+  const P=mk({player:true,team:br?0:0,hp:outfit.hp,color:outfit.color,hat:outfit.hat,gun:mkGun(pg),name:Az.name(),...spawnPlayer()});P.inv=2.5;S.ents.push(P);S.P=P;
   const nBots=net?(coop?14:0):br?Math.min(39,9+Math.floor(L*.3)):Math.min(7,3+Math.floor(L/22));
   const botHp=Math.round((55+L*.9)*Az.pick(D,.8,1,1.2)),botErr=Math.max(.025,(.34-L*.0029))*Az.pick(D,1.5,1,.7),botDmg=(.55+L*.0075)*dm;
   function botGun(){const tier=Math.min(5,Math.floor(rng()*(1.2+L/18)));return mkGun(guns[tier]);}
@@ -198,7 +198,7 @@ function run(o){
         else if(!br){const foe=S.ents.filter(e=>e.alive&&e.team!==b.team);const f=foe[Math.floor(Math.random()*foe.length)];b.goal=f?{x:f.x+(Math.random()-.5)*200,y:f.y+(Math.random()-.5)*200}:{x:WORLD/2,y:WORLD/2};}}
       if(br&&S.zone&&best==null&&rad(b.x-S.zone.x,b.y-S.zone.y)>S.zone.r*.95)b.goal={x:S.zone.x,y:S.zone.y};}
     let mx=0,my=0;const t=b.tgt;
-    if(t&&t.alive){const dx=t.x-b.x,dy=t.y-b.y,d=rad(dx,dy),want=Math.atan2(dy,dx);b.ang+=angd(b.ang,want)*Math.min(1,dt*b.turn);b.react-=dt;
+    if(t&&t.alive){const dx=t.x-b.x,dy=t.y-b.y,d=Math.max(1,rad(dx,dy)),want=Math.atan2(dy,dx);b.ang+=angd(b.ang,want)*Math.min(1,dt*b.turn);b.react-=dt;
       const pref=br?230:200;const f=d>pref*1.2?1:d<pref*.55?-1:0;mx=dx/d*f;my=dy/d*f;const s=Math.sin(S.t*b.sf+b.id)*(.75);mx+=-dy/d*s;my+=dx/d*s;
       if(b.react<=0&&Math.abs(angd(b.ang,want))<.25&&d<b.gun.range*.9)fire(b);}
     else if(b.goal){const dx=b.goal.x-b.x,dy=b.goal.y-b.y,d=rad(dx,dy)||1;mx=dx/d;my=dy/d;b.ang+=angd(b.ang,Math.atan2(dy,dx))*Math.min(1,dt*4);}
@@ -277,6 +277,7 @@ function run(o){
     ctx.fillStyle=e.color;ctx.strokeStyle=me?'#fff':(e.team!==P.team?'#ff4d6d':'#3dd9ff');ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,e.r*(1+bob*.07),0,TAU);ctx.fill();ctx.stroke();ctx.save();ctx.translate(7,0);Az.drawGun(ctx,e.gun,46);ctx.restore();ctx.rotate(-e.ang);
     if(e.hat){ctx.font='18px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(e.hat,0,-4);}
     ctx.translate(-swx,-swy);
+    ctx.save();ctx.rotate(-e.ang);ctx.font='bold 11px system-ui';ctx.textAlign='center';ctx.textBaseline='bottom';ctx.lineWidth=3;ctx.strokeStyle='rgba(0,0,0,.8)';ctx.fillStyle='#fff';ctx.strokeText(String(e.name||'Player').slice(0,14),0,-e.r-17);ctx.fillText(String(e.name||'Player').slice(0,14),0,-e.r-17);ctx.restore();
     if(me){ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(0,-e.r-20);ctx.lineTo(-6,-e.r-30);ctx.lineTo(6,-e.r-30);ctx.fill();}
     {const w=34,h=4;ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(-w/2,-e.r-12,w,h);ctx.fillStyle=e.hp/e.maxhp>.5?'#5fe38b':e.hp/e.maxhp>.25?'#ffd166':'#ff4d6d';ctx.fillRect(-w/2,-e.r-12,w*Math.max(0,e.hp)/e.maxhp,h);if(e.armor>0){ctx.fillStyle='#6ab7ff';ctx.fillRect(-w/2,-e.r-8,w*e.armor/100,2);}}
     ctx.restore();}
@@ -406,12 +407,12 @@ function run(o){
   /* ---------- online (PeerJS): 1v1 duel or co-op duo. Victim-authoritative; host runs bots + zone ---------- */
   let R=null,netT=0,bt=0,zt=0;
   if(net){const sp=(net.host||coop)?freeSpot(300,300,1000,1000):freeSpot(WORLD-1000,WORLD-1000,WORLD-300,WORLD-300);P.x=sp.x;P.y=sp.y;
-    R=mk({team:coop?0:1000,hp:100,color:'#ff6b6b',hat:'',gun:mkGun(guns[0]),name:coop?'Ally':'Rival',remote:true,x:coop?sp.x+40:(net.host?WORLD-600:600),y:coop?sp.y:(net.host?WORLD-600:600)});R.tx=R.x;R.ty=R.y;S.ents.push(R);
+    R=mk({team:coop?0:1000,hp:100,color:'#ff6b6b',hat:'',gun:mkGun(guns[0]),name:(net.peer&&net.peer.name)|| (coop?'Ally':'Rival'),remote:true,x:coop?sp.x+40:(net.host?WORLD-600:600),y:coop?sp.y:(net.host?WORLD-600:600)});R.tx=R.x;R.ty=R.y;S.ents.push(R);
     if(coop&&!net.host)for(const e of S.ents)if(e.bot){e.puppet=true;e.tx=e.x;e.ty=e.y;}
     net.send({t:'hi',c:P.color,h:P.hat,mh:P.maxhp});
     net.on(m=>{if(!m||S.over)return;
       if(m.t==='s'){R.tx=m.x;R.ty=m.y;R.ang=m.a;R.hp=m.hp;R.armor=m.ar;R.alive=!!m.al;const g=guns.find(x=>x.name===m.gn);if(g&&R.gun.name!==g.name)R.gun=mkGun(g);}
-      else if(m.t==='hi'){R.color=m.c;R.hat=m.h;R.maxhp=m.mh;if(T){const g=T.ch.get(R);if(g){T.sc.remove(g);T.ch.delete(R);}}if(R.hat==='🦋'&&window.THREE)loadModel();}
+      else if(m.t==='hi'){R.name=(net.peer&&net.peer.name)||R.name;R.color=m.c;R.hat=m.h;R.maxhp=m.mh;if(T){const g=T.ch.get(R);if(g){T.sc.remove(g);T.ch.delete(R);}}if(R.hat==='🦋'&&window.THREE)loadModel();}
       else if(m.t==='f'){const bot=m.bid!=null;for(const q of m.b)S.bul.push({x:q.x,y:q.y,vx:q.vx,vy:q.vy,dmg:q.dmg,life:q.life,col:q.col,team:bot?m.tm:R.team,o:bot?S.ents[m.bid]:R,rem:true});}
       else if(m.t==='k'){P.kills++;S.feed.unshift({t:'You ⚔ '+R.name,l:5});}
       else if(m.t==='l'){const l=S.loot[m.i];if(l)l.gone=true;}

@@ -1,40 +1,28 @@
-ARI GAME ZONE — DEVELOPER MODE (OWNER) SETUP  (v8)
-===================================================
-Owner Player ID: 97835276
-No Cloud Functions / Blaze plan needed — everything runs on the free Spark plan.
+ARI GAME ZONE — FIREBASE / DEVELOPER SETUP
 
-WHAT DEVELOPER MODE DOES
-- Set / add / remove your own coins (0 to 999,999,999) + quick buttons (+1K, +10K, +100K, +1M, MAX)
-- Set / add / remove your own diamonds from the Developer page
-- Enter any player's 8-digit ID to add, remove or set their coins
-- Only visible on the account with Player ID 97835276 (a "👑 Developer Mode" button on Home and in
-  Profile). Everyone else sees "Access denied".
+1) Firebase project
+- Keep the Firebase web app configuration in firebase-config.js.
+- Enable Google sign-in and Realtime Database.
+- Publish database.rules.json to Realtime Database > Rules.
 
-HOW IT IS SECURED
-The real check is done by the Firebase Database RULES (on the server), not by the game's JavaScript.
-Only the owner's Gmail is the "owner" in the rules, so nobody else can send coins or claim ID 97835276,
-even by editing the ID from the browser console.
-(Editing your own coins is local — any player can tamper with their own device anyway.)
+2) Owner account
+- Developer Mode is restricted to the verified owner Gmail: kumararihant625@gmail.com.
+- The owner Player ID is 97835276.
+- Open the website, sign in with that Gmail, then open Developer Mode.
+- Do not share the owner Gmail or its sign-in access.
 
-SETUP (one time, 2 minutes)
-1. Firebase Console > Realtime Database > Rules. Paste the full content of database.rules.json and press Publish.
-   The owner is identified by Gmail: kumararihant625@gmail.com (you can change it in the file).
-   Only this Gmail can get ID 97835276 + Developer Mode.
-2. Reload the website and log in with kumararihant625@gmail.com. You should see "🔑 Owner verified".
-3. Any other Gmail that wrongly got 97835276 receives a new Player ID automatically on its next login.
-   (Optional cleanup: in Firebase Console > Realtime Database > Data, open uidIndex/97835276;
-   it fixes itself when the owner logs in.)
-4. To send coins to a player, that player must have logged in with Google and opened the game at least once.
+3) Player Mail and Gold Coins
+- Developer Mode can send Gold Coins and a text message to one registered 8-digit Player ID.
+- The player receives a Mail entry and must claim the Gold Coins in the Mail inbox.
+- Message-only Mail is shown as read-only announcement text.
+- The Diwali action queues 500 claimable Gold Coins for every account currently listed in uidIndex. It requires the owner to sign in and press the confirmation button. It does not run automatically.
+- A player must have opened the game and registered their Player ID at least once to be included.
 
-NOTES
-- Guest (not logged in) players cannot receive coins — they have no account.
-- The old "Cloud Functions / ADMIN_AUTH_UID / functions/.env" steps are no longer needed.
-- In Firebase Authentication enable Google, and add arihant620.github.io to Authorized domains.
-- Upload ALL files to GitHub (az.js, az.css, owner-admin.html and database.rules.json too).
+4) Security notes
+- Never publish permissive public read/write rules.
+- The owner can read uidIndex and write adminGrants; each player can read their own grant queue and remove only their own delivered grants.
+- A player can only read/write their own users/{authUid} data.
 
-
-V8 CURRENCY UPDATE
-- Developer Mode now has a separate Diamonds balance with Set / Add / Remove controls.
-- The normal shop supports either Ⓐ Coins or 💎 Diamonds. Diamond prices are shown on each item.
-- Player ID 49019468 is a normal player (no Developer Mode). On first load of that account, the starter balance is initialized to 100,000 Coins and 10,000 Diamonds.
-- Publish the updated database.rules.json in Firebase Realtime Database Rules and upload all updated HTML/JS/CSS/JSON files to GitHub.
+5) Deploy
+- Upload the complete ZIP contents to the same GitHub Pages repository root.
+- If Firebase rules are changed, publish them in Firebase Console as well; uploading the JSON file to GitHub alone does not publish database rules.
