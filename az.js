@@ -56,7 +56,7 @@ function normalize(d) {
   d.starter49019468 = !!d.starter49019468;
   if (String(d.uid || '') === '49019468' && !d.starter49019468) { d.coins = 100000; d.diamonds = 10000; d.starter49019468 = true; }
   d.xp = (typeof d.xp === 'number' && isFinite(d.xp) && d.xp > 0) ? d.xp : 0;
-  d.lv = obj(d.lv); d.best = obj(d.best); d.own = obj(d.own); d.eq = obj(d.eq);
+  d.lv = obj(d.lv); d.best = obj(d.best); d.own = obj(d.own); d.eq = obj(d.eq); d.levelRewards = obj(d.levelRewards); d.mail = Array.isArray(d.mail) ? d.mail : [];
   d.theme = d.theme || 'neon'; d.diff = d.diff || 'medium'; d.sound = d.sound !== false; d.daily = d.daily || '';
   if (!/^\d{8}$/.test(String(d.uid || ''))) d.uid = genUid();
   d.uid = String(d.uid);
@@ -339,10 +339,44 @@ const Az = window.Az = {
   addDiamonds(n) { db().diamonds = Math.max(0, db().diamonds + Math.round(n)); save(); Az.refresh(); },
   addCoins(n) { db().coins = Math.max(0, db().coins + Math.round(n)); save(); Az.refresh(); },
   xp: () => db().xp,
-  addXp(n) { db().xp += Math.round(n); save(); Az.refresh(); },
+  addXp(n) {
+    const before = Az.plvl();
+    db().xp = Math.max(0, db().xp + Math.round(n));
+    const after = Az.plvl();
+    for (let lv = before + 1; lv <= after; lv++) {
+      if (db().levelRewards[lv]) continue;
+      db().levelRewards[lv] = true;
+      db().coins = Math.min(MAXC, db().coins + 100);
+      db().diamonds = Math.min(MAXC, db().diamonds + 5);
+      if (lv % 5 === 0) {
+        const free = Object.values(SHOP).flatMap(s => s.items).find(it => !db().own[it.id]);
+        if (free) { db().own[free.id] = 1; db().lastLevelItem = free.name; }
+      }
+    }
+    save(); Az.refresh();
+    if (after > before) Az.toast('🎉 Level ' + after + '! Reward: +100 coins, +5 diamonds' + (after % 5 === 0 && db().lastLevelItem ? ' + free ' + db().lastLevelItem : ''), 4500);
+  },
   plvl: () => Math.floor(Math.sqrt(db().xp / 40)) + 1,
   plProgress() { const L = Az.plvl(), a = 40 * (L - 1) * (L - 1), b = 40 * L * L; return { lvl: L, cur: db().xp - a, need: b - a }; },
 
+  mailCount: () => db().mail.filter(m => !m.claimed).length,
+  claimMail(i) {
+    const m = db().mail[i]; if (!m || m.claimed) return false;
+    const n = Math.round(+m.coins || 0), d = Math.round(+m.diamonds || 0);
+    if (m.mode === 'set') db().coins = Math.max(0, Math.min(MAXC, n)); else db().coins = Math.max(0, Math.min(MAXC, db().coins + n));
+    if (m.diamondMode === 'set') db().diamonds = Math.max(0, Math.min(MAXC, d)); else db().diamonds = Math.max(0, Math.min(MAXC, db().diamonds + d));
+    m.claimed = true; m.claimedAt = Date.now(); save(); Az.refresh(); Az.toast('🎁 Mail claimed: +' + n + ' coins, +' + d + ' diamonds'); return true;
+  },
+  mailbox() {
+    const m = Az.modal('<div id="azmailbox"></div>');
+    const draw = () => {
+      const list = db().mail.slice().reverse();
+      const rows = list.length ? list.map((v,j) => { const i=db().mail.length-1-j; return `<div class="azitem"><b>🎁 ${v.title || 'Gift from Ari Game Zone'}</b><small>Ⓐ ${v.coins||0} coins · 💎 ${v.diamonds||0} diamonds</small>${v.claimed?'<span class="azpill">✅ Claimed</span>':`<button class="azbtn sm" data-claim="${i}">Claim reward</button>`}</div>`; }).join('') : '<p class="sub">No messages yet. Gifts from the developer will appear here.</p>';
+      document.getElementById('azmailbox').innerHTML = `<h2>✉️ Mail</h2><p class="sub">Claim gifts sent to your Player ID.</p><div class="azshopgrid">${rows}</div><div class="azrow c"><button class="azbtn ghost" id="mailclose">Close</button></div>`;
+    };
+    m.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.claim!==undefined){Az.claimMail(+b.dataset.claim);draw();}if(b.id==='mailclose')m.close();});
+    draw(); return m;
+  },
   level: id => db().lv[id] || 1,                       // highest unlocked level of a game
   unlock(id, n) { const g = Az.game(id); db().lv[id] = Math.min(g ? g.max : 999, Math.max(Az.level(id), n)); save(); },
   best: (id, k) => (db().best[id + ':' + (k || 'score')]) || 0,
@@ -382,6 +416,7 @@ const Az = window.Az = {
   refresh() {
     const c = $('#azcoins'); if (c) c.textContent = 'Ⓐ ' + Az.coins() + '  💎 ' + Az.diamonds();
     document.querySelectorAll('[data-az=coins]').forEach(e => e.textContent = Az.coins());
+    document.querySelectorAll('[data-az=diamonds]').forEach(e => e.textContent = Az.diamonds());
     document.querySelectorAll('[data-az=plvl]').forEach(e => e.textContent = Az.plvl());
     document.querySelectorAll('[data-az=name]').forEach(e => e.textContent = Az.name());
     document.querySelectorAll('[data-az=avatar]').forEach(e => Az.avatarFill(e));
@@ -598,7 +633,13 @@ function startGrants(u) {
     const v = snap.val(); if (!v || typeof v !== 'object') return;
     Object.keys(v).forEach(id => {
       if (seenGrants[id]) return; seenGrants[id] = 1; const g = v[id];
-      ref.child(id).remove().then(() => { if (g && typeof g.coins === 'number' && fbUser && fbUser.uid === u.uid) applyGrant(g); }).catch(() => { delete seenGrants[id]; });
+      ref.child(id).remove().then(() => {
+        if (g && typeof g.coins === 'number' && fbUser && fbUser.uid === u.uid) {
+          db().mail.push({ title: g.title || 'Gift from Ari Game Zone', coins: Math.round(+g.coins||0), diamonds: Math.round(+g.diamonds||0), mode: g.mode || 'add', diamondMode: g.diamondMode || 'add', ts: g.ts || Date.now(), claimed: false });
+          save(); Az.toast('✉️ New mail received! Open Mail to claim your gift.', 4500);
+          document.dispatchEvent(new Event('az-mail'));
+        }
+      }).catch(() => { delete seenGrants[id]; });
     });
   }, () => {});
 }
@@ -638,6 +679,21 @@ Az.devGive = function (gid, amount, mode) {
     return fbDb.ref('uidIndex/' + gid).once('value').then(s => {
       const t = s.val(); if (!t) throw new Error('No account found for this Player ID. That player must log in and open the game once.');
       return fbDb.ref('adminGrants/' + t).push({ coins: amount, diamonds: 0, mode: mode === 'set' ? 'set' : 'add', diamondMode: 'add', ts: firebase.database.ServerValue.TIMESTAMP }).then(() => gid);
+    });
+  });
+};
+Az.devGiveMail = function (gid, coins, diamonds) {
+  return Promise.resolve().then(() => {
+    if (!Az.isOwner()) throw new Error('This is only for the owner account.');
+    if (!fbUser || !fbDb) throw new Error('Log in with Google/Phone first.');
+    if (!Az.ownerOK) throw new Error('Owner not verified. Publish database.rules.json in Firebase.');
+    gid = String(gid || '').replace(/\\D/g, '');
+    coins = Math.round(+coins || 0); diamonds = Math.round(+diamonds || 0);
+    if (!/^\\d{8}$/.test(gid)) throw new Error('Player ID must be 8 digits.');
+    if (!isFinite(coins) || !isFinite(diamonds) || coins < 0 || diamonds < 0 || coins > 1e9 || diamonds > 1e9) throw new Error('Enter valid positive amounts.');
+    return fbDb.ref('uidIndex/' + gid).once('value').then(s => {
+      const target=s.val(); if(!target) throw new Error('Player not found. They must log in once.');
+      return fbDb.ref('adminGrants/' + target).push({ coins, diamonds, mode:'add', diamondMode:'add', title:'Gift from Ari Game Zone', ts:firebase.database.ServerValue.TIMESTAMP }).then(()=>gid);
     });
   });
 };

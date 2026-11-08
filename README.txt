@@ -109,3 +109,6 @@ UPDATE v8 (A coin mark + diamonds)
 - Developer page supports setting, adding and removing Diamonds from the owner account.
 - Player ID 49019468 remains a normal player; on first load it receives 100,000 Coins and 10,000 Diamonds.
 - All pages now load az.js?v=8 to avoid stale browser cache.
+
+
+V9 updates: visible diamond balance on home, player Mail inbox with manual claim, level-up rewards (+100 coins and +5 diamonds per level; every 5th level also unlocks a free shop item), and owner Mail gifting of coins + diamonds. Firebase database.rules.json must be published for cloud gifts.

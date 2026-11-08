@@ -70,12 +70,13 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     </div>
 
     <div class="box">
-      <h2>🎁 Coins for another player</h2>
-      <p class="sub">Enter the player's 8-digit ID. The coins reach that player's account when they come online (instantly if they are online now).</p>
+      <h2>✉️ Mail gift for another player</h2>
+      <p class="sub">Enter the player's 8-digit ID. Coins and diamonds are delivered to the player's Mail inbox. They can claim the gift when they open the game.</p>
       <div class="azrow c"><input class="azinput" id="gid" inputmode="numeric" maxlength="8" placeholder="Player ID (8 digit)"></div>
       <div class="azrow c"><input class="azinput" id="gAmt" type="number" inputmode="numeric" placeholder="Coins (number)"></div>
+      <div class="azrow c"><input class="azinput" id="gDiamonds" type="number" inputmode="numeric" placeholder="Diamonds (number)"></div>
       <div class="azrow c">
-        <button class="azbtn sm" id="gAdd">🎁 Send (+)</button>
+        <button class="azbtn sm" id="gAdd">✉️ Send Mail (+)</button>
         <button class="azbtn sm ghost" id="gSub">⛔ Remove (−)</button>
         <button class="azbtn sm ghost" id="gSet">= Set</button>
       </div>
@@ -83,7 +84,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     <div id="log"></div>
   </div>
 </main>
-<script src="az.js?v=8"></script>
+<script src="az.js?v=9"></script>
 <script>
 (function(){
   const $=id=>document.getElementById(id);
@@ -114,12 +115,15 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
   $('diamondSub').onclick=()=>{const n=num('selfDiamondAmt');if(n==null||n<0)return log('Enter a valid diamond amount.',1);Az.devAddDiamonds(-n);paint();log('✅ −'+n+' diamonds → now '+Az.diamonds());};
   document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{Az.devAddCoins(+b.dataset.q);paint();log('✅ Now '+Az.coins()+' coins.');});
   function give(sign,mode){
-    const n=num('gAmt');if(n==null||n<0)return log('Enter a valid coin amount (0 or more).',1);
-    const gid=$('gid').value.replace(/\D/g,'');
-    log('Sending…');
-    Az.devGive(gid,mode==='set'?n:sign*n,mode).then(g=>log('✅ Sent to player '+g+': '+(mode==='set'?'set ':(sign>0?'+':'−'))+n+' coins.\nThey apply when the player is online.')).catch(e=>log('❌ '+(e&&e.message||'Error: check the database rules'),1));
+    const n=num('gAmt'), d=num('gDiamonds');
+    if(n==null||d==null||n<0||d<0)return log('Enter valid coin and diamond amounts (0 or more).',1);
+    const gid=$('gid').value.replace(/\\D/g,'');
+    log('Sending mail…');
+    Az.devGiveMail(gid,n,d).then(g=>log('✅ Mail sent to player '+g+': '+n+' coins and '+d+' diamonds. They can claim it in Mail.')).catch(e=>log('❌ '+(e&&e.message||'Error: check database rules'),1));
   }
-  $('gAdd').onclick=()=>give(1,'add');$('gSub').onclick=()=>give(-1,'add');$('gSet').onclick=()=>give(1,'set');
+  $('gAdd').onclick=()=>give(1,'add');
+  $('gSub').onclick=()=>log('For safety, use Mail to send positive rewards only. To remove currency, use the player account support flow.',1);
+  $('gSet').onclick=()=>log('Mail gifts are additive; use the player account support flow for setting balances.',1);
   document.addEventListener('az-ready',()=>{paint();Az.whenAuth().then(paint);});
   document.addEventListener('az-account',paint);document.addEventListener('az-owner',paint);
   setInterval(()=>{if(Az.isOwner()){$('mycoins').textContent=Az.coins();$('mydiamonds').textContent=Az.diamonds();}},1500);
