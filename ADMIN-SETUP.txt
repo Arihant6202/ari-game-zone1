@@ -1,32 +1,32 @@
-ARI GAME ZONE — DEVELOPER MODE (OWNER) SETUP  (v3)
+ARI GAME ZONE — DEVELOPER MODE (OWNER) SETUP  (v7)
 ===================================================
 Owner Player ID: 97835276
-Cloud Functions / Blaze plan ki ZARURAT NAHI — sab kuch free Spark plan par chalta hai.
+No Cloud Functions / Blaze plan needed — everything runs on the free Spark plan.
 
-DEVELOPER MODE KYA KARTA HAI
-- Apne coins set / add / remove (0 se 999,999,999) + quick buttons (+1K, +10K, +100K, +1M, MAX)
-- Kisi bhi player ki 8-digit ID daalke uske coins badhana / ghatana / set karna
-- Sirf Player ID 97835276 wale account par dikhta hai (home par "👑 Developer Mode" button,
-  Profile me bhi button). Baaki sabko "Access denied" milta hai.
+WHAT DEVELOPER MODE DOES
+- Set / add / remove your own coins (0 to 999,999,999) + quick buttons (+1K, +10K, +100K, +1M, MAX)
+- Enter any player's 8-digit ID to add, remove or set their coins
+- Only visible on the account with Player ID 97835276 (a "👑 Developer Mode" button on Home and in
+  Profile). Everyone else sees "Access denied".
 
-SECURITY KAISE HAI
-Asli check Firebase Database RULES karte hain (server par), game ka JS nahi. Rules me sirf tumhara
-Firebase Auth UID "owner" hai. Isliye koi dusra console se ID badal kar bhi dusron ko coins nahi
-bhej sakta, aur ID 97835276 koi aur claim nahi kar sakta.
-(Apne khud ke coins ka edit local hai — wo waise bhi har player apne device par tamper kar sakta hai.)
+HOW IT IS SECURED
+The real check is done by the Firebase Database RULES (on the server), not by the game's JavaScript.
+Only the owner's Gmail is the "owner" in the rules, so nobody else can send coins or claim ID 97835276,
+even by editing the ID from the browser console.
+(Editing your own coins is local — any player can tamper with their own device anyway.)
 
-SETUP (sirf ek baar, 2 minute)  — v4: ab UID paste karne ki zarurat NAHI
-1. Firebase Console > Realtime Database > Rules. database.rules.json ka poora content paste karo aur Publish dabao.
-   Owner ab Gmail se pehchana jata hai: kumararihant625@gmail.com (file me 'kumararihant625@gmail.com' badal sakte ho).
-   Sirf yahi Gmail ID 97835276 + Developer Mode paa sakta hai. mr5605682@gmail.com (ya koi bhi dusra Gmail) nahi.
-2. Website reload karo aur kumararihant625@gmail.com se login karo. "🔑 Owner verified" dikhna chahiye.
-3. Jis dusre Gmail par galti se 97835276 aa gayi thi, wo agli baar login karte hi apne aap nayi Player ID le leta hai.
-   (Optional safai: Firebase Console > Realtime Database > Data me uidIndex/97835276 ko kholo; owner login par wo
-   khud sahi ho jata hai.)
-4. Kisi player ko coins bhejne ke liye: us player ne kam se kam ek baar Google login karke game kholi ho.
+SETUP (one time, 2 minutes)
+1. Firebase Console > Realtime Database > Rules. Paste the full content of database.rules.json and press Publish.
+   The owner is identified by Gmail: kumararihant625@gmail.com (you can change it in the file).
+   Only this Gmail can get ID 97835276 + Developer Mode.
+2. Reload the website and log in with kumararihant625@gmail.com. You should see "🔑 Owner verified".
+3. Any other Gmail that wrongly got 97835276 receives a new Player ID automatically on its next login.
+   (Optional cleanup: in Firebase Console > Realtime Database > Data, open uidIndex/97835276;
+   it fixes itself when the owner logs in.)
+4. To send coins to a player, that player must have logged in with Google and opened the game at least once.
 
 NOTES
-- Guest (bina login) players ko coins nahi bheje ja sakte — unka koi account nahi hota.
-- Pehle wale "Cloud Functions / ADMIN_AUTH_UID / functions/.env" steps ab zaroori nahi.
-- Firebase Authentication me Google enable ho, aur Authorized domains me arihant620.github.io ho.
-- GitHub par saari files upload karo (az.js, az.css, owner-admin.html, database.rules.json bhi).
+- Guest (not logged in) players cannot receive coins — they have no account.
+- The old "Cloud Functions / ADMIN_AUTH_UID / functions/.env" steps are no longer needed.
+- In Firebase Authentication enable Google, and add arihant620.github.io to Authorized domains.
+- Upload ALL files to GitHub (az.js, az.css, owner-admin.html and database.rules.json too).

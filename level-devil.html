@@ -91,7 +91,10 @@ a{color:inherit}
 .azshopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
 .azitem{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center}
 .azitem.eq{border-color:var(--a3);box-shadow:0 0 18px -8px var(--a3)}
-.azitem .pv{font-size:34px;height:48px;display:grid;place-items:center}
+.azitem .pv{font-size:34px;height:78px;display:grid;place-items:center}
+.azitem .fig{width:100%;height:100%;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:2px;overflow:hidden}
+.azitem .fig svg{max-width:100%}
+.azitem.eq .fig{box-shadow:inset 0 0 0 1px var(--a3)}
 .azitem .sw{width:38px;height:38px;border-radius:50%;margin:auto;border:3px solid rgba(255,255,255,.7)}
 .azitem b{display:block;font-size:13px}.azitem small{display:block;color:var(--muted);font-size:11px;min-height:28px}
 .azitem .azbtn{width:100%;margin-top:6px}
@@ -121,7 +124,7 @@ a{color:inherit}
     <button class="azbtn ghost sm" id="swp">↔️ Swap hands</button>
     <button class="azbtn ghost sm" id="rst">🔄 Restart</button>
   </div>
-  <p class="azmsg ldhint" style="color:var(--muted);font-size:12px;font-weight:400">📱 Control chhota lag raha hai? <b>Rotate mode</b> dabao — game poori landscape screen me khulegi. Thumb ko ◀ ▶ ke beech slide kar sakte ho.<br>⌨️ Arrow keys / A D move · Space / W / ↑ jump · R restart</p>
+  <p class="azmsg ldhint" style="color:var(--muted);font-size:12px;font-weight:400">📱 Controls feel small? Tap <b>Rotate mode</b> — the game opens in full landscape. You can slide your thumb between ◀ ▶.<br>⌨️ Arrow keys / A D move · Space / W / ↑ jump · R restart</p>
   <div class="ldtop" id="ldtop"><span class="azpill" id="rHud">Lv 1</span><span class="rbtns"><button class="azbtn-i" id="rst2" aria-label="Restart">↻</button><button class="azbtn-i" id="swp2" aria-label="Swap hands">↔</button><button class="azbtn-i" id="rotx" aria-label="Exit rotate mode">✖</button></span></div>
 </main>
 <style>
@@ -162,7 +165,7 @@ body.ld-rot .rbtns .azbtn-i{width:44px;height:44px;font-size:18px}
 }
 @supports (height:100dvh){@media (orientation:portrait){body.ld-rot #ldmain,body.ld-rot .azmodal{left:100dvw;width:100dvh;height:100dvw}body.ld-rot .azbox{max-height:88dvw}}}
 </style>
-<script src="az.js?v=6"></script>
+<script src="az.js?v=7"></script>
 <script>
 (function(){
 'use strict';
@@ -184,26 +187,26 @@ const DOOR={x:735,y:344};
 function L(name,taunt,o){const d=Object.assign({name,taunt,s:[30,F-PH],so:[],sp:[],saw:[],fake:[]},o);d.door=Object.assign({w:30,h:46},DOOR,o.door||{});return d;}
 
 const LEVELS=[
- /*1*/()=>L('Easy peasy','Itna aasan? Soch lo... 😏',{so:[g(0,800)],sp:[pop(380,34,28,90)]}),
- /*2*/()=>L('Floor is a lie','Zameen bhi dhokha deti hai.',{so:[g(0,300),cr(300,F,120,3),g(420,800)]}),
- /*3*/()=>L('Shy door','Darwaza sharmeela hai!',{so:[g(0,800),pl(570,300,110)],sp:[pop(300,30,26,80)],door:{x:735,y:344,run:[{x:605,y:254}],rr:120}}),
- /*4*/()=>L('Invisible walls','Deewar dikhti nahi...',{so:[g(0,800),hid(430,300,26,90),hid(610,290,26,100)]}),
- /*5*/()=>L('Look up!','Upar dekho! 👆',{so:[g(0,800)],sp:[drop(240,230,56,46,115),pop(520,30,28,85),drop(620,200,50,50,60)]}),
- /*6*/()=>L('Elevator','Lift pe chadho.',{so:[g(0,270),mv(280,F,440,F,90,1.8),g(530,800)],sp:[{k:'st',x:270,y:416,w:260,h:30},pop(650,30,28,80)]}),
- /*7*/()=>L('Which door?','Asli darwaza kaun sa?',{so:[g(0,800),pl(130,320,90),pl(260,255,90),pl(390,190,90)],door:{x:425,y:144,w:30,h:46},fake:[{x:735,y:344}]}),
- /*8*/()=>L('Spike sea','Neeche mat girna.',{so:[g(0,120),pl(130,330,70),cr(250,330,70,12),pl(370,330,70),cr(490,330,70,12),pl(610,330,70),g(700,800)],sp:[sp(120,580,26)]}),
- /*9*/()=>L('Buzzsaw','Aari chal rahi hai ⚙️',{so:[g(0,800)],saw:[saw(300,372,560,372,18,2.4)],sp:[pop(650,30,28,80)]}),
- /*10*/()=>L('Ambush','Peeche se hamla!',{so:[g(0,300),g(380,800)],sp:[dash(830,364,60,26,500,6.5)]}),
- /*11*/()=>L('Ghost bridge','Pul toot raha hai!',{so:[g(0,250),cr(262,F,70,6),cr(362,F,70,6),cr(462,F,70,6),g(560,800)],sp:[pop(640,30,28,80)]}),
- /*12*/()=>L('Stairway','Seedhi chadhai.',{so:[g(0,800),pl(60,330,80),pl(190,275,80),pl(320,220,80),pl(450,165,80),app(580,125,60,14,480,90),pl(680,95,110)],door:{x:725,y:49,w:30,h:46}}),
- /*13*/()=>L('Lifts','Do lift, ek guffa.',{so:[g(0,150),mv(160,F-10,160,200,80,1.5),pl(250,200,90),mv(350,200,470,200,80,1.6),pl(560,200,80),g(620,800)],sp:[{k:'st',x:150,y:416,w:470,h:30}]}),
- /*14*/()=>L('Spike rhythm','Taal pe kudo! 🎵',{so:[g(0,800)],sp:[pop(250,26,30,65),pop(340,26,30,65),pop(430,26,30,65),pop(520,26,30,65),pop(610,26,30,65)]}),
- /*15*/()=>L('Door runner','Darwaza bhaag raha hai.',{so:[g(0,800),pl(300,260,90),pl(520,310,90)],saw:[saw(380,372,470,372,18,2.5)],door:{x:735,y:344,w:30,h:46,run:[{x:330,y:214},{x:550,y:264}],rr:110}}),
- /*16*/()=>L('Head bump','Sir bachao!',{so:[g(0,260),g(400,800),hid(190,250,45,40)],sp:[pop(500,30,28,80)]}),
- /*17*/()=>L('Spike rain','Baarish aa rahi hai ☔',{so:[g(0,800)],sp:[drop(170,230,40,44,60),drop(290,230,40,44,60),drop(410,230,40,44,60),drop(530,230,40,44,60),drop(650,230,40,44,60)]}),
- /*18*/()=>L('Crumble run','Sab kuch gir raha hai!',{so:[g(0,150),cr(160,360,70,14),cr(270,330,60,12),cr(380,300,60,12),cr(490,330,60,12),cr(600,360,60,14),g(700,800)],sp:[sp(150,550,26)],saw:[saw(355,230,355,330,14,2)]}),
- /*19*/()=>L('Gauntlet','Sab kuch ek saath!',{so:[g(0,200),g(330,800),hid(540,300,24,90)],sp:[pop(390,28,30,70),pop(450,28,30,70),dash(830,364,60,26,620,7)]}),
- /*20*/()=>L("Devil's castle",'Ab asli shaitan! 👹',{so:[g(0,140),mv(150,F,250,F,90,1.7),g(340,480),cr(480,F,100,3),g(580,800),pl(560,325,60),pl(640,260,60),pl(720,195,80)],sp:[pop(410,30,28,75)],saw:[saw(600,372,720,372,18,2.6)],door:{x:745,y:149,w:30,h:46},fake:[{x:735,y:344}]}),
+ /*1*/()=>L('Easy peasy','That easy? Think again... 😏',{so:[g(0,800)],sp:[pop(380,34,28,90)]}),
+ /*2*/()=>L('Floor is a lie','Even the ground lies.',{so:[g(0,300),cr(300,F,120,3),g(420,800)]}),
+ /*3*/()=>L('Shy door','The door is shy!',{so:[g(0,800),pl(570,300,110)],sp:[pop(300,30,26,80)],door:{x:735,y:344,run:[{x:605,y:254}],rr:120}}),
+ /*4*/()=>L('Invisible walls','The wall is invisible...',{so:[g(0,800),hid(430,300,26,90),hid(610,290,26,100)]}),
+ /*5*/()=>L('Look up!','Look up! 👆',{so:[g(0,800)],sp:[drop(240,230,56,46,115),pop(520,30,28,85),drop(620,200,50,50,60)]}),
+ /*6*/()=>L('Elevator','Hop on the lift.',{so:[g(0,270),mv(280,F,440,F,90,1.8),g(530,800)],sp:[{k:'st',x:270,y:416,w:260,h:30},pop(650,30,28,80)]}),
+ /*7*/()=>L('Which door?','Which door is the real one?',{so:[g(0,800),pl(130,320,90),pl(260,255,90),pl(390,190,90)],door:{x:425,y:144,w:30,h:46},fake:[{x:735,y:344}]}),
+ /*8*/()=>L('Spike sea','Do not fall down.',{so:[g(0,120),pl(130,330,70),cr(250,330,70,12),pl(370,330,70),cr(490,330,70,12),pl(610,330,70),g(700,800)],sp:[sp(120,580,26)]}),
+ /*9*/()=>L('Buzzsaw','The saw is running ⚙️',{so:[g(0,800)],saw:[saw(300,372,560,372,18,2.4)],sp:[pop(650,30,28,80)]}),
+ /*10*/()=>L('Ambush','Attack from behind!',{so:[g(0,300),g(380,800)],sp:[dash(830,364,60,26,500,6.5)]}),
+ /*11*/()=>L('Ghost bridge','The bridge is breaking!',{so:[g(0,250),cr(262,F,70,6),cr(362,F,70,6),cr(462,F,70,6),g(560,800)],sp:[pop(640,30,28,80)]}),
+ /*12*/()=>L('Stairway','A steep climb.',{so:[g(0,800),pl(60,330,80),pl(190,275,80),pl(320,220,80),pl(450,165,80),app(580,125,60,14,480,90),pl(680,95,110)],door:{x:725,y:49,w:30,h:46}}),
+ /*13*/()=>L('Lifts','Two lifts, one cave.',{so:[g(0,150),mv(160,F-10,160,200,80,1.5),pl(250,200,90),mv(350,200,470,200,80,1.6),pl(560,200,80),g(620,800)],sp:[{k:'st',x:150,y:416,w:470,h:30}]}),
+ /*14*/()=>L('Spike rhythm','Jump to the beat! 🎵',{so:[g(0,800)],sp:[pop(250,26,30,65),pop(340,26,30,65),pop(430,26,30,65),pop(520,26,30,65),pop(610,26,30,65)]}),
+ /*15*/()=>L('Door runner','The door is running away.',{so:[g(0,800),pl(300,260,90),pl(520,310,90)],saw:[saw(380,372,470,372,18,2.5)],door:{x:735,y:344,w:30,h:46,run:[{x:330,y:214},{x:550,y:264}],rr:110}}),
+ /*16*/()=>L('Head bump','Watch your head!',{so:[g(0,260),g(400,800),hid(190,250,45,40)],sp:[pop(500,30,28,80)]}),
+ /*17*/()=>L('Spike rain','Rain is falling ☔',{so:[g(0,800)],sp:[drop(170,230,40,44,60),drop(290,230,40,44,60),drop(410,230,40,44,60),drop(530,230,40,44,60),drop(650,230,40,44,60)]}),
+ /*18*/()=>L('Crumble run','Everything is falling!',{so:[g(0,150),cr(160,360,70,14),cr(270,330,60,12),cr(380,300,60,12),cr(490,330,60,12),cr(600,360,60,14),g(700,800)],sp:[sp(150,550,26)],saw:[saw(355,230,355,330,14,2)]}),
+ /*19*/()=>L('Gauntlet','Everything at once!',{so:[g(0,200),g(330,800),hid(540,300,24,90)],sp:[pop(390,28,30,70),pop(450,28,30,70),dash(830,364,60,26,620,7)]}),
+ /*20*/()=>L("Devil's castle",'Now the real devil! 👹',{so:[g(0,140),mv(150,F,250,F,90,1.7),g(340,480),cr(480,F,100,3),g(580,800),pl(560,325,60),pl(640,260,60),pl(720,195,80)],sp:[pop(410,30,28,75)],saw:[saw(600,372,720,372,18,2.6)],door:{x:745,y:149,w:30,h:46},fake:[{x:735,y:344}]}),
 ];
 
 /* ============================ simulation (pure, so it can be tested) ============================ */
@@ -323,7 +326,7 @@ function drawParts(){for(let i=parts.length-1;i>=0;i--){const q=parts[i];q.x+=q.
 
 /* ============================ game flow ============================ */
 let HERO={color:'#1d2433',hat:''},net=null,ghost=null,ghostName='Friend',tick=0,O=null,level=1,S=null,place=null,deaths=0,totalDeaths=0,held={l:0,r:0,j:0},acc=0,last=0,raf=0,paused=false,over=false,dieT=0;
-const TAUNT=['Hehe, phir se! 😈','Ye to trap tha!','Dhyaan se dekho...','Aise nahi, waise!','Shaitan jeet gaya 😂','Ek aur koshish!','Mere paas aur bhi traps hain 😈'];
+const TAUNT=['Hehe, again! 😈','That was a trap!','Look carefully...','Not like that, like this!','The devil wins 😂','One more try!','I have more traps 😈'];
 function hud(){$('hLv').textContent='Level '+level+' / '+LEVELS.length;$('hDeath').textContent='💀 '+deaths;$('hName').textContent=S?LEVELS[level-1]().name:'—';$('rHud').textContent='Lv '+level+'\n💀 '+deaths;}
 function begin(n){HERO=Az.eq('hero');ghost=null;tick=0;level=Math.max(1,Math.min(LEVELS.length,n|0));place=Az.place(level);S=build(level);deaths=0;over=false;dieT=0;parts.length=0;acc=0;last=performance.now();held={l:0,r:0,j:0};hud();$('msg').textContent=LEVELS[level-1]().taunt;if(!raf)raf=requestAnimationFrame(loop);}
 function respawn(){S=build(level);dieT=0;parts.length=0;$('msg').textContent=TAUNT[(Math.max(1,deaths)-1)%TAUNT.length];hud();}
@@ -331,11 +334,11 @@ function win(){over=true;Az.sfx('win');
   if(net){
     net.send({t:'win'});
     Az.finish({game:'leveldevil',level,diff:'medium',won:true,base:30,score:Math.max(0,1000-deaths*50),progress:false,
-      title:'🏁 Tum pehle pahunche!',sub:deaths?('Deaths: '+deaths+' — '+ghostName+' ko peeche chhod diya!'):'Ek bhi death nahi! 😈',retry:()=>rematch()});
+      title:'🏁 You got there first!',sub:deaths?('Deaths: '+deaths+' — '+ghostName+' was left behind!'):'Not a single death! 😈',retry:()=>rematch()});
     return;
   }
   Az.finish({game:'leveldevil',level,diff:'medium',won:true,base:Math.max(10,26-deaths),score:Math.max(0,1000-deaths*50),
-    title:'😈 Level '+level+' clear!',sub:deaths?('Deaths: '+deaths+' — shaitan ne khoob troll kiya.'):'Ek bhi death nahi! Bhagwan ho kya?',
+    title:'😈 Level '+level+' clear!',sub:deaths?('Deaths: '+deaths+' — the devil trolled you a lot.'):'Not a single death! Are you a god?',
     next:lv=>begin(lv),retry:lv=>begin(lv)});}
 /* ---- online race: both players get the SAME level (from the shared seed); first to the real door wins ---- */
 const lvOf=seed=>1+((seed>>>0)%LEVELS.length);
@@ -348,7 +351,7 @@ function onNet(m){
   if(!m)return;
   if(m.t==='p'){ if(!ghost)ghost={x:m.x,y:m.y,tx:m.x,ty:m.y,d:0};ghost.tx=m.x;ghost.ty=m.y;ghost.d=m.d; }
   else if(m.t==='win'){ if(over)return; over=true;Az.sfx('lose');
-    Az.finish({game:'leveldevil',level,diff:'medium',won:false,base:30,progress:false,title:'😔 '+ghostName+' pehle pahuncha',sub:'Rematch khelo aur badla lo!',retry:()=>rematch()}); }
+    Az.finish({game:'leveldevil',level,diff:'medium',won:false,base:30,progress:false,title:'😔 '+ghostName+' got there first',sub:'Play a rematch and get revenge!',retry:()=>rematch()}); }
   else if(m.t==='again'&&!O.host){begin(lvOf(m.seed));}
   else if(m.t==='ask'&&O.host){rematch();}
 }
@@ -418,9 +421,9 @@ Az.start({game:'leveldevil',noDiff:true,extra:[{key:'view',label:'Screen / Contr
     ghostName=(net.peer&&net.peer.name)||'Friend';
     net.on(onNet);
     setInterval(()=>{if(net&&net.peer&&net.peer.name)ghostName=net.peer.name;},800);
-    net.onclose(()=>{if(!over){over=true;Az.finish({game:'leveldevil',level,diff:'medium',won:true,base:15,progress:false,title:'Friend left',sub:'Dost game chhod gaya.',retry:()=>location.reload()});}});
+    net.onclose(()=>{if(!over){over=true;Az.finish({game:'leveldevil',level,diff:'medium',won:true,base:15,progress:false,title:'Friend left',sub:'Your friend left the game.',retry:()=>location.reload()});}});
     $('rst').hidden=false;begin(lvOf(o.seed));
-    $('msg').textContent='🏁 Race! Pehle door tak pahunchne wala jeetega — '+'saamne wala 🔵 ghost hai.';
+    $('msg').textContent='🏁 Race! First to reach the door wins — '+'the 🔵 ghost is your opponent.';
   }else begin(o.level);
 }});
 })();

@@ -135,7 +135,15 @@ const SHOP = {
     { id: 'o_ghost', name: 'Ghost Lord', price: 4500, color: '#e0aaff', hat: '👻', hp: 200, desc: '+100 HP' },
     { id: 'o_wizard', name: 'Dark Wizard', price: 2000, color: '#6a4c93', hat: '🧙', hp: 140, desc: '+40 HP' },
     { id: 'o_pumpkin', name: 'Pumpkin Knight', price: 3500, color: '#ff7f11', hat: '🎃', hp: 160, desc: '+60 HP' },
-    { id: 'o_shinobu', name: 'Shinobu', price: 0, color: '#b794f4', hat: '🦋', hp: 180, desc: 'Butterfly Hashira. +80 HP' },
+    { id: 'o_shinobu', name: 'Shinobu', price: 7000, color: '#b794f4', hat: '🦋', hp: 180, desc: 'Butterfly Hashira. +80 HP' },
+    { id: 'o_karate', name: 'Karate Master', price: 600, color: '#f1f1f1', hat: '🥋', hp: 120, desc: '+20 HP' },
+    { id: 'o_cowboy', name: 'Outlaw Cowboy', price: 900, color: '#a0693a', hat: '🤠', hp: 125, desc: '+25 HP' },
+    { id: 'o_alien', name: 'Alien Invader', price: 1800, color: '#3a7d44', hat: '👽', hp: 145, desc: '+45 HP' },
+    { id: 'o_zombie', name: 'Zombie Brute', price: 2500, color: '#556b2f', hat: '🧟', hp: 155, desc: '+55 HP' },
+    { id: 'o_vampire', name: 'Night Vampire', price: 3200, color: '#7a0f2b', hat: '🧛', hp: 165, desc: '+65 HP' },
+    { id: 'o_hero', name: 'Super Hero', price: 5000, color: '#1d4ed8', hat: '🦸', hp: 190, desc: '+90 HP' },
+    { id: 'o_dragon', name: 'Dragon Warrior', price: 6500, color: '#b91c1c', hat: '🐲', hp: 210, desc: '+110 HP' },
+    { id: 'o_phoenix', name: 'Phoenix Legend', price: 9000, color: '#ff6a00', hat: '🔥', hp: 230, desc: '+130 HP. Legendary.' },,
   ] },
   car: { title: 'Cars', emoji: '🏎️', items: [
     { id: 'c_red', name: 'Red Spark', price: 0, color: '#ef233c', speed: 1, desc: 'Starter car.' },
@@ -225,9 +233,100 @@ const SHOP = {
 const ALL_ITEMS = {};
 Object.keys(SHOP).forEach(s => SHOP[s].items.forEach(i => { i.slot = s; ALL_ITEMS[i.id] = i; }));
 
+/* ------------------------------ figures: pictures for shop items + in-game gun skins ------------------------------ */
+const hx = c => { c = String(c || '#888').replace('#', ''); if (c.length === 3) c = c.split('').map(x => x + x).join(''); const n = parseInt(c, 16); return isNaN(n) ? [136, 136, 136] : [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const shade = (c, f) => { if (!/^#/.test(c || '')) return c; const [r, g, b] = hx(c); const m = v => Math.max(0, Math.min(255, Math.round(f < 1 ? v * f : v + (255 - v) * (f - 1)))); return '#' + [m(r), m(g), m(b)].map(v => v.toString(16).padStart(2, '0')).join(''); };
+/* gun shapes: [x, y, w, h, colour]  (64 x 30 box, barrel points right). c=skin colour a=light accent k=gunmetal m=metal g=glow */
+const GUN_PARTS = {
+  g_pistol: [[10,8,30,8,'c'],[40,9,8,4,'m'],[14,16,9,13,'k'],[10,8,30,2,'a']],
+  g_smg: [[2,9,8,6,'k'],[10,8,34,9,'c'],[44,10,12,4,'m'],[22,17,6,12,'k'],[12,17,6,8,'k'],[14,5,16,3,'a']],
+  g_ar: [[0,9,12,9,'k'],[12,8,30,9,'c'],[42,9,14,7,'k'],[56,11,8,3,'m'],[26,17,6,12,'k'],[18,4,12,4,'m'],[14,17,5,8,'k'],[12,8,30,2,'a']],
+  g_shotgun: [[0,10,12,8,'k'],[12,10,26,8,'c'],[38,10,26,4,'m'],[38,14,26,3,'m'],[42,17,12,5,'k'],[14,18,6,8,'k']],
+  g_sniper: [[0,10,14,9,'k'],[14,10,28,6,'c'],[42,11,22,3,'m'],[18,2,20,6,'m'],[20,4,4,2,'g'],[34,16,3,10,'k'],[22,16,5,10,'k']],
+  g_golden: [[0,9,12,9,'k'],[12,8,30,9,'c'],[42,9,14,7,'a'],[56,11,8,3,'m'],[26,17,6,12,'k'],[18,4,12,4,'a'],[14,17,5,8,'k'],[18,12,20,2,'a'],[12,8,30,2,'a']],
+  g_twin: [[4,8,14,9,'k'],[18,5,30,7,'c'],[18,13,30,7,'c'],[48,6,14,4,'m'],[48,14,14,4,'m'],[10,17,6,11,'k'],[20,9,24,2,'a']],
+  g_laser: [[2,10,12,8,'k'],[14,8,30,11,'c'],[44,11,16,5,'m'],[60,12,4,3,'g'],[18,10,22,2,'g'],[18,15,22,2,'g'],[24,19,6,10,'k']],
+  g_inferno: [[2,10,12,9,'k'],[14,7,22,14,'c'],[36,5,24,18,'m'],[58,9,6,10,'g'],[40,9,14,3,'g'],[40,16,14,3,'g'],[18,21,6,8,'k']],
+  g_mini: [[2,9,10,12,'k'],[12,6,22,18,'c'],[34,7,26,3,'m'],[34,12,26,3,'m'],[34,17,26,3,'m'],[60,6,4,15,'g'],[16,24,10,5,'k'],[16,9,14,3,'a']],
+  g_rail: [[0,11,12,8,'k'],[12,9,30,12,'c'],[42,8,22,3,'m'],[42,19,22,3,'m'],[42,12,22,6,'g'],[18,12,16,2,'a'],[16,21,6,8,'k']],
+  g_dragon: [[0,10,12,8,'k'],[12,8,26,11,'c'],[38,6,12,15,'a'],[50,9,12,9,'c'],[60,10,4,7,'g'],[44,3,6,4,'c'],[18,19,6,9,'k']],
+  g_void: [[0,9,13,10,'k'],[13,8,32,10,'c'],[45,10,18,5,'m'],[22,3,14,5,'k'],[26,5,6,2,'g'],[20,11,20,2,'g'],[28,18,6,11,'k']],
+  g_divine: [[0,9,13,11,'a'],[13,7,34,13,'c'],[47,9,16,7,'a'],[63,10,1,5,'g'],[22,3,16,4,'a'],[24,11,22,3,'g'],[26,20,7,9,'k'],[16,4,3,3,'g']],
+};
+const gunItem = g => (g && (ALL_ITEMS[g.id] || Object.values(ALL_ITEMS).find(i => i.slot === 'gun' && i.name === g.name))) || ALL_ITEMS.g_pistol;
+function gunParts(g) {
+  const it = gunItem(g), c = it.color || '#ffd166', pal = { c, a: shade(c, 1.55), k: '#2a2d34', m: '#aeb6c2', g: shade(c, 1.25) };
+  return (GUN_PARTS[it.id] || GUN_PARTS.g_pistol).map(p => ({ x: p[0], y: p[1], w: p[2], h: p[3], col: pal[p[4]], glow: p[4] === 'g' }));
+}
+function drawGun(ctx, g, len) {
+  const ps = gunParts(g); let W = 0; ps.forEach(q => W = Math.max(W, q.x + q.w)); const s = (len || W * .5) / W;
+  ctx.save(); ctx.translate(4, -14 * s); ctx.scale(s, s); ctx.lineWidth = 1.2; ctx.strokeStyle = '#0b0b12';
+  ps.forEach(q => { ctx.fillStyle = q.col; if (q.glow) { ctx.shadowColor = q.col; ctx.shadowBlur = 8; } else ctx.shadowBlur = 0; ctx.fillRect(q.x, q.y, q.w, q.h); ctx.shadowBlur = 0; ctx.strokeRect(q.x, q.y, q.w, q.h); });
+  ctx.restore();
+}
+const gunSVG = (g, h) => { const ps = gunParts(g), c = gunItem(g).color;
+  return `<svg viewBox="-2 -1 68 32" height="${h || 44}" style="filter:drop-shadow(0 0 5px ${c}88)">` + ps.map(p => `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="1.5" fill="${p.col}" stroke="#0b0b12" stroke-width=".9"/>`).join('') + '</svg>'; };
+/* hat drawing on a 60 x 80 character (head centre 30,20) */
+function hatSVG(hat, col) {
+  const R = (x, y, w, h, f, rx) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx || 1}" fill="${f}"/>`;
+  switch (hat) {
+    case '🥷': return R(18, 15, 24, 6, '#111') + R(18, 12, 24, 3, '#e63946') + '<rect x="40" y="14" width="10" height="3" fill="#e63946" transform="rotate(20 40 15)"/>';
+    case '🪖': return '<path d="M17 19a13 13 0 0 1 26 0z" fill="#4f772d" stroke="#2f4a1a"/>' + R(15, 18, 30, 3, '#3a5a22');
+    case '🤖': return R(29, 4, 2, 7, '#adb5bd') + '<circle cx="30" cy="3" r="3" fill="#ff3d3d"/>';
+    case '👑': return '<path d="M19 12l3-10 4 7 4-9 4 9 4-7 3 10z" fill="#ffd700" stroke="#b8860b"/>';
+    case '🎩': return R(16, 11, 28, 3, '#222') + R(21, -2, 18, 13, '#222') + R(21, 6, 18, 3, '#c1121f');
+    case '🧢': return '<path d="M18 17a12 10 0 0 1 24 0z" fill="#3a86ff"/>' + R(30, 15, 17, 3, '#2a63c4');
+    case '🧙': return '<path d="M14 15h32l-16-26z" fill="#4b2e83" stroke="#2c1a52"/>' + R(14, 13, 32, 3, '#4b2e83') + R(21, 8, 18, 2, '#ffd166');
+    case '🎃': return R(28, 5, 4, 6, '#2d6a4f');
+    case '🤠': return '<path d="M8 14q22 8 44 0l-4-3q-18 5-36 0z" fill="#8b5a2b"/><path d="M19 12q-1-9 11-9t11 9z" fill="#a0693a"/>' + R(19, 9, 22, 2, '#5a3a1a');
+    case '👽': return '<path d="M23 11l-5-9M37 11l5-9" stroke="#7cfc00" stroke-width="2"/><circle cx="18" cy="2" r="2.5" fill="#7cfc00"/><circle cx="42" cy="2" r="2.5" fill="#7cfc00"/>';
+    case '🧟': return '<path d="M19 14q3-6 6-3t5-3 6 3 5-1l1 5z" fill="#3b4a3b"/>';
+    case '🧛': return '<path d="M18 18q0-12 12-12t12 12l-6-5-6 4-6-4z" fill="#101018"/>';
+    case '🦸': return R(18, 15, 24, 5, '#d00000', 2) + R(20, 3, 20, 3, '#222');
+    case '🐲': return '<path d="M20 12l-5-12 9 7zM40 12l5-12-9 7z" fill="#ffd166" stroke="#a66b00"/>';
+    case '🔥': return '<path d="M20 12q-2-9 4-11-1 6 3 7 0-8 4-10 1 7 5 8 3-3 4-6 2 8-1 12z" fill="#ff7b00"/><path d="M25 12q0-5 5-7 1 4 4 7z" fill="#ffd166"/>';
+    case '🥋': return R(18, 13, 24, 4, '#ffffff') + R(40, 13, 4, 10, '#ffffff');
+    case '👻': return '';
+    case '🦋': return '<path d="M17 20q-3-16 13-17t13 17q0 14 5 24-9-1-10-10l-2-8H24l-2 8q-1 9-10 10 5-10 5-24z" fill="#5b3a9e"/><text x="23" y="9" font-size="10">🦋</text>';
+    default: return '<path d="M19 17q0-9 11-9t11 9q-6-5-11-4t-11 4z" fill="#4a2f1b"/>';
+  }
+}
+function personSVG(it, h) {
+  const col = it.color || '#4cc9f0', hat = it.hat || '', dk = shade(col, .55);
+  const headCol = { '🤖': '#adb5bd', '🎃': '#ff7f11', '👽': '#7cfc00', '🧟': '#8fbc8f', '🧛': '#efe3e3', '🐲': '#e63946' }[hat] || '#f1c27d';
+  const cape = hat === '🦸' ? '<path d="M18 30l-8 36h40l-8-36z" fill="#d00000"/>' : hat === '🧛' ? '<path d="M18 30l-9 38h42l-9-38z" fill="#5a0a18"/>' : '';
+  const eye = hat === '🤖' ? '#00e5ff' : '#1b1b1b';
+  const op = hat === '👻' ? ' opacity=".6"' : '';
+  const wings = hat === '🦋' ? '<path d="M22 40l8 6 8-6-4 12H26z" fill="#e0c3ff" opacity=".85"/>' : '';
+  return `<svg viewBox="-6 -12 72 96" height="${h || 66}" style="filter:drop-shadow(0 2px 4px #0008)"><g${op}>${cape}` +
+    `<rect x="22" y="52" width="7" height="20" rx="2" fill="${dk}"/><rect x="31" y="52" width="7" height="20" rx="2" fill="${dk}"/><rect x="20" y="70" width="10" height="6" rx="2" fill="#222"/><rect x="30" y="70" width="10" height="6" rx="2" fill="#222"/>` +
+    `<rect x="18" y="30" width="24" height="25" rx="5" fill="${col}"/><rect x="18" y="48" width="24" height="3" fill="${shade(col, .7)}"/>${wings}` +
+    `<rect x="9" y="31" width="9" height="21" rx="4" fill="${col}"/><rect x="42" y="31" width="9" height="21" rx="4" fill="${col}"/><circle cx="13.5" cy="53" r="4" fill="#f1c27d"/><circle cx="46.5" cy="53" r="4" fill="#f1c27d"/>` +
+    `<circle cx="30" cy="21" r="11" fill="${headCol}"/><circle cx="26" cy="21" r="1.6" fill="${eye}"/><circle cx="34" cy="21" r="1.6" fill="${eye}"/><path d="M27 26q3 2 6 0" stroke="#7a3b1e" stroke-width="1.2" fill="none"/>` +
+    hatSVG(hat, col) + '</g></svg>';
+}
+const pip = (x, y) => `<circle cx="${x}" cy="${y}" r="3.2" fill="currentColor"/>`;
+function figure(it) {
+  const s = it.slot, bgc = it.color || it.c1 || it.ring || it.w || '#7c5cff';
+  let svg = '';
+  if (s === 'gun') svg = gunSVG(it, 46);
+  else if (s === 'outfit' || s === 'hero') svg = personSVG(it, 68);
+  else if (s === 'car') svg = `<svg viewBox="0 0 90 44" height="46"><ellipse cx="45" cy="40" rx="36" ry="3" fill="#0006"/><path d="M6 30l4-10q2-5 8-6l14-2 12-8q3-2 8-2h12q6 0 9 5l6 12 5 2q4 1 4 6v4H6z" transform="translate(-4 4) scale(.95)" fill="${it.color}" stroke="#0b0b12" stroke-width="1.4"/><path d="M34 13l10-6h14l7 7-5 3H34z" fill="#bfe9ff" stroke="#0b0b12" stroke-width="1"/><rect x="20" y="30" width="52" height="2" fill="${shade(it.color, 1.5)}"/><circle cx="24" cy="36" r="7" fill="#15151d"/><circle cx="24" cy="36" r="3" fill="#aab"/><circle cx="68" cy="36" r="7" fill="#15151d"/><circle cx="68" cy="36" r="3" fill="#aab"/></svg>`;
+  else if (s === 'ship') svg = `<svg viewBox="0 0 70 70" height="62" style="filter:drop-shadow(0 0 6px ${it.color}99)"><path d="M35 4l9 28 20 20-4 8-18-8-7 12-7-12-18 8-4-8 20-20z" fill="${it.color}" stroke="#0b0b12" stroke-width="1.4"/><ellipse cx="35" cy="30" rx="5" ry="9" fill="#d7f6ff"/><path d="M30 62l5 8 5-8z" fill="#ff9f1c"/><path d="M33 62l2 6 2-6z" fill="#fff3b0"/></svg>`;
+  else if (s === 'snake') { const g = it.c1 === 'rainbow' ? null : it.c1, g2 = it.c2; const cols = i => g ? shade(g, .75 + i * .06) : `hsl(${i * 50},90%,58%)`; svg = '<svg viewBox="0 0 100 50" height="50">' + [0, 1, 2, 3, 4, 5].map(i => `<circle cx="${12 + i * 14}" cy="${30 + Math.sin(i * 1.3) * 11}" r="${8 - i * .2}" fill="${cols(i)}" stroke="${g2}" stroke-width="1.5"/>`).join('') + `<circle cx="92" cy="${30 + Math.sin(7.8) * 11}" r="9" fill="${g || '#ffd54a'}" stroke="${g2}" stroke-width="1.5"/><circle cx="95" cy="${27 + Math.sin(7.8) * 11}" r="2" fill="#111"/><path d="M99 ${31 + Math.sin(7.8) * 11}l6 2" stroke="#e63946" stroke-width="1.5"/></svg>`; }
+  else if (s === 'piece') svg = ['w', 'b'].map(k => `<svg viewBox="0 0 40 56" height="54" style="${it.glow ? 'filter:drop-shadow(0 0 5px ' + it[k] + ')' : ''}"><path d="M20 3v8M16 7h8" stroke="${it[k]}" stroke-width="3"/><path d="M12 18q0-7 8-7t8 7q0 6-5 9 5 4 6 14h4v7H7v-7h4q1-10 6-14-5-3-5-9z" fill="${it[k]}" stroke="${k === 'w' ? '#222' : '#ddd'}" stroke-width="1.4"/></svg>`).join('');
+  else if (s === 'ball') { const c = it.color === 'rainbow' ? '#ff4d6d' : it.color; svg = `<svg viewBox="0 0 50 50" height="50"><defs><radialGradient id="rb${it.id}" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="${c}"/><stop offset="1" stop-color="${shade(c, .45)}"/></radialGradient></defs><circle cx="25" cy="25" r="21" fill="url(#rb${it.id})"/>${it.color === 'rainbow' ? '<path d="M5 25a20 20 0 0 1 40 0z" fill="#ffd54a88"/><path d="M5 25a20 20 0 0 0 40 0z" fill="#3a86ff88"/>' : ''}</svg>`; }
+  else if (s === 'dice') svg = `<div style="width:52px;height:52px;border-radius:12px;background:${it.bg};color:${it.fg};display:grid;place-items:center;${it.glow ? 'box-shadow:0 0 16px ' + it.glow : 'box-shadow:0 3px 8px #0006'}"><svg viewBox="0 0 30 30" width="38" height="38">${pip(7, 7)}${pip(23, 7)}${pip(15, 15)}${pip(7, 23)}${pip(23, 23)}</svg></div>`;
+  else if (s === 'token') svg = `<svg viewBox="0 0 40 52" height="54" style="filter:drop-shadow(0 0 4px ${it.ring}aa)"><ellipse cx="20" cy="46" rx="14" ry="5" fill="${it.ring}"/><path d="M12 44q1-16 8-16t8 16z" fill="${it.dot}" stroke="${it.ring}" stroke-width="2.5"/><circle cx="20" cy="16" r="10" fill="${it.dot}" stroke="${it.ring}" stroke-width="3"/><circle cx="17" cy="13" r="3" fill="#fff8"/></svg>`;
+  else if (s === 'cardback') svg = `<svg viewBox="0 0 44 62" height="60" style="filter:drop-shadow(0 3px 5px #0007)"><rect x="2" y="2" width="40" height="58" rx="6" fill="${it.c2}" stroke="#fff" stroke-width="2"/><ellipse cx="22" cy="31" rx="15" ry="22" fill="${it.c1}" transform="rotate(25 22 31)"/><text x="22" y="37" text-anchor="middle" font-size="15" font-weight="900" fill="#fff" stroke="#000" stroke-width=".8" font-family="Arial Black,sans-serif">UNO</text></svg>`;
+  else if (it.emoji) svg = `<div style="font-size:42px;line-height:1;filter:drop-shadow(0 3px 4px #0007)">${it.emoji}</div>`;
+  else svg = `<div class="sw" style="background:${it.color || '#888'}"></div>`;
+  return `<div class="fig" style="background:radial-gradient(circle at 50% 60%,${bgc}33,transparent 70%)">${svg}</div>`;
+}
+
 /* ------------------------------ core API ------------------------------ */
 const Az = window.Az = {
-  BASE, GAMES, PLACES, SHOP, COIN_RATE, DAILY_BONUS,
+  BASE, GAMES, PLACES, SHOP, COIN_RATE, DAILY_BONUS, figure, gunSVG, gunParts, personSVG, drawGun, gunItem,
   game: id => GAMES.find(g => g.id === id),
   get: k => db()[k],
   set: (k, v) => { db()[k] = v; save(); },
@@ -258,7 +357,7 @@ const Az = window.Az = {
 
   /* utils */
   rng(seed) { let a = (seed >>> 0) || 1; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; },
-  toast(msg, ms) { const t = el('div', 'aztoast', msg); document.body.appendChild(t); setTimeout(() => t.remove(), ms || 2200); },
+  toast(msg, ms) { if (!msg) return; const old = document.querySelector('.aztoast'); if (old) { if (old.textContent === msg) return; old.remove(); } const t = el('div', 'aztoast', msg); document.body.appendChild(t); setTimeout(() => t.remove(), ms || 2200); },
   sfx(t) {
     if (!db().sound) return;
     try {
@@ -320,9 +419,9 @@ Az.setName = function (n) {
 };
 Az.profile = function (first) {
   const m = Az.modal('<div class="azbig">🆔</div><h2 style="text-align:center">' + (first ? 'Welcome! 👋' : 'Your Profile') + '</h2>' +
-    '<p class="sub" style="text-align:center">' + (first ? 'Tumhe ek unique Player ID mil gayi hai. Ab apna naam daalo.' : 'Ye tumhari unique Player ID hai.') + '</p>' +
+    '<p class="sub" style="text-align:center">' + (first ? 'You got a unique Player ID. Now enter your name.' : 'This is your unique Player ID.') + '</p>' +
     '<div class="azrow c"><span class="azpill" id="pfuid" style="font-size:16px;letter-spacing:1px;cursor:pointer" title="Tap to copy"></span></div>' +
-    '<div class="azrow c" style="margin-top:12px"><input id="pfname" maxlength="14" autocomplete="off" placeholder="Apna naam (2-14 letters)" style="width:100%;max-width:260px;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:inherit;font:inherit;text-align:center"></div>' +
+    '<div class="azrow c" style="margin-top:12px"><input id="pfname" maxlength="14" autocomplete="off" placeholder="Your name (2-14 letters)" style="width:100%;max-width:260px;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:inherit;font:inherit;text-align:center"></div>' +
     '<p class="sub" id="pferr" style="text-align:center;color:#ff6b6b;min-height:18px"></p>' +
     '<div class="azrow c"><button class="azbtn" id="pfsave">✅ Save</button><button class="azbtn ghost" id="pfskip">' + (first ? 'Skip' : 'Close') + '</button></div>',
     { sticky: !!first });
@@ -333,13 +432,13 @@ Az.profile = function (first) {
     const bt = document.createElement('button'); bt.className = 'azbtn ghost sm'; bt.textContent = '📷 Phone se photo chuno';
     const rm = document.createElement('button'); rm.className = 'azbtn ghost sm'; rm.textContent = '✖ Photo hatao';
     bt.onclick = () => fi.click(); rm.onclick = () => { db().photo = ''; save(); Az.refresh(); Az.avatarFill(av); };
-    fi.onchange = () => { const f = fi.files && fi.files[0]; if (f) Az.setPhoto(f).then(() => { Az.avatarFill(av); Az.toast('✅ Photo save ho gayi'); }).catch(() => Az.toast('❌ Photo nahi chali, dusri try karo')); };
+    fi.onchange = () => { const f = fi.files && fi.files[0]; if (f) Az.setPhoto(f).then(() => { Az.avatarFill(av); Az.toast('✅ Photo saved'); }).catch(() => Az.toast('❌ That photo did not work, try another one')); };
     const r2 = document.createElement('div'); r2.className = 'azrow c'; r2.append(bt, rm); row.append(av, r2, fi); m.querySelector('#pfuid').parentNode.before(row); }
   const inp = m.querySelector('#pfname'); inp.value = db().nameSet ? db().name : (fbUser && fbUser.displayName ? Az.cleanName(fbUser.displayName) : '');
   if (fbUser) { const ac = document.createElement('p'); ac.className = 'sub'; ac.style.textAlign = 'center'; ac.textContent = '☁️ ' + (fbUser.email || fbUser.phoneNumber || 'Logged in'); m.querySelector('#pfuid').parentNode.after(ac); }
   if (Az.isOwner()) { const dv = document.createElement('div'); dv.className = 'azrow c'; const db2 = document.createElement('button'); db2.className = 'azbtn sm'; db2.textContent = '👑 Developer Mode'; db2.onclick = () => { location.href = BASE + 'owner-admin.html'; }; dv.appendChild(db2); m.querySelector('#pferr').after(dv); }
   setTimeout(() => { try { inp.focus(); } catch (e) {} }, 50);
-  const doSave = () => { if (Az.setName(inp.value)) { m.close(); Az.toast('✅ Naam save: ' + Az.name()); } else m.querySelector('#pferr').textContent = 'Naam kam se kam 2 characters ka ho.'; };
+  const doSave = () => { if (Az.setName(inp.value)) { m.close(); Az.toast('✅ Name saved: ' + Az.name()); } else m.querySelector('#pferr').textContent = 'Name must be at least 2 characters.'; };
   m.addEventListener('click', e => {
     if (e.target.id === 'pfsave') doSave();
     else if (e.target.id === 'pfskip') { db().nameAsked = true; save(); Az.refresh(); m.close(); }
@@ -360,12 +459,12 @@ Az.shop = function (slots, startSlot) {
     const tabs = slots.map(s => `<button class="azchip ${s === cur ? 'on' : ''}" data-s="${s}">${SHOP[s].emoji} ${SHOP[s].title}</button>`).join('');
     const items = SHOP[cur].items.map(it => {
       const own = Az.owned(it.id), eq = Az.eq(cur).id === it.id;
-      const pv = it.bg ? `<div class="pv"><div class="sw" style="background:${it.bg};color:${it.fg};display:grid;place-items:center;font-size:20px;border-radius:10px;${it.glow ? 'box-shadow:0 0 14px ' + it.glow : ''}">⚄</div></div>` : it.ring ? `<div class="pv"><div class="sw" style="background:${it.dot};border-color:${it.ring}"></div></div>` : it.emoji ? `<div class="pv">${it.emoji}</div>` : (it.c1 ? `<div class="pv"><div class="sw" style="background:${it.c1 === 'rainbow' ? 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)' : `linear-gradient(135deg,${it.c1},${it.c2})`}"></div></div>` : (it.w ? `<div class="pv"><div class="sw" style="background:linear-gradient(90deg,${it.w} 50%,${it.b} 50%)"></div></div>` : `<div class="pv"><div class="sw" style="background:${it.color === 'rainbow' ? 'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)' : it.color}">${it.hat || ''}</div></div>`));
+      const pv = `<div class="pv">${figure(it)}</div>`;
       const btn = eq ? '<button class="azbtn sm ghost" disabled>✔ Equipped</button>' : own ? `<button class="azbtn sm" data-eq="${it.id}">Equip</button>` : `<button class="azbtn sm" data-buy="${it.id}" ${Az.coins() < it.price ? 'style="filter:grayscale(.7)"' : ''}>🪙 ${it.price}</button>`;
       return `<div class="azitem ${eq ? 'eq' : ''}">${pv}<b>${it.name}</b><small>${it.desc || ''}</small>${btn}</div>`;
     }).join('');
     $('#shopin', m).innerHTML = `<h2>🛒 Shop</h2><p class="sub">You have <b style="color:var(--a4)">🪙 ${Az.coins()}</b> coins. Earn more by winning levels!</p><div class="azrow">${tabs}</div><div class="azshopgrid">${items}</div><div class="azrow c" style="margin-top:14px"><button class="azbtn ghost" id="shopx">Close</button></div>`;
-   } catch (err) { $('#shopin', m).innerHTML = '<h2>🛒 Shop</h2><p class="sub">Shop load nahi hua: ' + String(err && err.message || err).replace(/[<>&]/g, '') + '</p><div class="azrow c"><button class="azbtn ghost" id="shopx">Close</button></div>'; }
+   } catch (err) { $('#shopin', m).innerHTML = '<h2>🛒 Shop</h2><p class="sub">Could not load the shop: ' + String(err && err.message || err).replace(/[<>&]/g, '') + '</p><div class="azrow c"><button class="azbtn ghost" id="shopx">Close</button></div>'; }
   }
   m.addEventListener('click', e => {
     const t = e.target.closest('button'); if (!t) return;
@@ -451,7 +550,7 @@ function loadFb() {
   if (fbP) return fbP;
   fbP = new Promise((res, rej) => {
     const c = window.AZ_FIREBASE;
-    if (!c || !c.apiKey || /PASTE/.test(c.apiKey)) return rej(new Error('Firebase keys missing. firebase-config.js me apni keys daalo.'));
+    if (!c || !c.apiKey || /PASTE/.test(c.apiKey)) return rej(new Error('Firebase keys missing. Add your keys in firebase-config.js.'));
     const L = ['app', 'auth', 'database'];
     const next = i => {
       if (i === L.length) {
@@ -464,7 +563,7 @@ function loadFb() {
         return;
       }
       const s = document.createElement('script'); s.src = FBV + L[i] + '-compat.js'; s.onload = () => next(i + 1);
-      s.onerror = () => rej(new Error('Login service load nahi hua. Internet check karo.')); document.head.appendChild(s);
+      s.onerror = () => rej(new Error('Login service could not load. Check your internet.')); document.head.appendChild(s);
     };
     next(0);
   });
@@ -481,7 +580,7 @@ function applyGrant(g) {
   const n = Math.round(+g.coins); if (!isFinite(n)) return;
   const was = db().coins;
   db().coins = Math.max(0, Math.min(MAXC, g.mode === 'set' ? n : was + n)); save(); Az.refresh();
-  const d = db().coins - was; Az.toast && Az.toast(g.mode === 'set' ? '🎁 Owner ne tumhare coins ' + db().coins + ' kar diye!' : (d >= 0 ? '🎁 Owner ne +' + d + ' coins bheje!' : '⚠️ Owner ne ' + (-d) + ' coins kam kiye'), 3500);
+  const d = db().coins - was; Az.toast && Az.toast(g.mode === 'set' ? '🎁 The owner set your coins to ' + db().coins + '!' : (d >= 0 ? '🎁 The owner sent you +' + d + ' coins!' : '⚠️ The owner removed ' + (-d) + ' coins'), 3500);
   try { Az.sfx('coin'); } catch (e) {}
 }
 function startGrants(u) {
@@ -505,9 +604,9 @@ function postLogin(u, seq) {
   /* The OWNER ID is decided by the Gmail address itself (client side), so it never depends on whether the Firebase rules
      were published yet. The Firebase RULES still decide the real powers (coins to other players, admin nodes). */
   if (owner && String(db().uid) !== OWNER_UID) { db().uid = OWNER_UID; save(); accountChanged(); }
-  else if (!owner && String(db().uid) === OWNER_UID) { db().uid = genUid(); save(); accountChanged(); Az.toast && Az.toast('🆔 Ye ID sirf owner ki hai — tumhe nayi Player ID mili: ' + db().uid, 4000); }
+  else if (!owner && String(db().uid) === OWNER_UID) { db().uid = genUid(); save(); accountChanged(); Az.toast && Az.toast('🆔 That ID belongs to the owner only — you got a new Player ID: ' + db().uid, 4000); }
   (owner ? fbDb.ref('admin/ping').once('value').then(() => { if (alive()) Az.ownerOK = true; }) : Promise.resolve())
-    .catch(() => { if (alive()) { Az.ownerOK = false; Az.toast && Az.toast('⚠️ Owner ID mili, par Developer coins ke liye Firebase me naya database.rules.json Publish karo.', 5000); } })
+    .catch(() => { if (alive()) Az.ownerOK = false; })
     .then(() => (alive() && owner) ? fbDb.ref('uidIndex/' + OWNER_UID).set(u.uid).catch(() => {}) : null)
     .then(() => {
       if (!alive()) return;
@@ -521,14 +620,14 @@ Az.devSetCoins = function (n) { if (!Az.isOwner()) return false; n = Math.round(
 Az.devAddCoins = function (n) { n = Math.round(+n); return isFinite(n) && Az.devSetCoins(db().coins + n); };
 Az.devGive = function (gid, amount, mode) {
   return Promise.resolve().then(() => {
-    if (!Az.isOwner()) throw new Error('Ye sirf owner ID ' + OWNER_UID + ' ke liye hai.');
-    if (!fbUser || !fbDb) throw new Error('Pehle Google/Phone se login karo.');
-    if (!Az.ownerOK) throw new Error('Owner verify nahi hua. Naya database.rules.json Publish karo aur owner Gmail se login karo (ADMIN-SETUP.txt).');
+    if (!Az.isOwner()) throw new Error('This is only for owner ID ' + OWNER_UID + '.');
+    if (!fbUser || !fbDb) throw new Error('Log in with Google/Phone first.');
+    if (!Az.ownerOK) throw new Error('Owner not verified. Publish the new database.rules.json and log in with the owner Gmail (see ADMIN-SETUP.txt).');
     gid = String(gid || '').replace(/\D/g, ''); amount = Math.round(+amount);
-    if (!/^\d{8}$/.test(gid)) throw new Error('Player ID 8 digit ki honi chahiye.');
-    if (!isFinite(amount) || Math.abs(amount) > 1e9) throw new Error('Coins sahi number me daalo.');
+    if (!/^\d{8}$/.test(gid)) throw new Error('Player ID must be 8 digits.');
+    if (!isFinite(amount) || Math.abs(amount) > 1e9) throw new Error('Enter a valid coin amount.');
     return fbDb.ref('uidIndex/' + gid).once('value').then(s => {
-      const t = s.val(); if (!t) throw new Error('Is Player ID ka account nahi mila. Us player ko ek baar login karke game kholna hoga.');
+      const t = s.val(); if (!t) throw new Error('No account found for this Player ID. That player must log in and open the game once.');
       return fbDb.ref('adminGrants/' + t).push({ coins: amount, mode: mode === 'set' ? 'set' : 'add', ts: firebase.database.ServerValue.TIMESTAMP }).then(() => gid);
     });
   });
@@ -576,10 +675,10 @@ function afterLogin(u) {
     const existed = !!cloud;                                          // did this Gmail already have an account (an ID)?
     if (cloud) {
       cloud = normalize(cloud);
-      if (hadLocal && localD.rev > cloud.rev) { cloudUid = u.uid; doPush(); Az.toast && Az.toast('☁️ Latest progress uploaded'); }   // this device is ahead (cloud write was lost)
-      else { D = cloud; LS.set(ACTIVE_KEY, JSON.stringify(D)); cloudUid = u.uid; Az.toast && Az.toast('☁️ Account progress restored'); }
+      if (hadLocal && localD.rev > cloud.rev) { cloudUid = u.uid; doPush(); }   // this device is ahead (cloud write was lost)
+      else { D = cloud; LS.set(ACTIVE_KEY, JSON.stringify(D)); cloudUid = u.uid; }
     } else {
-      cloudUid = u.uid; D = db(); doPush(); Az.toast && Az.toast('☁️ New account created');
+      cloudUid = u.uid; D = db(); doPush();
     }
     if (lg) linkInto(u, lg, existed);
     accountChanged(); askNameIfNeeded(); postLogin(u, seq);
@@ -618,9 +717,9 @@ function adoptGuest(u, lg, data) {           // move a guest's progress into thi
   D = data; LS.set(ACTIVE_KEY, JSON.stringify(D)); cloudUid = u.uid;
   accountChanged();
   doPush().then(ok => {
-    if (!ok) { Az.toast && Az.toast('⚠️ Cloud save nahi hua — guest progress safe hai, dobara link karo.', 3500); return; }
+    if (!ok) { Az.toast && Az.toast('⚠️ Cloud save failed — your guest progress is safe, please try linking again.', 3500); return; }
     LS.del(GPFX + lg); if (guestId() === lg) rotateGuest();
-    Az.toast && Az.toast('🔗 Guest progress ab ' + (u.email || u.phoneNumber || 'is account') + ' se linked hai ☁️', 3500);
+    Az.toast && Az.toast('🔗 Guest progress is now linked to ' + (u.email || u.phoneNumber || 'this account') + ' ☁️', 3500);
     accountChanged();
   });
   postLogin(u, loadSeq);
@@ -628,10 +727,10 @@ function adoptGuest(u, lg, data) {           // move a guest's progress into thi
 /* RULE: one ID <-> one Gmail. A guest can only be linked to a Gmail that has NO ID yet (a brand-new / never-played one).
    A Gmail that already owns an ID is refused, signed out again, and you are back on your guest (guest is never touched). */
 function linkInto(u, lg, existed) {
-  const g = readGuest(lg); if (!g) { Az.toast && Az.toast('Guest progress nahi mila.'); return; }
+  const g = readGuest(lg); if (!g) { Az.toast && Az.toast('Guest progress not found.'); return; }
   if (!existed || db().rev === 0) return adoptGuest(u, lg, g);
   const mine = String(db().uid), who = esc(u.email || u.phoneNumber || 'Ye Gmail');
-  Az.modal('<div class="azbig">🚫</div><h2 style="text-align:center">Link nahi ho sakta</h2><p class="sub" style="text-align:center"><b>' + who + '</b> pehle se Player ID <b>' + esc(mine) + '</b> se linked hai.<br>Ek ID ke saath sirf ek Gmail aur ek Gmail ke saath sirf ek ID jud sakti hai.<br><br>Guest ko link karne ke liye <b>naya Gmail</b> use karo (jo kabhi login na hua ho).<br>Tumhara guest progress bilkul safe hai.</p><div class="azrow c"><button class="azbtn" onclick="this.closest(\'.azmodal\').remove()">OK</button></div>', {});
+  Az.modal('<div class="azbig">🚫</div><h2 style="text-align:center">Cannot link</h2><p class="sub" style="text-align:center"><b>' + who + '</b> is already linked to Player ID <b>' + esc(mine) + '</b>.<br>One ID can link to only one Gmail, and one Gmail to only one ID.<br><br>To link this guest, use a <b>new Gmail</b> (one that has never logged in).<br>Your guest progress is completely safe.</p><div class="azrow c"><button class="azbtn" onclick="this.closest(\'.azmodal\').remove()">OK</button></div>', {});
   Az.logout();                                // straight back to the guest
 }
 
@@ -652,23 +751,23 @@ Az.login = function () {
       '<div style="flex:1;min-width:120px"><b>' + esc(g.name) + '</b><br><small style="color:var(--muted)">🆔 ' + esc(g.uid) + ' · 🪙 ' + g.coins + ' · Lv ' + lvOfXp(g.xp) + '</small></div>' +
       tag + (act ? '' : b('gsw', '▶ Use')) + b('gdel', '🗑', 1) + '</div>';
   };
-  const drawGuests = () => { const c = m.querySelector('#glist'); if (c) c.innerHTML = listGuests().map(gRow).join('') || '<p class="sub" style="text-align:center">Koi saved guest nahi.</p>'; };
-  const guestBlock = '<div class="azlbl">👥 Is device ke saved guests</div><div id="glist"></div><div class="azrow c"><button class="azbtn ghost sm" id="gnew">➕ Naya guest banao</button></div>';
+  const drawGuests = () => { const c = m.querySelector('#glist'); if (c) c.innerHTML = listGuests().map(gRow).join('') || '<p class="sub" style="text-align:center">No saved guests.</p>'; };
+  const guestBlock = '<div class="azlbl">👥 Guests saved on this device</div><div id="glist"></div><div class="azrow c"><button class="azbtn ghost sm" id="gnew">➕ Create new guest</button></div>';
   if (fbUser) {
     const who = esc(fbUser.email || fbUser.phoneNumber || fbUser.displayName || '');
-    box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + who + '<br>Player ID: <b>' + esc(Az.uid()) + '</b><br>Profile cloud me saved hai ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div><p class="sub" style="text-align:center;font-size:11px">Logout karte hi tumhara guest progress khul jayega (guest ka progress kabhi delete nahi hota).</p><p class="sub" style="text-align:center;font-size:10px;word-break:break-all;opacity:.7">Firebase UID (tap to copy):<br><span id="fbuid" style="cursor:pointer"></span></p>';
+    box().innerHTML = '<div class="azbig">👤</div><h2 style="text-align:center">Logged in</h2><p class="sub" style="text-align:center">' + who + '<br>Player ID: <b>' + esc(Az.uid()) + '</b><br>Profile cloud me saved hai ☁️</p><div class="azrow c"><button class="azbtn ghost" id="lo">Logout</button></div><p class="sub" style="text-align:center;font-size:11px">After logging out your guest progress opens again (guest progress is never deleted).</p><p class="sub" style="text-align:center;font-size:10px;word-break:break-all;opacity:.7">Firebase UID (tap to copy):<br><span id="fbuid" style="cursor:pointer"></span></p>';
     const fu = box().querySelector('#fbuid'); fu.textContent = fbUser.uid; fu.onclick = () => { try { navigator.clipboard.writeText(fbUser.uid); Az.toast('📋 Firebase UID copied'); } catch (x) {} };
     m.addEventListener('click', e => {
       const t = e.target.closest('button'); if (!t || t.id !== 'lo') return;
-      t.disabled = true; t.textContent = 'Logging out…'; Az.logout().then(() => { m.close(); Az.toast && Az.toast('👋 Logout ho gaya — guest progress wapas'); });
+      t.disabled = true; t.textContent = 'Logging out…'; Az.logout().then(() => { m.close(); Az.toast && Az.toast('👋 Logged out — guest progress restored'); });
     });
     return m;
   }
   const me = db();
   box().innerHTML = '<div class="azbig">📱</div><h2 style="text-align:center">Login / Guest</h2>' +
-    '<p class="sub" style="text-align:center">Abhi tum <b>Guest</b> ho: ' + esc(Az.name()) + ' · 🆔 ' + esc(me.uid) + ' · 🪙 ' + me.coins + '</p>' +
-    '<p class="sub" style="text-align:center">Har Gmail ka apna alag progress hota hai. Naya Gmail = bilkul naya account. Purana Gmail = uska purana progress.</p>' +
-    '<div class="azrow c" style="flex-direction:column;align-items:center"><button class="azbtn" id="gg">🔵 Google (Gmail) se login</button><button class="azbtn ghost" id="gl">🔗 Is guest ko NAYE Gmail se link karo</button></div><p class="sub" style="text-align:center;font-size:11px">Link sirf aise Gmail se ho sakta hai jo pehle kisi ID se linked nahi hai. Ek ID = ek Gmail.</p>' +
+    '<p class="sub" style="text-align:center">You are currently a <b>Guest</b>: ' + esc(Az.name()) + ' · 🆔 ' + esc(me.uid) + ' · 🪙 ' + me.coins + '</p>' +
+    '<p class="sub" style="text-align:center">Every Gmail has its own separate progress. A new Gmail = a brand-new account. An old Gmail = its old progress.</p>' +
+    '<div class="azrow c" style="flex-direction:column;align-items:center"><button class="azbtn" id="gg">🔵 Log in with Google (Gmail)</button><button class="azbtn ghost" id="gl">🔗 Link this guest to a NEW Gmail</button></div><p class="sub" style="text-align:center;font-size:11px">Link sirf aise Gmail se ho sakta hai jo pehle kisi ID se linked nahi hai. Ek ID = ek Gmail.</p>' +
     '<p class="sub" style="text-align:center;margin-top:12px">ya phone OTP se:</p><div class="azrow c"><input class="azinput" id="ph" type="tel" placeholder="98765 43210" style="width:210px;letter-spacing:1px"></div><div class="azrow c" id="otpr" style="display:none"><input class="azinput" id="otp" inputmode="numeric" maxlength="6" placeholder="OTP"></div><div class="azerr" id="lerr"></div><div class="azrow c"><button class="azbtn" id="sn">Send OTP</button></div><div id="rc"></div>' + guestBlock;
   drawGuests();
   const err = t => { const e = box() && box().querySelector('#lerr'); if (e) e.textContent = t; }; let conf = null, ver = null;
@@ -678,24 +777,24 @@ Az.login = function () {
       const p = new firebase.auth.GoogleAuthProvider();
       p.setCustomParameters({ prompt: 'select_account' });   // always show the Gmail chooser, so a 2nd Gmail can really be picked
       return firebase.auth().signInWithPopup(p);
-    }).then(() => { m.close(); if (!link) Az.toast && Az.toast('✅ Login ho gaya!'); })
-      .catch(x => { linkG = null; err(x.code === 'auth/popup-closed-by-user' ? 'Login cancel hua.' : (x.code === 'auth/popup-blocked' ? 'Popup block hua — browser me popup allow karo.' : (x.message || 'Google login fail hua.'))); });
+    }).then(() => { m.close(); if (!link) Az.toast && Az.toast('✅ Logged in!'); })
+      .catch(x => { linkG = null; err(x.code === 'auth/popup-closed-by-user' ? 'Login cancel hua.' : (x.code === 'auth/popup-blocked' ? 'Popup blocked — please allow popups in your browser.' : (x.message || 'Google login fail hua.'))); });
   };
   m.addEventListener('click', e => {
     const t = e.target.closest('button'); if (!t) return;
     if (t.id === 'gg') google(false);
     else if (t.id === 'gl') google(true);
     else if (t.dataset.gsw) Az.switchGuest(t.dataset.gsw);
-    else if (t.dataset.gdel) { if (confirm('Ye guest aur uska progress hamesha ke liye delete ho jayega. Pakka?')) { Az.deleteGuest(t.dataset.gdel); drawGuests(); } }
+    else if (t.dataset.gdel) { if (confirm('This guest and its progress will be deleted forever. Are you sure?')) { Az.deleteGuest(t.dataset.gdel); drawGuests(); } }
     else if (t.id === 'gnew') Az.newGuest();
     else if (t.id === 'sn' && !conf) {
       let n = box().querySelector('#ph').value.replace(/[\s-]/g, ''); if (!n.startsWith('+')) n = '+91' + n.replace(/^0+/, '');
-      if (n.length < 12) return err('Sahi phone number daalo.'); err('OTP bhej raha hoon…');
+      if (n.length < 12) return err('Enter a valid phone number.'); err('Sending OTP…');
       loadFb().then(() => { ver = ver || new firebase.auth.RecaptchaVerifier(box().querySelector('#rc'), { size: 'invisible' }); return firebase.auth().signInWithPhoneNumber(n, ver); })
         .then(c => { conf = c; err(''); box().querySelector('#otpr').style.display = ''; t.textContent = 'Verify OTP'; })
-        .catch(x => err(x.message || 'OTP nahi gaya. Dobara try karo.'));
+        .catch(x => err(x.message || 'OTP could not be sent. Try again.'));
     } else if (t.id === 'sn' && conf) {
-      conf.confirm(box().querySelector('#otp').value.trim()).then(() => { m.close(); Az.toast && Az.toast('✅ Login ho gaya!'); }).catch(() => err('Galat OTP. Dobara try karo.'));
+      conf.confirm(box().querySelector('#otp').value.trim()).then(() => { m.close(); Az.toast && Az.toast('✅ Logged in!'); }).catch(() => err('Wrong OTP. Try again.'));
     }
   });
   return m;
@@ -748,7 +847,7 @@ Az.start = function (cfg) {
         peer.on('open', () => {
           const conn = peer.connect('azgz-' + code, { reliable: true }); const net = mkNet(conn, false);
           net._start = s => { if (done) return; done = true; begin({ mode: 'online', diff: s.diff, level: 1, extra: s.extra || {}, seed: s.seed, net, host: false }); };
-          setTimeout(() => { if (!done) { err('Connect nahi hua. Code dobara check karo, dono net chalu rakho, aur ek hi WiFi par try karo.'); info(''); } }, 25000);
+          setTimeout(() => { if (!done) { err('Could not connect. Check the code, keep both devices online, and try the same WiFi.'); info(''); } }, 25000);
         });
       }
     }).catch(e => { err(e.message); info(''); });

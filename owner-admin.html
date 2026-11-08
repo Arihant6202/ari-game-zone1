@@ -23,8 +23,8 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
   <h1 style="text-align:center">👑 Developer Mode</h1>
   <div id="deny" class="box" hidden>
     <h2>🔒 Access denied</h2>
-    <p class="sub">Ye page sirf owner Player ID <b>97835276</b> ke liye hai. Is account ki ID: <b id="myid">—</b></p>
-    <p class="sub">Agar tum owner ho: Google se login karo, aur <b>database.rules.json</b> me apna Firebase Auth UID daalke Publish karo (ADMIN-SETUP.txt me steps hain). Uske baad ye account apne aap ID 97835276 ban jayega.</p>
+    <p class="sub">This page is only for owner Player ID <b>97835276</b>. This account's ID: <b id="myid">—</b></p>
+    <p class="sub">If you are the owner: log in with Google and publish <b>database.rules.json</b> in Firebase (steps are in ADMIN-SETUP.txt). After that this account becomes ID 97835276 automatically.</p>
     <div class="azrow c"><button class="azbtn" id="dologin">👤 Login</button></div>
   </div>
 
@@ -39,9 +39,9 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     </div>
 
     <div class="box">
-      <h2>🪙 Apne coins</h2>
+      <h2>🪙 Your coins</h2>
       <div class="big">🪙 <span id="mycoins">0</span></div>
-      <p class="sub" style="text-align:center">Sirf tumhare apne account ke coins (0 se 999,999,999).</p>
+      <p class="sub" style="text-align:center">Only your own account's coins (0 to 999,999,999).</p>
       <div class="azrow c"><input class="azinput" id="selfAmt" type="number" inputmode="numeric" placeholder="Coins (number)"></div>
       <div class="azrow c">
         <button class="azbtn sm" id="selfSet">= Set</button>
@@ -58,20 +58,20 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     </div>
 
     <div class="box">
-      <h2>🎁 Dusre player ko coins</h2>
-      <p class="sub">Player ki 8 digit ID daalo. Coins us player ke account me tab pahunchte hain jab wo online aata hai (turant, agar abhi online hai).</p>
+      <h2>🎁 Coins for another player</h2>
+      <p class="sub">Enter the player's 8-digit ID. The coins reach that player's account when they come online (instantly if they are online now).</p>
       <div class="azrow c"><input class="azinput" id="gid" inputmode="numeric" maxlength="8" placeholder="Player ID (8 digit)"></div>
       <div class="azrow c"><input class="azinput" id="gAmt" type="number" inputmode="numeric" placeholder="Coins (number)"></div>
       <div class="azrow c">
-        <button class="azbtn sm" id="gAdd">🎁 Bhejo (+)</button>
-        <button class="azbtn sm ghost" id="gSub">⛔ Kam karo (−)</button>
-        <button class="azbtn sm ghost" id="gSet">= Set karo</button>
+        <button class="azbtn sm" id="gAdd">🎁 Send (+)</button>
+        <button class="azbtn sm ghost" id="gSub">⛔ Remove (−)</button>
+        <button class="azbtn sm ghost" id="gSet">= Set</button>
       </div>
     </div>
     <div id="log"></div>
   </div>
 </main>
-<script src="az.js?v=6"></script>
+<script src="az.js?v=7"></script>
 <script>
 (function(){
   const $=id=>document.getElementById(id);
@@ -88,20 +88,20 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     $('stLogin').className='azpill '+(acc?'ok':'no');
     $('stOwner').textContent=Az.ownerOK?'🔑 Owner verified':'🔑 Not verified';
     $('stOwner').className='azpill '+(Az.ownerOK?'ok':'no');
-    $('stHelp').textContent=Az.ownerOK?'Sab ready hai: dusre players ko coins bhej sakte ho.':(acc?'Dusre players ko coins bhejne ke liye naye database.rules.json ko Firebase Rules me Publish karo aur kumararihant625@gmail.com se login karo.':'Dusre players ko coins bhejne ke liye pehle Google se login karo. Apne coins abhi bhi badal sakte ho.');
+    $('stHelp').textContent=Az.ownerOK?'All ready: you can send coins to other players.':(acc?'To send coins to other players, publish the new database.rules.json in Firebase Rules and log in with kumararihant625@gmail.com.':'To send coins to other players, log in with Google first. You can still change your own coins.');
   }
   const num=id=>{const v=Math.round(+$(id).value);return isFinite(v)&&$(id).value!==''?v:null;};
   $('dologin').onclick=()=>Az.login();
-  $('selfSet').onclick=()=>{const n=num('selfAmt');if(n==null||n<0)return log('Sahi coins number daalo (0 ya zyada).',1);Az.devSetCoins(n);paint();log('✅ Coins set: '+Az.coins());};
-  $('selfAdd').onclick=()=>{const n=num('selfAmt');if(n==null||n<0)return log('Sahi coins number daalo.',1);Az.devAddCoins(n);paint();log('✅ +'+n+' → ab '+Az.coins());};
-  $('selfSub').onclick=()=>{const n=num('selfAmt');if(n==null||n<0)return log('Sahi coins number daalo.',1);Az.devAddCoins(-n);paint();log('✅ −'+n+' → ab '+Az.coins());};
+  $('selfSet').onclick=()=>{const n=num('selfAmt');if(n==null||n<0)return log('Enter a valid coin amount (0 or more).',1);Az.devSetCoins(n);paint();log('✅ Coins set: '+Az.coins());};
+  $('selfAdd').onclick=()=>{const n=num('selfAmt');if(n==null||n<0)return log('Enter a valid coin amount.',1);Az.devAddCoins(n);paint();log('✅ +'+n+' → now '+Az.coins());};
+  $('selfSub').onclick=()=>{const n=num('selfAmt');if(n==null||n<0)return log('Enter a valid coin amount.',1);Az.devAddCoins(-n);paint();log('✅ −'+n+' → now '+Az.coins());};
   $('selfMax').onclick=()=>{Az.devSetCoins(999999999);paint();log('✅ MAX coins set.');};
-  document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{Az.devAddCoins(+b.dataset.q);paint();log('✅ Ab '+Az.coins()+' coins.');});
+  document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{Az.devAddCoins(+b.dataset.q);paint();log('✅ Now '+Az.coins()+' coins.');});
   function give(sign,mode){
-    const n=num('gAmt');if(n==null||n<0)return log('Sahi coins number daalo (0 ya zyada).',1);
+    const n=num('gAmt');if(n==null||n<0)return log('Enter a valid coin amount (0 or more).',1);
     const gid=$('gid').value.replace(/\D/g,'');
-    log('Bhej raha hoon…');
-    Az.devGive(gid,mode==='set'?n:sign*n,mode).then(g=>log('✅ Player '+g+' ke liye '+(mode==='set'?'set ':(sign>0?'+':'−'))+n+' coins bhej diye.\nJab wo online hoga tab apply honge.')).catch(e=>log('❌ '+(e&&e.message||'Error: rules check karo'),1));
+    log('Sending…');
+    Az.devGive(gid,mode==='set'?n:sign*n,mode).then(g=>log('✅ Sent to player '+g+': '+(mode==='set'?'set ':(sign>0?'+':'−'))+n+' coins.\nThey apply when the player is online.')).catch(e=>log('❌ '+(e&&e.message||'Error: check the database rules'),1));
   }
   $('gAdd').onclick=()=>give(1,'add');$('gSub').onclick=()=>give(-1,'add');$('gSet').onclick=()=>give(1,'set');
   document.addEventListener('az-ready',()=>{paint();Az.whenAuth().then(paint);});

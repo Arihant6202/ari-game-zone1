@@ -91,7 +91,10 @@ a{color:inherit}
 .azshopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
 .azitem{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center}
 .azitem.eq{border-color:var(--a3);box-shadow:0 0 18px -8px var(--a3)}
-.azitem .pv{font-size:34px;height:48px;display:grid;place-items:center}
+.azitem .pv{font-size:34px;height:78px;display:grid;place-items:center}
+.azitem .fig{width:100%;height:100%;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:2px;overflow:hidden}
+.azitem .fig svg{max-width:100%}
+.azitem.eq .fig{box-shadow:inset 0 0 0 1px var(--a3)}
 .azitem .sw{width:38px;height:38px;border-radius:50%;margin:auto;border:3px solid rgba(255,255,255,.7)}
 .azitem b{display:block;font-size:13px}.azitem small{display:block;color:var(--muted);font-size:11px;min-height:28px}
 .azitem .azbtn{width:100%;margin-top:6px}
@@ -127,7 +130,7 @@ a{color:inherit}
   <div class="azmsg" id="msg">&nbsp;</div>
   <div class="azctl"><button class="azbtn ghost sm" id="bRestart">🔄 Restart</button><button class="azbtn ghost sm" id="bMenu">⚙️ Menu</button></div>
 </main>
-<script src="az.js?v=6"></script>
+<script src="az.js?v=7"></script>
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
@@ -171,7 +174,7 @@ function setup() {
   $('bMenu').onclick = () => { try { net && net.close(); } catch (e) {} location.reload(); };
   $('dice').onclick = () => { if (phase === 'roll' && !busy && !isBot(cur) && isMine(cur)) { net && net.send({ t: 'roll' }); doRoll(); } };
   $('svg').onclick = e => { const g = e.target.closest('.tk'); if (g) tap(+g.dataset.s, +g.dataset.k); };
-  if (net) { net.on(m => { inbox.push(m); pump(); }); net.onclose(() => { if (!over) { over = true; Az.finish({ game: 'ludo', level: 1, diff: 'medium', progress: false, won: true, base: 20, title: 'Friend left', sub: 'Dost game chhod gaya.', retry: () => location.reload() }); } }); }
+  if (net) { net.on(m => { inbox.push(m); pump(); }); net.onclose(() => { if (!over) { over = true; Az.finish({ game: 'ludo', level: 1, diff: 'medium', progress: false, won: true, base: 20, title: 'Friend left', sub: 'Your friend left the game.', retry: () => location.reload() }); } }); }
   build(); applySkins(); render(); turnStart();
 }
 function applySkins() {      // shop items: dice + token skins
@@ -195,7 +198,7 @@ function afterRoll() {
   const s = seats[cur]; sixes = dice === 6 ? sixes + 1 : 0;
   if (sixes >= 3) { msg(nm(cur) + ': teen 6, baari gayi'); sixes = 0; return T(next, 900); }
   mv = [0, 1, 2, 3].filter(k => can(s.toks[k], dice));
-  if (!mv.length) { msg('Koi chaal nahi'); return T(() => dice === 6 ? turnStart() : next(), 800); }
+  if (!mv.length) { msg('No valid move'); return T(() => dice === 6 ? turnStart() : next(), 800); }
   if (mv.length === 1) return T(() => doMove(mv[0]), 350);
   if (isBot(cur)) return T(() => doMove(botPick()), 500);
   phase = 'pick'; ui(); render(); pump();
@@ -229,7 +232,7 @@ const _dm = doMove; doMove = function (k) { lm = k; _dm(k); };
 function next() { cur = (cur + 1) % seats.length; sixes = 0; turnStart(); }
 function end(i) {
   over = true; const won = mode === 'local' ? true : mode === 'single' ? i === 0 : i === mine;
-  Az.finish({ game: 'ludo', level: 1, diff: 'medium', progress: false, won, base: mode === 'local' ? 15 : 30, title: nm(i) + ' jeet gaya! 🎉', sub: 'Sabhi 4 goti ghar pahunch gayi.', retry: () => mode === 'online' ? location.reload() : setup() });
+  Az.finish({ game: 'ludo', level: 1, diff: 'medium', progress: false, won, base: mode === 'local' ? 15 : 30, title: nm(i) + ' wins! 🎉', sub: 'All 4 tokens reached home.', retry: () => mode === 'online' ? location.reload() : setup() });
 }
 function msg(t) { $('msg').textContent = t; }
 function xy(i, k) {
@@ -251,7 +254,7 @@ function ui() {
   $('dice').disabled = !ok; $('dice').classList.toggle('go', ok);
   $('hTurn').innerHTML = `<span style="color:${COL[seats[cur].c]}">●</span> ${esc(nm(cur))}`;
   $('legend').innerHTML = seats.map((s, i) => `<span class="azpill" style="${i === cur ? 'outline:2px solid ' + COL[s.c] : ''}"><span style="color:${COL[s.c]}">●</span> ${esc(nm(i))} · 🏠${s.toks.filter(q => q === 56).length}/4</span>`).join('');
-  msg(ok ? '🎲 Dice par tap karo' : (isBot(cur) || !isMine(cur)) ? '⏳ ' + nm(cur) + ' ki baari…' : '');
+  msg(ok ? '🎲 Tap the dice' : (isBot(cur) || !isMine(cur)) ? '⏳ ' + nm(cur) + ' is playing…' : '');
   render();
 }
 const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

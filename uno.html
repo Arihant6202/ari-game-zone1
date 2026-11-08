@@ -91,7 +91,10 @@ a{color:inherit}
 .azshopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
 .azitem{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center}
 .azitem.eq{border-color:var(--a3);box-shadow:0 0 18px -8px var(--a3)}
-.azitem .pv{font-size:34px;height:48px;display:grid;place-items:center}
+.azitem .pv{font-size:34px;height:78px;display:grid;place-items:center}
+.azitem .fig{width:100%;height:100%;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:2px;overflow:hidden}
+.azitem .fig svg{max-width:100%}
+.azitem.eq .fig{box-shadow:inset 0 0 0 1px var(--a3)}
 .azitem .sw{width:38px;height:38px;border-radius:50%;margin:auto;border:3px solid rgba(255,255,255,.7)}
 .azitem b{display:block;font-size:13px}.azitem small{display:block;color:var(--muted);font-size:11px;min-height:28px}
 .azitem .azbtn{width:100%;margin-top:6px}
@@ -144,6 +147,16 @@ a{color:inherit}
 .uact .azbtn{font-size:15px}
 .unobtn{background:linear-gradient(135deg,#e53935,#fbc02d)!important;color:#fff!important;text-shadow:0 1px 2px #0008}
 .uanim{animation:azpop .35s}
+.uland{animation:uland .38s cubic-bezier(.2,1.4,.4,1)}
+@keyframes uland{from{transform:translateY(-60px) scale(1.5) rotate(-18deg);opacity:0}}
+.uunofx{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:150;font-family:Orbitron,sans-serif;font-weight:900;font-size:clamp(40px,14vw,90px);color:#fff;text-shadow:0 0 30px #ff3d9a,0 4px 0 #e53935;pointer-events:none;animation:uunofx 1.1s ease-out forwards}
+@keyframes uunofx{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-12deg)}25%{opacity:1;transform:translate(-50%,-50%) scale(1.15) rotate(4deg)}100%{opacity:0;transform:translate(-50%,-80%) scale(1)}}
+.ubot.turn .n::after{content:' 🤔';font-size:14px}
+.uhand.many button.card.uc{margin-left:-26px}
+.uhand.many button.card.uc:first-of-type{margin-left:0}
+.card.uc::after{content:'';position:absolute;inset:0;border-radius:9px;background:linear-gradient(135deg,rgba(255,255,255,.28),transparent 45%);pointer-events:none}
+#draw:not(:disabled){animation:udp 1.6s ease-in-out infinite}
+@keyframes udp{50%{box-shadow:0 0 0 4px var(--ring)}}
 .ucover{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:rgba(8,4,20,.94);text-align:center;padding:20px}
 .ucover .box{max-width:380px}
 .upick{display:grid;grid-template-columns:repeat(2,90px);gap:10px;justify-content:center;margin:14px 0}
@@ -159,12 +172,12 @@ a{color:inherit}
     <div style="text-align:center"><div id="top"></div><small style="color:var(--muted)">Discard</small></div>
     <div style="text-align:center"><div class="ucol" id="col" style="color:#e53935;background:#e53935"></div><small style="color:var(--muted)">Colour</small></div>
   </div>
-  <div class="azmsg" id="msg">Game shuru!</div>
+  <div class="azmsg" id="msg">Game started!</div>
   <div class="uact"><button class="azbtn ghost" id="draw">🂠 Draw card</button><button class="azbtn ghost" id="pass" hidden>⏭ Pass</button><button class="azbtn unobtn" id="uno">🔔 UNO!</button><button class="azbtn ghost sm" id="rst">🔄 New game</button></div>
   <div class="uhand" id="hand"></div>
-  <p class="azmsg" style="color:var(--muted);font-size:12px;font-weight:400">Colour ya number match karo • Skip ⊘ • Reverse ⇄ • +2 • Wild • Wild +4 • Last se pehle card par <b>UNO!</b> dabana mat bhoolna (warna +2 penalty)</p>
+  <p class="azmsg" style="color:var(--muted);font-size:12px;font-weight:400">Match colour or number • Skip ⊘ • Reverse ⇄ • +2 • Wild • Wild +4 • Don't forget to press <b>UNO!</b> on your second-to-last card (or take a +2 penalty)</p>
 </main>
-<script src="az.js?v=6"></script>
+<script src="az.js?v=7"></script>
 <script>
 (function(){
 'use strict';
@@ -174,26 +187,26 @@ const SYM={skip:'⊘',rev:'⇄',d2:'+2',w:'W',w4:'+4'};
 function mkDeck(){const a=[];COLORS.forEach(c=>{a.push({c,v:'0'});for(let n=1;n<=9;n++){a.push({c,v:''+n},{c,v:''+n});}['skip','rev','d2'].forEach(v=>a.push({c,v},{c,v}));});for(let i=0;i<4;i++)a.push({c:'wild',v:'w'},{c:'wild',v:'w4'});return shuffle(a);}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 const pts=c=>/^\d$/.test(c.v)?+c.v:(c.c==='wild'?50:20);
-let O=null,G=null,botT=0,unoT=0,lastMsg='',lastSent='',shownEnd=false;
+let O=null,G=null,botT=0,unoT=0,lastMsg='',lastSent='',shownEnd=false,topKey='';
 const peerName=()=>(O&&O.net&&O.net.peer&&O.net.peer.name)||'Friend';
 function applyBack(){const b=Az.eq('cardback'),r=document.documentElement.style;r.setProperty('--cb1',b.c1||'#e53935');r.setProperty('--cb2',b.c2||'#111');}
 
 function nextIdx(p,s){const n=G.hands.length;return ((p+G.dir*s)%n+n)%n;}
 function drawCard(){if(!G.deck.length){const top=G.disc.pop();G.deck=shuffle(G.disc.map(c=>c.c==='wild'?{c:'wild',v:c.v}:c));G.disc=[top];}return G.deck.pop();}
 function give(p,n){for(let i=0;i<n;i++){const c=drawCard();if(c)G.hands[p].push(c);}G.said[p]=false;}
-function playable(c){return c.c==='wild'||c.c===G.color||c.v===G.top.v;}
+function playable(c){if(G.pend>0)return c.v==='d2'||c.v==='w4';return c.c==='wild'||c.c===G.color||c.v===G.top.v;}
 function msg(t){lastMsg=t;$('msg').textContent=t;}
 
 function newGame(){
   clearTimeout(botT);clearTimeout(unoT);
   const online=O.mode==='online',n=online?2:+(O.extra.n||2),single=O.mode==='single';
-  G={online,me:online?0:0,winner:null,pts:null,n,single,deck:mkDeck(),disc:[],hands:Array.from({length:n},()=>[]),said:Array(n).fill(false),turn:0,dir:1,color:'red',top:null,drew:false,over:false,wait:false,
+  G={online,me:online?0:0,winner:null,pts:null,n,single,deck:mkDeck(),disc:[],hands:Array.from({length:n},()=>[]),said:Array(n).fill(false),turn:0,dir:1,color:'red',top:null,drew:false,over:false,pend:0,stack:!!(O.extra&&O.extra.stack==='1')||false,wait:false,
      names:online?[Az.name(),peerName()]:Array.from({length:n},(_,i)=>single?(i===0?'You':'Bot '+i):'Player '+(i+1)),bot:Array.from({length:n},(_,i)=>single&&i>0),cover:false,penalty:null};
   for(let p=0;p<n;p++)for(let i=0;i<7;i++)G.hands[p].push(G.deck.pop());
   let c;do{c=G.deck.pop();if(!/^\d$/.test(c.v)){G.deck.unshift(c);c=null;}}while(!c);
   G.top=c;G.disc.push(c);G.color=c.c;
   $('hMode').textContent=online?'🌐 Online 1v1':single?('🤖 vs '+(n-1)+' bot'+(n>2?'s':'')):('👥 '+n+' players');
-  shownEnd=false;msg(online?'Game shuru! '+G.names[0]+' pehle khelega.':'Game shuru! Tum pehle.');startTurn();
+  shownEnd=false;msg(online?'Game started! '+G.names[0]+' plays first.':'Game started! You go first.');startTurn();
 }
 function cardEl(c,opt){opt=opt||{};const b=document.createElement(opt.btn?'button':'div');b.className='card uc '+(opt.back?'back':c.c)+(opt.cls?' '+opt.cls:'');
   if(opt.back){b.innerHTML='<span>UNO</span>';return b;}
@@ -206,23 +219,24 @@ function render(){
   if(!G)return;
   if(G.online&&O.host){G.names=[Az.name(),peerName()];}
   $('hDeck').textContent='🂠 '+G.deck.length;
-  $('hTurn').textContent=G.over?'Game over':(G.names[G.turn]+' ki baari');
+  $('hTurn').textContent=G.over?'Game over':(G.names[G.turn]+"'s turn");
   $('dir').textContent=G.dir>0?'↻':'↺';
   const col=$('col');col.style.background=CHEX[G.color]||'#888';col.style.color=CHEX[G.color]||'#888';
-  const tp=$('top');tp.innerHTML='';const te=cardEl(G.top);te.classList.add('uanim');tp.appendChild(te);
+  const tp=$('top');tp.innerHTML='';tp.style.position='relative';const below=G.disc&&G.disc.length>1?G.disc.slice(-3,-1):[];below.forEach((bc,k)=>{const be=cardEl(bc);be.style.cssText='position:absolute;left:0;top:0;transform:rotate('+((k?1:-1)*(7+k*4))+'deg);opacity:.85;filter:brightness(.7)';tp.appendChild(be);});const te=cardEl(G.top);if(topKey!==G.top.c+G.top.v+G.disc.length)te.classList.add('uland');te.style.position='relative';topKey=G.top.c+G.top.v+(G.disc?G.disc.length:0);tp.appendChild(te);if(below.length)tp.style.minHeight='106px';
   const dp=$('drawpile');dp.innerHTML='';dp.appendChild(cardEl(null,{back:1}));
   const bots=$('bots');bots.innerHTML='';
   G.names.forEach((nm,i)=>{ if(G.online?i===G.me:(G.single&&i===0))return;
     const d=document.createElement('div');d.className='ubot'+(G.turn===i&&!G.over?' turn':'');
     const k=Math.min(G.hands[i].length,10);d.innerHTML='<b></b><div class="n">'+G.hands[i].length+'</div><div class="fan">'+'<i></i>'.repeat(k)+'</div>';
     d.querySelector('b').textContent=nm+(G.hands[i].length===1?' · UNO!':'');bots.appendChild(d);});
-  const me=G.online?G.me:(G.single?0:G.turn),hand=$('hand');hand.innerHTML='';
+  const me=G.online?G.me:(G.single?0:G.turn),hand=$('hand');hand.innerHTML='';hand.className='uhand'+(G.hands[me]&&G.hands[me].length>9?' many':'');
   const isMyTurn=!G.over&&!G.bot[G.turn]&&!G.wait&&!G.cover&&(!G.online||G.turn===G.me);
-  const h3=document.createElement('h3');h3.textContent=(G.single||G.online)?('Tumhare cards ('+G.hands[me].length+')'):(G.names[me]+' ke cards ('+G.hands[me].length+')');hand.appendChild(h3);
+  const h3=document.createElement('h3');h3.textContent=(G.single||G.online)?('Your cards ('+G.hands[me].length+')'):(G.names[me]+' cards ('+G.hands[me].length+')');hand.appendChild(h3);
   if(showHand(me)){
     const sorted=G.hands[me].map((c,i)=>({c,i})).sort((a,b)=>(COLORS.indexOf(a.c.c)<0?9:COLORS.indexOf(a.c.c))-(COLORS.indexOf(b.c.c)<0?9:COLORS.indexOf(b.c.c))||(''+a.c.v).localeCompare(''+b.c.v,undefined,{numeric:true}));
     sorted.forEach(({c,i})=>{const ok=isMyTurn&&playable(c)&&(!G.drew||G.drewIdx===i);const b=cardEl(c,{btn:1,cls:ok?'ok':''});b.disabled=!ok;b.onclick=()=>humanPlay(i);hand.appendChild(b);});
-  }else{const s=document.createElement('p');s.className='sub';s.textContent='🙈 Cards chhupe hain';hand.appendChild(s);}
+  }else{const s=document.createElement('p');s.className='sub';s.textContent='🙈 Cards are hidden';hand.appendChild(s);}
+  $('draw').textContent=G.pend>0?('🂠 Draw +'+G.pend):'🂠 Draw card';
   $('draw').disabled=!isMyTurn||G.drew;
   $('pass').hidden=!(isMyTurn&&G.drew);
   $('uno').disabled=G.online?(G.over||!(G.penalty===G.me||(isMyTurn&&G.hands[G.me].length<=2))):(G.over||!(G.penalty!=null||(isMyTurn&&G.hands[G.turn].length<=2)));
@@ -231,7 +245,7 @@ function render(){
 /* ---------- online (host runs the game, guest sends actions) ---------- */
 function sendView(){
   if(!G||!G.online||!O.host||!O.net)return;
-  const v={me:1,n:2,deck:G.deck.length,hands:[G.hands[0].map(()=>0),G.hands[1]],said:G.said,turn:G.turn,dir:G.dir,color:G.color,top:G.top,drew:G.drew,drewIdx:G.drewIdx,over:G.over,winner:G.winner,pts:G.pts,penalty:G.penalty,names:G.names,msg:lastMsg};
+  const v={me:1,n:2,deck:G.deck.length,hands:[G.hands[0].map(()=>0),G.hands[1]],said:G.said,turn:G.turn,dir:G.dir,color:G.color,top:G.top,drew:G.drew,drewIdx:G.drewIdx,over:G.over,winner:G.winner,pts:G.pts,penalty:G.penalty,pend:G.pend,stack:G.stack,names:G.names,msg:lastMsg};
   const j=JSON.stringify(v);if(j===lastSent)return;lastSent=j;O.net.send({t:'st',v});
 }
 function applyView(v){
@@ -258,8 +272,8 @@ function startTurn(){
   if(!G.single&&!G.online){G.cover=true;render();setTimeout(()=>{if(G&&!G.over&&G.cover)showCover();},G.penalty!=null?2700:0);return;}
 }
 function showCover(){
-  const p=G.turn,m=Az.modal('<div style="text-align:center"><div class="azbig">📱</div><h2>'+G.names[p]+'</h2><p class="sub">Device '+G.names[p]+' ko do. Baaki log cards na dekhein! 🙈</p><div class="azrow c"><button class="azbtn" id="shw">👀 Mere cards dikhao</button></div></div>',{sticky:true});
-  m.addEventListener('click',e=>{if(e.target.id==='shw'){m.close();G.cover=false;msg(G.names[p]+': tumhari baari!');render();}});
+  const p=G.turn,m=Az.modal('<div style="text-align:center"><div class="azbig">📱</div><h2>'+G.names[p]+'</h2><p class="sub">Hand the device to '+G.names[p]+'. Everyone else, look away! 🙈</p><div class="azrow c"><button class="azbtn" id="shw">👀 Show my cards</button></div></div>',{sticky:true});
+  m.addEventListener('click',e=>{if(e.target.id==='shw'){m.close();G.cover=false;msg(G.names[p]+': your turn!');render();}});
 }
 function humanPlay(i){
   if(G.over||G.bot[G.turn]||G.wait)return;
@@ -269,37 +283,39 @@ function humanPlay(i){
   if(c.c==='wild')chooseColor(go);else go(c.c);
 }
 function chooseColor(cb){
-  const m=Az.modal('<div style="text-align:center"><h2>Colour chuno 🎨</h2><div class="upick">'+COLORS.map(c=>'<button data-c="'+c+'" style="background:'+CHEX[c]+';'+(c==='yellow'?'color:#222':'')+'">'+c.toUpperCase()+'</button>').join('')+'</div></div>',{sticky:true});
+  const m=Az.modal('<div style="text-align:center"><h2>Choose a colour 🎨</h2><div class="upick">'+COLORS.map(c=>'<button data-c="'+c+'" style="background:'+CHEX[c]+';'+(c==='yellow'?'color:#222':'')+'">'+c.toUpperCase()+'</button>').join('')+'</div></div>',{sticky:true});
   m.addEventListener('click',e=>{const b=e.target.closest('button[data-c]');if(b){m.close();cb(b.dataset.c);}});
 }
+function unoFx(n){const d=document.createElement('div');d.className='uunofx';d.textContent='UNO!';document.body.appendChild(d);setTimeout(()=>d.remove(),1200);}
 function commit(p,i,col){
   const c=G.hands[p].splice(i,1)[0];G.disc.push(c);G.top=c;G.color=col||c.c;G.drew=false;
   Az.sfx(c.c==='wild'?'win':'click');
-  const name=G.names[p];let text=name+' ne '+(c.c==='wild'?'':c.c+' ')+(SYM[c.v]||c.v)+' khela.';
-  if(G.hands[p].length===0){msg(name+' ne aakhri card khela! 🎉');G.over=true;G.winner=p;G.pts=G.hands.reduce((s,h,i)=>i===p?s:s+h.reduce((a,c)=>a+pts(c),0),0);render();return finish(p);}
+  const name=G.names[p];let text=name+' played '+(c.c==='wild'?'':c.c+' ')+(SYM[c.v]||c.v)+'.';
+  if(G.hands[p].length===0){msg(name+' played the last card! 🎉');G.over=true;G.winner=p;G.pts=G.hands.reduce((s,h,i)=>i===p?s:s+h.reduce((a,c)=>a+pts(c),0),0);render();return finish(p);}
   if(G.hands[p].length===1){
-    if(G.bot[p]||G.said[p]){text+=' 🔔 '+name+': UNO!';G.said[p]=true;}
-    else{G.penalty=p;clearTimeout(unoT);unoT=setTimeout(()=>{if(G&&G.penalty===p&&!G.over){G.penalty=null;give(p,2);Az.sfx('lose');msg('😬 '+G.names[p]+' ne UNO nahi bola — +2 penalty!');render();}},2600);text+=' ⚡ Jaldi UNO! dabao!';}
+    if(G.bot[p]||G.said[p]){unoFx(name);text+=' 🔔 '+name+': UNO!';G.said[p]=true;}
+    else{G.penalty=p;clearTimeout(unoT);unoT=setTimeout(()=>{if(G&&G.penalty===p&&!G.over){G.penalty=null;give(p,2);Az.sfx('lose');msg('😬 '+G.names[p]+' forgot to say UNO — +2 penalty!');render();}},2600);text+=' ⚡ Press UNO! quickly!';}
   }
   let step=1;
-  if(c.v==='skip'){step=2;text+=' '+G.names[nextIdx(p,1)]+' skip.';}
-  else if(c.v==='rev'){G.dir*=-1;if(G.hands.length===2)step=2;text+=' Direction ulta!';}
-  else if(c.v==='d2'){const v=nextIdx(p,1);give(v,2);step=2;text+=' '+G.names[v]+' +2 cards.';}
-  else if(c.v==='w4'){const v=nextIdx(p,1);give(v,4);step=2;text+=' '+G.names[v]+' +4 cards. Colour: '+CNAME[G.color];}
+  if(c.v==='skip'){step=2;text+=' '+G.names[nextIdx(p,1)]+' is skipped.';}
+  else if(c.v==='rev'){G.dir*=-1;if(G.hands.length===2)step=2;text+=' Direction reversed!';}
+  else if(c.v==='d2'){const v=nextIdx(p,1);if(G.stack){G.pend=(G.pend||0)+2;text+=' Pending: +'+G.pend+' for '+G.names[v]+'!';}else{give(v,2);step=2;text+=' '+G.names[v]+' draws 2 cards.';}}
+  else if(c.v==='w4'){const v=nextIdx(p,1);if(G.stack){G.pend=(G.pend||0)+4;text+=' Pending: +'+G.pend+' for '+G.names[v]+'! Colour: '+CNAME[G.color];}else{give(v,4);step=2;text+=' '+G.names[v]+' draws 4 cards. Colour: '+CNAME[G.color];}}
   else if(c.v==='w'){text+=' Colour: '+CNAME[G.color];}
   G.turn=nextIdx(p,step);G.wait=false;msg(text);
   startTurn();
 }
 function doDraw(){
   if(!G||G.over||G.bot[G.turn]||G.wait||G.drew||G.cover)return;
-  const p=G.turn;give(p,1);const idx=G.hands[p].length-1,c=G.hands[p][idx];Az.sfx('pop');
-  if(playable(c)){G.drew=true;G.drewIdx=idx;msg('Card mila — khelo ya Pass karo.');render();}
-  else{msg(G.names[p]+' ne card liya, khel nahi saka. Next!');G.drew=false;G.turn=nextIdx(p,1);startTurn();}
+  const p=G.turn;if(G.pend>0){const n=G.pend;G.pend=0;give(p,n);Az.sfx('lose');G.drew=false;G.turn=nextIdx(p,1);msg(G.names[p]+' draws '+n+' cards!');startTurn();return;}
+  give(p,1);const idx=G.hands[p].length-1,c=G.hands[p][idx];Az.sfx('pop');
+  if(playable(c)){G.drew=true;G.drewIdx=idx;msg('You drew a card — play it or Pass.');render();}
+  else{msg(G.names[p]+' drew a card and could not play. Next!');G.drew=false;G.turn=nextIdx(p,1);startTurn();}
 }
-function doPass(){if(!G||!G.drew)return;const p=G.turn;G.drew=false;G.turn=nextIdx(p,1);msg(G.names[p]+' ne pass kiya.');startTurn();}
+function doPass(){if(!G||!G.drew)return;const p=G.turn;G.drew=false;G.turn=nextIdx(p,1);msg(G.names[p]+' passed.');startTurn();}
 function doUno(who){
   if(!G||G.over)return;
-  if(G.penalty!=null){if(G.online&&G.penalty!==who)return;G.said[G.penalty]=true;G.penalty=null;clearTimeout(unoT);Az.sfx('coin');msg('🔔 UNO! Bach gaye.');render();return;}
+  if(G.penalty!=null){if(G.online&&G.penalty!==who)return;G.said[G.penalty]=true;G.penalty=null;clearTimeout(unoT);Az.sfx('coin');msg('🔔 UNO! Safe.');render();return;}
   const p=G.online?who:G.turn;if(!G.bot[p]&&G.hands[p].length<=2){G.said[p]=true;Az.sfx('coin');Az.toast('🔔 UNO call ready!',1200);}
 }
 const isGuest=()=>G&&G.online&&!O.host;
@@ -312,6 +328,7 @@ $('rst').onclick=()=>{if(O)newGame();};
 function botMove(){
   if(!G||G.over)return;const p=G.turn;if(!G.bot[p])return;
   const h=G.hands[p],ok=h.map((c,i)=>({c,i})).filter(x=>playable(x.c));
+  if(G.pend>0&&!ok.length){const n=G.pend;G.pend=0;give(p,n);Az.sfx('lose');msg(G.names[p]+' draws '+n+' cards!');G.wait=false;G.turn=nextIdx(p,1);startTurn();return;}
   const lvl=O.diff||'medium';
   function pick(list){
     if(lvl==='easy')return list[Math.floor(Math.random()*list.length)];
@@ -328,7 +345,7 @@ function botMove(){
   }else{
     give(p,1);const c=h[h.length-1];
     if(playable(c)){let col=c.c;if(col==='wild'){const cnt={red:0,blue:0,green:0,yellow:0};h.forEach(k=>{if(k.c!=='wild')cnt[k.c]++;});col=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];}G.wait=false;commit(p,h.length-1,col);}
-    else{msg(G.names[p]+' ne card liya aur pass kiya.');G.wait=false;G.turn=nextIdx(p,1);startTurn();}
+    else{msg(G.names[p]+' drew a card and passed.');G.wait=false;G.turn=nextIdx(p,1);startTurn();}
   }
 }
 
@@ -338,26 +355,26 @@ function finish(w){
   if(G.online){
     const won=w===G.me;
     Az.finish({game:'uno',level:1,diff:'medium',won,base:won?25:8,score:won?pointsWon:0,
-      title:won?'🎉 UNO! Tum jeet gaye!':'😔 '+G.names[w]+' jeet gaya',sub:won?(pointsWon+' points mile.'):'Rematch khelo!',progress:false,
-      retry:()=>{if(O.host){lastSent='';newGame();}else{O.net.send({t:'again'});Az.toast('Host ka wait… ⏳',2500);}}});
+      title:won?'🎉 UNO! You win!':'😔 '+G.names[w]+' wins',sub:won?(pointsWon+' points earned.'):'Play a rematch!',progress:false,
+      retry:()=>{if(O.host){lastSent='';newGame();}else{O.net.send({t:'again'});Az.toast('Waiting for the host… ⏳',2500);}}});
     return;
   }
   if(G.single){
     const won=w===0;
     Az.finish({game:'uno',level:1,diff:O.diff||'medium',won,base:won?(30+(n-2)*10):10,score:won?pointsWon:0,
-      title:won?'🎉 UNO! Tum jeet gaye!':'😔 '+G.names[w]+' jeet gaya',sub:won?('Opponents ke cards ke '+pointsWon+' points mile.'):'Agli baar zaroor jeetoge!',progress:false,retry:()=>newGame()});
+      title:won?'🎉 UNO! You win!':'😔 '+G.names[w]+' wins',sub:won?(pointsWon+' points earned from opponents\' cards.'):'You will win next time!',progress:false,retry:()=>newGame()});
   }else{
-    Az.finish({game:'uno',level:1,diff:'medium',won:true,base:15,score:pointsWon,title:'🎉 '+G.names[w]+' jeet gaya!',sub:pointsWon+' points.',progress:false,retry:()=>newGame()});
+    Az.finish({game:'uno',level:1,diff:'medium',won:true,base:15,score:pointsWon,title:'🎉 '+G.names[w]+' wins!',sub:pointsWon+' points.',progress:false,retry:()=>newGame()});
   }
 }
 window.__UNO={get G(){return G;},playable,newGame:()=>newGame()};
-Az.start({game:'uno',noLevels:true,extra:[{key:'n',label:'Players (not for online)',options:[['2','2 Players'],['3','3 Players'],['4','4 Players']]}],onStart:o=>{
+Az.start({game:'uno',noLevels:true,extra:[{key:'n',label:'Players (not for online)',options:[['2','2 Players'],['3','3 Players'],['4','4 Players']]},{key:'stack',label:'Stack +2 / +4 cards',options:[['0','Off (classic)'],['1','On (stack draw cards)']]}],onStart:o=>{
   O=o;applyBack();
   if(o.mode==='online'){
     $('rst').hidden=true;
     o.net.on(m=>{if(o.host)onNet(m);else if(m&&m.t==='st')applyView(m.v);});
-    o.net.onclose(()=>{if(G&&!G.over){G.over=true;clearTimeout(unoT);Az.finish({game:'uno',level:1,diff:'medium',won:true,base:15,progress:false,title:'Friend left',sub:'Dost game chhod gaya.',retry:()=>location.reload()});}});
-    if(o.host)newGame();else{$('hMode').textContent='🌐 Online 1v1';msg('Host ke game ka wait…');}
+    o.net.onclose(()=>{if(G&&!G.over){G.over=true;clearTimeout(unoT);Az.finish({game:'uno',level:1,diff:'medium',won:true,base:15,progress:false,title:'Friend left',sub:'Your friend left the game.',retry:()=>location.reload()});}});
+    if(o.host)newGame();else{$('hMode').textContent='🌐 Online 1v1';msg('Waiting for the host to start…');}
   }else newGame();
 }});
 })();

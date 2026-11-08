@@ -91,7 +91,10 @@ a{color:inherit}
 .azshopgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
 .azitem{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center}
 .azitem.eq{border-color:var(--a3);box-shadow:0 0 18px -8px var(--a3)}
-.azitem .pv{font-size:34px;height:48px;display:grid;place-items:center}
+.azitem .pv{font-size:34px;height:78px;display:grid;place-items:center}
+.azitem .fig{width:100%;height:100%;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:2px;overflow:hidden}
+.azitem .fig svg{max-width:100%}
+.azitem.eq .fig{box-shadow:inset 0 0 0 1px var(--a3)}
 .azitem .sw{width:38px;height:38px;border-radius:50%;margin:auto;border:3px solid rgba(255,255,255,.7)}
 .azitem b{display:block;font-size:13px}.azitem small{display:block;color:var(--muted);font-size:11px;min-height:28px}
 .azitem .azbtn{width:100%;margin-top:6px}
@@ -115,7 +118,7 @@ a{color:inherit}
   <div class="azdpad"><span></span><button data-d="u">▲</button><span></span><button data-d="l">◀</button><button data-d="d">▼</button><button data-d="r">▶</button></div>
   <div class="azctl"><button class="azbtn ghost" id="rst">🔄 Restart</button></div>
 </main>
-<script src="az.js?v=6"></script>
+<script src="az.js?v=7"></script>
 <script>
 (function(){
 const cv=document.getElementById('cv'),ctx=cv.getContext('2d'),$=id=>document.getElementById(id),SZ=360;

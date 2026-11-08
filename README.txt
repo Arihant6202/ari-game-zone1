@@ -89,3 +89,14 @@ UPDATE v4 (guest profiles, link-to-Gmail, premium guns, Level Devil controls)
   (lefty), aur "🔄 Rotate mode": poori landscape screen, controls side me (player/door ko nahi dhakte).
   Phone portrait me ho tab bhi game 90° ghoom jata hai - bas phone ko tilt karo. Choice account ke saath save hoti hai.
 - Saari HTML ab az.js?v=6 load karti hain (cache refresh ke liye). GitHub me poora folder dobara upload karo.
+
+
+UPDATE v7
+- Shop now shows a drawn figure for every item (guns, outfits, cars, ships, snakes, chess pieces, balls, dice, tokens, UNO card backs, heroes).
+- Gun skins are visible in-game (Zone Survivor 2D + 3D, Arena Strike, loot on the ground). Each gun has its own shape and colour.
+- 8 new outfits (Karate Master, Outlaw Cowboy, Alien Invader, Zombie Brute, Night Vampire, Super Hero, Dragon Warrior, Phoenix Legend).
+- Shinobu now costs 7000 coins (no longer free).
+- The repeating "Owner ID found..." popup is gone (status is shown on the Developer page). Only one popup shows at a time, and repeats are ignored.
+- All text is now in English.
+- UNO: optional +2/+4 stacking, stacked discard pile, card landing animation, big UNO! flash, hand fan for big hands, pulsing Draw button.
+- Upload ALL files again (az.js and az.css changed; pages now load az.js?v=7).
