@@ -60,6 +60,14 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     
 
     <div class="box">
+      <h2>⭐ Developer Player Level</h2>
+      <p class="sub">Set your own account's overall player level. Level rewards are applied when the level is increased.</p>
+      <div class="stat"><span class="azpill">Current level: <b id="selfLevel">1</b></span><span class="azpill">XP: <b id="selfXp">0</b></span></div>
+      <div class="azrow c"><input class="azinput" id="selfLevelAmt" type="number" min="1" max="100000" step="1" placeholder="New player level (1–100000)"></div>
+      <div class="azrow c"><button class="azbtn sm" id="selfLevelSet">⭐ Set Player Level</button></div>
+    </div>
+
+    <div class="box">
       <h2>✉️ Mail gift for another player</h2>
       <p class="sub">Enter the player's 8-digit ID. Coins are delivered to the player's Mail inbox. They can claim the gift when they open the game.</p>
       <div class="azrow c"><input class="azinput" id="gid" inputmode="numeric" maxlength="8" placeholder="Player ID (8 digit)"></div>
@@ -74,7 +82,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     <div id="log"></div>
   </div>
 </main>
-<script src="az.js?v=20"></script>
+<script src="az.js?v=21"></script>
 <script>
 (function(){
   const $=id=>document.getElementById(id);
@@ -86,6 +94,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     if(!owner)return;
     $('pid').textContent=Az.uid();
     $('mycoins').textContent=Az.coins();
+    $('selfLevel').textContent=Az.plvl(); $('selfXp').textContent=Az.xp();
 
     const acc=Az.account();
     $('stLogin').textContent=acc?'☁️ Logged in':'☁️ Not logged in';
@@ -100,6 +109,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
   $('selfAdd').onclick=()=>{const n=num('selfAmt');if(n==null||n<0)return log('Enter a valid coin amount.',1);Az.devAddCoins(n);paint();log('✅ +'+n+' → now '+Az.coins());};
   $('selfSub').onclick=()=>{const n=num('selfAmt');if(n==null||n<0)return log('Enter a valid coin amount.',1);Az.devAddCoins(-n);paint();log('✅ −'+n+' → now '+Az.coins());};
   $('selfMax').onclick=()=>{Az.devSetCoins(999999999);paint();log('✅ MAX coins set.');};
+  $('selfLevelSet').onclick=()=>{const n=num('selfLevelAmt');if(n==null||n<1||n>100000)return log('Enter a whole player level from 1 to 100000.',1);const r=Az.devSetPlayerLevel(n);if(!r)return log('Could not set player level. Owner access required.',1);paint();log('✅ Player level set to '+r.level+'. '+r.rewards+' level reward item(s) unlocked.');};
   document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{Az.devAddCoins(+b.dataset.q);paint();log('✅ Now '+Az.coins()+' coins.');});
   function give(sign,mode){
     const n=num('gAmt');
@@ -112,7 +122,8 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
   $('diwali').onclick=()=>{if(!confirm('Send 500 claimable Gold Coins to every existing registered Player ID? This cannot be undone.'))return;log('Sending Diwali bonus…');Az.devBroadcastMail(500,'🪔 Diwali Bonus','Happy Diwali! Claim your 500 Gold Coins bonus.').then(n=>log('✅ Diwali bonus mail queued for '+n+' existing accounts.')).catch(e=>log('❌ '+(e&&e.message||'Could not send bonus'),1));};
   document.addEventListener('az-ready',()=>{paint();Az.whenAuth().then(paint);});
   document.addEventListener('az-account',paint);document.addEventListener('az-owner',paint);
-  setInterval(()=>{if(Az.isOwner()){$('mycoins').textContent=Az.coins();}},1500);
+  setInterval(()=>{if(Az.isOwner()){$('mycoins').textContent=Az.coins();
+    $('selfLevel').textContent=Az.plvl(); $('selfXp').textContent=Az.xp();}},1500);
 })();
 </script>
 </body>

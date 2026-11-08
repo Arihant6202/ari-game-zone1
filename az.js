@@ -86,13 +86,13 @@ const GAMES = [
   { id: 'ttt', file: 'tic-tac-toe.html', name: 'Tic Tac Toe', emoji: '⭕', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: ['xo'], desc: 'Classic X and O. Beat the AI, play a friend or go online.' },
   { id: 'c4', file: 'connect-four.html', name: 'Connect Four', emoji: '🔴', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: ['disc'], desc: 'Drop discs and connect four. AI levels, 2 players or online.' },
   { id: 'ludo', file: 'ludo.html', name: 'Ludo', emoji: '🎲', cat: 'Board', max: 1, modes: ['single', 'local', 'online'], shop: ['dice', 'token'], desc: 'Classic Ludo for 2-4 players: vs computer, on one phone, or online with a friend. Shop: dice & token skins.' },
-  { id: 'flyer', file: 'sky-flyer.html', name: 'Sky Flyer', emoji: '🐤', cat: 'Arcade', max: 100, modes: ['single'], shop: ['bird'], desc: 'Tap to fly through the gaps. Pick a cool bird skin.' },
+  { id: 'flyer', file: 'sky-flyer.html', name: 'Sky Flyer', emoji: '🐤', cat: 'Arcade', max: 1, modes: ['single'], shop: ['bird'], desc: 'Tap to fly through the gaps. Pick a cool bird skin.' },
   { id: 'snake', file: 'snake-evolution.html', name: 'Snake Evolution', emoji: '🐍', cat: 'Arcade', max: 100, modes: ['single'], shop: ['snake'], desc: 'Eat, grow and avoid walls. Obstacles and speed grow each level.' },
   { id: 'brick', file: 'brick-breaker.html', name: 'Brick Breaker', emoji: '🧱', cat: 'Arcade', max: 100, modes: ['single'], shop: ['ball'], desc: 'Break all bricks, catch power-ups. 100 different layouts.' },
   { id: 'mole', file: 'whack-a-mole.html', name: 'Whack-a-Mole', emoji: '🐹', cat: 'Fun', max: 100, modes: ['single'], shop: ['hammer'], desc: 'Tap the moles fast, avoid bombs and grab golden moles.' },
   { id: 'leveldevil', file: 'level-devil.html', name: 'Level Devil', emoji: '😈', cat: 'Platformer', max: 20, modes: ['single', 'online'], shop: ['hero'], desc: 'A tricky platform challenge with hidden surprises and 20 stages. Race a friend online to the door!' },
   { id: 'uno', file: 'uno.html', name: 'UNO', emoji: '🃏', cat: 'Cards', max: 1, modes: ['single', 'local', 'online'], shop: ['cardback'], desc: 'Classic colour-and-number card game: vs computer bots, pass-and-play, or online 1v1 with a friend.' },
-  { id: 'runner', file: 'runner.html', name: 'Neon Runner', emoji: '🏃', cat: 'Arcade', max: 100, modes: ['single', 'online'], shop: ['runner', 'trail'], desc: 'Endless runner v2: jump, slide, double-jump, grab coins & shields. Race a friend online!' },
+  { id: 'runner', file: 'runner.html', name: 'Neon Runner', emoji: '🏃', cat: 'Arcade', max: 1, modes: ['single', 'online'], shop: ['runner', 'trail'], desc: 'Endless runner v2: jump, slide, double-jump, grab coins & shields. Race a friend online!' },
   { id: 'badminton', file: 'badminton.html', name: 'Badminton Rally', emoji: '🏸', cat: 'Sports', max: 100, modes: ['single', 'online'], shop: ['racket', 'shuttle'], desc: 'Move, clear, drop and smash against a smart AI.' },
   { id: 'memory', file: 'memory-match.html', name: 'Memory Match', emoji: '🧠', cat: 'Puzzle', max: 100, modes: ['single'], shop: [], desc: 'Flip cards and find matching pairs with the fewest moves.' },
   { id: 'quickmath', file: 'quick-math.html', name: 'Quick Math', emoji: '➗', cat: 'Puzzle', max: 100, modes: ['single'], shop: [], desc: 'Solve rapid-fire arithmetic before the timer runs out.' },
@@ -894,6 +894,19 @@ function postLogin(u, seq) {
 Az.isOwner = () => String(db().uid) === OWNER_UID;
 Az.devSetCoins = function (n) { if (!Az.isOwner()) return false; n = Math.round(+n); if (!isFinite(n)) return false; db().coins = Math.max(0, Math.min(MAXC, n)); save(); Az.refresh(); return true; };
 Az.devAddCoins = function (n) { n = Math.round(+n); return isFinite(n) && Az.devSetCoins(db().coins + n); };
+Az.devSetPlayerLevel = function (level) {
+  if (!Az.isOwner()) return false;
+  level = Math.floor(Number(level));
+  if (!Number.isFinite(level) || level < 1 || level > 100000) return false;
+  const before = Az.plvl();
+  db().xp = Math.max(0, 40 * (level - 1) * (level - 1));
+  const after = Az.plvl();
+  for (let lv = before + 1; lv <= after; lv++) {
+    if (!db().levelRewards[lv]) { db().levelRewards[lv] = true; db().coins = Math.min(MAXC, db().coins + 100); }
+  }
+  const items = grantLevelItems(after); save(); Az.refresh();
+  return { level: after, rewards: items.length };
+};
 Az.devGiveMail = function (gid, coins, title='Gift from Ari Game Zone', message='') {
   return Promise.resolve().then(() => {
     if (!Az.isOwner()) throw new Error('This is only for the owner account.');

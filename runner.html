@@ -7,7 +7,7 @@
 </style></head>
 <body data-game="runner"><main class="azgame">
 <div class="azpanel" style="width:100%;max-width:560px;padding:12px">
-  <div class="azhud"><span class="azpill" id="score">Distance 0</span><span class="azpill" id="target">Target 600</span><span class="azpill" id="speed">Speed 1x</span><span class="azpill" id="coins">⭐ 0</span></div>
+  <div class="azhud"><span class="azpill" id="score">Distance 0</span><span class="azpill" id="target">♾️ Endless Run</span><span class="azpill" id="speed">Speed 1x</span><span class="azpill" id="coins">⭐ 0</span></div>
   <div id="versus" class="sub" style="text-align:center;margin-top:8px">🏃 Solo run</div>
   <div id="opponent" class="sub" style="text-align:center">Opponent: waiting</div>
 </div>
@@ -19,7 +19,7 @@
 <div class="rn-sub"><button class="azbtn ghost sm" id="restart">↻ Restart</button><button class="azbtn ghost sm" id="emoji">😎 React</button></div>
 <p class="rn-tip">Keys: Space / ↑ / W = jump (press again in the air to double jump) · ↓ / S = slide or fast-fall</p>
 </main>
-<script src="az.js?v=20"></script>
+<script src="az.js?v=21"></script>
 <script>
 (() => {
 const c = document.getElementById('cv'), $ = id => document.getElementById(id);
@@ -54,14 +54,14 @@ function buildScenery() {
 function reset(level) {
   cancelAnimationFrame(raf);
   L = level; place = Az.place(L); skin = Az.eq('runner'); trailFx = Az.eq('trail');
-  target = 700 + L * 75;
+  target = Infinity;
   score = 0; picked = 0; t = 0; last = 0; phase = 'run'; deathT = 0; shake = 0;
   py = GY; vy = 0; jumps = 0; slideT = 0; wantSlide = false; shield = 0; magnet = 0; inv = 0; combo = 0; pupTimer = 7;
   obs = []; coins = []; pups = []; parts = []; texts = []; nextGap = 260; opDone = false;
   buildScenery();
-  $('target').textContent = 'Target ' + target; $('score').textContent = 'Distance 0'; $('speed').textContent = 'Speed 1.0x'; $('coins').textContent = '⭐ 0';
+  $('target').textContent = '♾️ Endless Run'; $('score').textContent = 'Distance 0'; $('speed').textContent = 'Speed 1.0x'; $('coins').textContent = '⭐ 0';
   $('msg').textContent = 'Run! Jump over barriers, slide under drones.';
-  Az.setBadge && Az.setBadge('Lv ' + L);
+  Az.setBadge && Az.setBadge('♾️ Endless');
   raf = requestAnimationFrame(loop);
 }
 
@@ -126,8 +126,8 @@ function finish(won) {
   Az.finish({
     game: 'runner', level: L, diff: 'medium', won, base: won ? 22 : 8, score: Math.floor(score),
     title: won ? 'Distance cleared!' : 'Crashed!',
-    sub: (net ? 'Your distance: ' + Math.floor(score) + ' · ' + opName + ': ' + opScore : 'You ran ' + Math.floor(score) + ' / ' + target + ' m') + ' · ⭐ ' + picked + (bonus ? ' (+' + bonus + ' bonus coins)' : ''),
-    next: n => reset(n), retry: reset
+    sub: (net ? 'Your distance: ' + Math.floor(score) + ' · ' + opName + ': ' + opScore : 'You ran ' + Math.floor(score) + ' m') + ' · ⭐ ' + picked + (bonus ? ' (+' + bonus + ' bonus coins)' : ''),
+    retry: () => reset(1)
   });
 }
 function crash() {
@@ -183,7 +183,7 @@ function update(dt) {
   });
   // distance
   score += dt * s * .35;
-  if (score >= target) { score = target; finish(true); return; }
+  // Endless mode: no target, no level completion; only a crash ends the run.
   $('score').textContent = 'Distance ' + Math.floor(score); $('speed').textContent = 'Speed ' + (s / 245).toFixed(1) + 'x'; $('coins').textContent = '⭐ ' + picked;
   if (net && performance.now() - lastSend > 250) { lastSend = performance.now(); net.send({ __game: 'runner-score', score: Math.floor(score), name: Az.name() }); }
 }
@@ -272,11 +272,11 @@ function drawHud() {
   const bw = 200, bx = (W - bw) / 2;
   x.fillStyle = 'rgba(0,0,0,.35)'; x.beginPath(); x.roundRect ? x.roundRect(bx - 6, 10, bw + 12, net ? 34 : 20, 8) : x.rect(bx - 6, 10, bw + 12, net ? 34 : 20); x.fill();
   x.fillStyle = 'rgba(255,255,255,.18)'; x.fillRect(bx, 16, bw, 6);
-  x.fillStyle = '#7cfc8a'; x.fillRect(bx, 16, bw * clamp(score / target, 0, 1), 6);
+  x.fillStyle = '#7cfc8a'; x.fillRect(bx, 16, bw * (0.18 + 0.82 * (1 - Math.exp(-score / 1800))), 6);
   x.font = '14px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = '#fff'; x.fillText('🏁', bx + bw + 14, 19);
-  if (net) { x.fillStyle = 'rgba(255,255,255,.18)'; x.fillRect(bx, 31, bw, 6); x.fillStyle = '#ff7ab8'; x.fillRect(bx, 31, bw * clamp(opScore / target, 0, 1), 6); }
+  if (net) { x.fillStyle = 'rgba(255,255,255,.18)'; x.fillRect(bx, 31, bw, 6); x.fillStyle = '#ff7ab8'; x.fillRect(bx, 31, bw * (0.18 + 0.82 * (1 - Math.exp(-opScore / 1800))), 6); }
   x.textBaseline = 'alphabetic'; x.textAlign = 'left'; x.font = 'bold 13px system-ui'; x.lineWidth = 3; x.strokeStyle = 'rgba(0,0,0,.6)'; x.fillStyle = '#fff';
-  const lab = place.emoji + ' ' + place.name + ' · Level ' + L; x.strokeText(lab, 12, 66); x.fillText(lab, 12, 66);
+  const lab = '♾️ ' + place.emoji + ' ' + place.name; x.strokeText(lab, 12, 66); x.fillText(lab, 12, 66);
   if (shield > 0) { x.strokeText('🛡️ Shield ready', 12, 84); x.fillText('🛡️ Shield ready', 12, 84); }
   if (magnet > 0) { const q = '🧲 Magnet ' + magnet.toFixed(1) + 's'; x.strokeText(q, 12, shield > 0 ? 102 : 84); x.fillText(q, 12, shield > 0 ? 102 : 84); }
   x.textAlign = 'center'; x.font = 'bold 15px system-ui';
@@ -323,7 +323,7 @@ Az.start({ game: 'runner', onStart: o => {
     });
     net.onclose(() => { $('opponent').textContent = 'Opponent disconnected'; });
   } else { $('versus').textContent = '🏃 SOLO MODE'; const b = Az.best('runner'); $('opponent').textContent = b ? 'Your best distance: ' + b + ' m' : 'Beat your own best distance'; }
-  reset(o.level);
+  reset(1);
 } });
 window.__runner = { get S() { return { L, score, picked, phase, shield, magnet, obs: obs.length, py, target }; }, jump, slide, reset, update, finish, step: dt => { if (phase === 'run') update(dt); updateFx(dt); draw(); } };
 })();
