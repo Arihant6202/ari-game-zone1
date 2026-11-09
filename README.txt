@@ -129,3 +129,8 @@ NEW ITEMS: new items added to every game slot (guns, outfits, cars, birds, runne
 ZONE SURVIVOR ONLINE FIX: online used to end after one kill (battle royale with no respawn). Online now uses the Arena Strike engine: respawn after 3s, kill target (first to 5 in 1v1 duel), and Co-op vs Bots. Solo Zone Survivor is unchanged.
 RELEASE: VERSION 1.02.00 (az.js, version.json, ?v= on every page). database.rules.json is unchanged.
 TESTED: headless Chromium - every page loads with zero JS errors; every game starts; shop renders every slot; two-client simulated online match for Boxing (rounds, KO, match end synced) and for Zone Survivor online (kill -> respawn -> game continues). NOT tested over real PeerJS between two devices.
+
+
+--- VERSION 1.03.00 UPDATE NOTES ---
+- Boxing Arena: full-screen landscape stage. On a portrait phone the game rotates itself 90 degrees. Move / block / jab / power buttons sit inside the game (left and right bottom corners; 2-player mode shows one set per player).
+- Another batch of new shop items in every slot (6 guns, 8 outfits, and 2-4 for each other game incl. boxing gloves). No level-reward items changed.

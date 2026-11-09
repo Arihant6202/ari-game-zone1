@@ -110,31 +110,28 @@ a{color:inherit}
 
 .coinbig,.azpill.coin,#azcoins,#hC,#hCoin,#mycoins{color:#ffbf24!important}.az-coin-icon{width:1.22em;height:1.22em;object-fit:contain;vertical-align:-.22em;display:inline-block;filter:drop-shadow(0 1px 2px rgba(255,190,30,.35))}</style>
 <style>
-.azgame{width:min(960px,100% - 12px);margin-top:6px;gap:6px}
-#cvw{position:relative;width:100%;aspect-ratio:900/420;flex:0 0 auto}
-.azgame>*{flex-shrink:0}
-#cv{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:14px;touch-action:none;background:#0b0620;border:1px solid var(--line)}
-.bxmsg{min-height:20px;font-size:13px;color:var(--a3);font-weight:600;text-align:center}
-.bxctl{display:flex;gap:8px;justify-content:center}
-.pads{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap}
-.pad{display:flex;gap:6px;align-items:center;flex:1;justify-content:center;min-width:250px}
-.pad b{font-size:11px;color:var(--muted);width:100%;text-align:center;display:none}
-.pad.two b{display:block}
-.pad button{flex:1;max-width:76px;height:58px;font-size:22px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);color:var(--text);touch-action:none;user-select:none;-webkit-user-select:none}
-.pad button:active,.pad button.dn{background:var(--a2);transform:scale(.95)}
-.pad.p2 button:active,.pad.p2 button.dn{background:var(--a1)}
-.pad .sp{flex:.35}
-@media (hover:hover) and (pointer:fine){.pad.one{display:none}}
+html,body{overscroll-behavior:none}
+#stage{position:fixed;left:0;top:0;z-index:60;background:#05030d;overflow:hidden;transform-origin:0 0;user-select:none;-webkit-user-select:none;touch-action:none}
+#stage canvas{position:absolute;display:block;touch-action:none;background:#0b0620}
+.hint{position:absolute;left:50%;transform:translateX(-50%);bottom:6px;font-size:12px;color:#fff;background:#0009;padding:4px 12px;border-radius:12px;pointer-events:none;transition:opacity .6s;white-space:nowrap;z-index:3}
+.hint.fade{opacity:0}
+.topb{position:absolute;top:64px;left:6px;z-index:4;display:flex;gap:6px}
+.topb a,.topb button{font-size:13px;padding:5px 10px;border-radius:10px;border:1px solid #fff4;background:#0008;color:#fff;text-decoration:none;font-family:inherit;cursor:pointer}
+.pad{position:absolute;bottom:10px;display:flex;gap:8px;z-index:3;align-items:flex-end}
+.pad.L{left:10px}.pad.R{right:10px}
+.pad button{width:62px;height:62px;font-size:24px;border-radius:50%;border:2px solid #fff5;background:#ffffff1f;color:#fff;touch-action:none;user-select:none;-webkit-user-select:none;padding:0;backdrop-filter:blur(2px)}
+.pad button.big{width:72px;height:72px;font-size:28px}
+.pad button.dn{background:var(--a2);transform:scale(.93)}
+.pad.p2 button.dn{background:var(--a1)}
+.pad .lbl{position:absolute;top:-16px;left:0;font-size:10px;color:#fff9}
+.pad.two button{width:48px;height:48px;font-size:19px}.pad.two button.big{width:54px;height:54px;font-size:21px}
 </style>
 </head>
 <body data-game="boxing">
-<main class="azgame">
-  <div id="cvw"><canvas id="cv" width="900" height="420"></canvas></div>
-  <div class="bxmsg" id="msg">A/D move · F jab · G power punch · H block (P2: ←/→ · J · K · L)</div>
-  <div class="pads" id="pads"></div>
-  <div class="bxctl"><button class="azbtn ghost sm" id="rst">🔄 Restart</button></div>
-</main>
-<script src="az.js?v=1.02.01"></script>
+<div id="stage"><canvas id="cv" width="900" height="420"></canvas>
+  <div class="topb"><a href="index.html" id="exit">✕ Exit</a><button id="rst">🔄</button></div>
+  <div class="hint" id="msg"></div><div id="pads"></div></div>
+<script src="az.js?v=1.03.00"></script>
 <script>
 (function(){
 const $=id=>document.getElementById(id),cv=$('cv'),ctx=cv.getContext('2d');
@@ -382,30 +379,42 @@ function run(o){
   return{S,F,k1,k2,stop(){stopped=true;cancelAnimationFrame(raf);removeEventListener('keydown',kd);removeEventListener('keyup',ku);removeEventListener('blur',blur);if(net)net.on(()=>{});}};
 }
 
-/* ---------- touch pads ---------- */
+/* ---------- stage layout (landscape, auto-rotates on portrait phones) + in-game buttons ---------- */
+function layout(){
+  const st=$('stage'),iw=innerWidth,ih=innerHeight,port=ih>iw,sw=port?ih:iw,sh=port?iw:ih;
+  st.style.width=sw+'px';st.style.height=sh+'px';
+  st.style.transform=port?'translateX('+iw+'px) rotate(90deg)':'none';
+  const sc=Math.min(sw/900,sh/420),cw=900*sc,ch=420*sc;
+  cv.style.width=cw+'px';cv.style.height=ch+'px';cv.style.left=(sw-cw)/2+'px';cv.style.top=(sh-ch)/2+'px';
+  $('pads').dataset.sc=sc;
+}
+addEventListener('resize',layout);addEventListener('orientationchange',()=>setTimeout(layout,150));
 function buildPads(mode){
   const box=$('pads');box.innerHTML='';
-  const mk=(id,label,cls)=>{const p=document.createElement('div');p.className='pad '+cls;p.innerHTML=(mode==='local'?'<b>'+label+'</b>':'')+'<button data-k="l">◀</button><button data-k="r">▶</button><span class="sp"></span><button data-k="blk">🛡️</button><button data-k="jab">👊</button><button data-k="pow">💥</button>';
+  const mkSet=(id,side,label,two)=>{const p=document.createElement('div');p.className='pad '+side+(id===2?' p2':'')+(two?' two':'');
+    const mv='<button data-k="l">◀</button><button data-k="r">▶</button>',ac='<button data-k="blk">🛡️</button><button class="big" data-k="jab">👊</button><button class="big" data-k="pow">💥</button>';
+    p.innerHTML=(two?'<span class="lbl">'+label+'</span>':'')+(two?(side==='L'?mv+ac:ac+mv):(side==='L'?mv:ac));
     box.appendChild(p);
     p.querySelectorAll('button').forEach(b=>{const k=b.dataset.k;
-      const down=e=>{e.preventDefault();if(!G)return;const t=id===1?G.k1:G.k2;b.classList.add('dn');if(k==='jab'||k==='pow')t[k]=.18;else t[k]=1;};
-      const up=e=>{e.preventDefault();b.classList.remove('dn');if(!G)return;const t=id===1?G.k1:G.k2;if(k!=='jab'&&k!=='pow')t[k]=0;};
-      b.addEventListener('pointerdown',down);['pointerup','pointercancel','pointerleave'].forEach(n=>b.addEventListener(n,up));b.addEventListener('contextmenu',e=>e.preventDefault());});
-    p.classList.add(mode==='local'?'two':'one');return p;};
-  mk(1,'Player 1','p1');if(mode==='local'){mk(2,'Player 2','p2');}
-  if(mode==='local')box.querySelectorAll('.pad').forEach(p=>p.classList.remove('one'));
+      const T=()=>id===1?G&&G.k1:G&&G.k2;
+      const down=e=>{e.preventDefault();const t=T();if(!t)return;b.classList.add('dn');if(k==='jab'||k==='pow')t[k]=.18;else t[k]=1;};
+      const up=e=>{e.preventDefault();b.classList.remove('dn');const t=T();if(t&&k!=='jab'&&k!=='pow')t[k]=0;};
+      b.addEventListener('pointerdown',down);['pointerup','pointercancel','pointerleave'].forEach(n=>b.addEventListener(n,up));b.addEventListener('contextmenu',e=>e.preventDefault());});};
+  if(mode==='local'){mkSet(1,'L','Player 1',true);mkSet(2,'R','Player 2',true);}
+  else{mkSet(1,'L','',false);mkSet(1,'R','',false);}
 }
+let hintT=0;function hint(t){const h=$('msg');h.textContent=t;h.classList.remove('fade');clearTimeout(hintT);hintT=setTimeout(()=>h.classList.add('fade'),6000);}
 
 function begin(lv){
   if(G)G.stop();const pl=Az.place(lv);
   if(O.mode==='single')Az.setBadge('Lv '+lv+' · '+pl.emoji+' '+pl.name);
-  buildPads(O.mode);
-  $('msg').textContent=O.mode==='local'?'P1: A/D · F jab · G power · H block   |   P2: ←/→ · J jab · K power · L block':'A/D or ←/→ move · F/J jab · G/K power punch · H/L/Space block. Best of 3 rounds.';
+  layout();buildPads(O.mode);
+  hint(O.mode==='local'?'P1: A/D · F jab · G power · H block   |   P2: ←/→ · J jab · K power · L block':'A/D or ←/→ move · F/J jab · G/K power punch · H/L/Space block. Best of 3 rounds.');
   G=run({mode:O.mode,net:O.mode==='online'?O.net:null,level:lv,diff:O.diff,end:r=>{
     Az.finish({game:'boxing',level:lv,diff:O.diff,won:r.won,progress:O.mode==='single',base:50+(r.rounds||0)*15,score:r.rounds||0,title:r.title,sub:r.sub,next:l=>begin(l),retry:l=>O.mode==='online'?location.reload():begin(l)});}});
 }
 $('rst').onclick=()=>O&&O.mode!=='online'&&begin(O.level);
-Az.start({game:'boxing',onStart:o=>{O=o;begin(o.level);}});
+layout();Az.start({game:'boxing',onStart:o=>{O=o;begin(o.level);}});
 window.__bx={get G(){return G;},begin:(l,o)=>{O=o||O||{mode:'single',diff:'medium'};begin(l);}};
 })();
 </script>

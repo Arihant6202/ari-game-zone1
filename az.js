@@ -169,6 +169,13 @@ const SHOP = {
     { id: 'g_burst', name: 'Tri-Burst', price: 7500, color: '#22d3ee', dmg: 20, rate: 5, pellets: 3, spread: .06, speed: 14, mag: 30, range: 900, desc: '3-shot burst. Tight and accurate.' },
     { id: 'g_ricochet', name: 'Hornet SMG', price: 18000, color: '#facc15', dmg: 14, rate: 16, pellets: 1, spread: .11, speed: 15, mag: 50, rarity: 'epic', desc: 'Stings fast. Buzzing fire rate.' },
     { id: 'g_arc', name: 'Arc Thrower', price: 45000, color: '#60a5fa', dmg: 38, rate: 9, pellets: 2, spread: .05, speed: 22, mag: 40, range: 1200, rarity: 'legendary', desc: 'Twin electric arcs. Shocking damage.' },
+    /* ---- NEW (v1.03) ---- */
+    { id: 'g_revolver', name: 'Desert Revolver', price: 2800, color: '#d6a35c', dmg: 48, rate: 2.2, pellets: 1, spread: .02, speed: 15, mag: 6, desc: 'Slow but heavy. 6 powerful shots.' },
+    { id: 'g_scar', name: 'Scar Elite', price: 11000, color: '#94a3b8', dmg: 31, rate: 8, pellets: 1, spread: .04, speed: 15, mag: 32, range: 1000, desc: 'Tactical rifle. Stable and strong.' },
+    { id: 'g_flame', name: 'Flame Thrower', price: 19000, color: '#fb7185', dmg: 9, rate: 18, pellets: 3, spread: .3, speed: 8, mag: 90, range: 420, rarity: 'epic', desc: 'Short-range fire storm.' },
+    { id: 'g_ghostgun', name: 'Ghost Whisper', price: 34000, color: '#a5b4fc', dmg: 75, rate: 1.6, pellets: 1, spread: 0, speed: 26, mag: 8, range: 1500, rarity: 'epic', desc: 'Silent long-range sniper.' },
+    { id: 'g_thunderbolt', name: 'Thunderbolt', price: 65000, color: '#38bdf8', dmg: 40, rate: 11, pellets: 2, spread: .04, speed: 23, mag: 50, range: 1300, rarity: 'legendary', desc: 'Lightning twin-shot machine.' },
+    { id: 'g_omega', name: 'Omega Destroyer', price: 180000, color: '#f472b6', dmg: 60, rate: 12, pellets: 3, spread: .06, speed: 25, mag: 60, range: 1400, rarity: 'mythic', desc: 'Triple beam. Pure destruction.' },
   ] },
   outfit: { title: 'Outfits', emoji: '🧥', items: [
     { id: 'o_rookie', name: 'Rookie', price: 0, color: '#4cc9f0', hat: '', hp: 100, desc: 'Starter outfit. Style only, no bonus.' },
@@ -199,6 +206,15 @@ const SHOP = {
     { id: 'o_astro', name: 'Space Ranger', price: 5500, color: '#e2e8f0', hat: '🤖', hp: 100, desc: 'Style only, no bonus.' },
     { id: 'o_gold', name: 'Golden Guard', price: 16000, color: '#eab308', hat: '👑', hp: 100, rarity: 'epic', desc: 'Style only, no bonus.' },
     { id: 'o_abyss', name: 'Abyss Walker', price: 55000, color: '#0f172a', hat: '💀', hp: 100, rarity: 'legendary', desc: 'Style only, no bonus.' },
+    /* ---- NEW (v1.03) ---- */
+    { id: 'o_police', name: 'Street Cop', price: 1200, color: '#1d4ed8', hat: '🧢', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_sniper', name: 'Ghillie Sniper', price: 2800, color: '#3f6212', hat: '🪖', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_magma', name: 'Magma Titan', price: 8500, color: '#dc2626', hat: '🔥', hp: 100, rarity: 'epic', desc: 'Style only, no bonus.' },
+    { id: 'o_glacier', name: 'Glacier Knight', price: 9500, color: '#38bdf8', hat: '❄️', hp: 100, rarity: 'epic', desc: 'Style only, no bonus.' },
+    { id: 'o_toxic', name: 'Toxic Zombie', price: 6000, color: '#65a30d', hat: '🧟', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_shadowking', name: 'Shadow King', price: 30000, color: '#18181b', hat: '👑', hp: 100, rarity: 'epic', desc: 'Style only, no bonus.' },
+    { id: 'o_stormcaller', name: 'Storm Caller', price: 65000, color: '#2563eb', hat: '⚡', hp: 100, rarity: 'legendary', desc: 'Style only, no bonus.' },
+    { id: 'o_galaxyhero', name: 'Galaxy Guardian', price: 120000, color: '#9333ea', hat: '🌌', hp: 100, rarity: 'mythic', desc: 'Style only, no bonus.' },
   ] },
   car: { title: 'Cars', emoji: '🏎️', items: [
     { id: 'c_red', name: 'Red Spark', price: 0, color: '#ef233c', speed: 1, desc: 'Starter car.' },
@@ -216,6 +232,11 @@ const SHOP = {
     { id: 'c_lime', name: 'Lime Dash', price: 900, color: '#84cc16', speed: 1.06, desc: '+6% speed. Fresh & fast.' },
     { id: 'c_stealth', name: 'Stealth Black', price: 8000, color: '#1f2937', speed: 1.24, rarity: 'epic', desc: '+24% speed. Silent night racer.' },
     { id: 'c_nitro', name: 'Nitro Comet', price: 22000, color: '#06b6d4', speed: 1.28, rarity: 'epic', desc: '+28% speed. Blue-flame boost.' },
+    /* ---- NEW (v1.03) ---- */
+    { id: 'c_green', name: 'Emerald Cruiser', price: 1500, color: '#10b981', speed: 1.1, desc: '+10% speed.' },
+    { id: 'c_orange', name: 'Sunset Rocket', price: 5000, color: '#f97316', speed: 1.2, desc: '+20% speed.' },
+    { id: 'c_white', name: 'Arctic Ghost', price: 11000, color: '#e2e8f0', speed: 1.25, rarity: 'epic', desc: '+25% speed.' },
+    { id: 'c_rainbow', name: 'Rainbow Dash', price: 55000, color: '#ec4899', speed: 1.32, rarity: 'legendary', desc: '+32% speed. The fastest ride.' },
   ] },
   ship: { title: 'Spaceships', emoji: '🚀', items: [
     { id: 's_scout', name: 'Scout', price: 0, color: '#4cc9f0', power: 1, desc: 'Starter ship.' },
@@ -241,6 +262,10 @@ const SHOP = {
     { id: 'b_swan', name: 'Swan', price: 1600, emoji: '🦢', desc: 'Graceful glider.' },
     { id: 'b_bat', name: 'Night Bat', price: 3500, emoji: '🦇', rarity: 'rare', desc: 'Flaps through the dark.' },
     { id: 'b_phoenix', name: 'Phoenix', price: 12000, emoji: '🔥', rarity: 'epic', desc: 'Reborn from fire.' },
+    { id: 'b_duck', name: 'Rubber Duck', price: 400, emoji: '🦆', desc: 'Quack flyer.' },
+    { id: 'b_bee', name: 'Busy Bee', price: 1000, emoji: '🐝', desc: 'Buzz buzz.' },
+    { id: 'b_butterfly', name: 'Butterfly', price: 2400, emoji: '🦋', rarity: 'rare', desc: 'Light as a feather.' },
+    { id: 'b_rocket', name: 'Rocket', price: 20000, emoji: '🚀', rarity: 'epic', desc: 'Too fast for birds.' },
   ] },
   runner: { title: 'Runners', emoji: '🏃', items: [
     { id: 'r_boy', name: 'Runner', price: 0, emoji: '🏃', desc: 'Starter.' },
@@ -262,6 +287,10 @@ const SHOP = {
     { id: 'r_fairy', name: 'Fairy', price: 2200, emoji: '🧚', desc: 'Sparkly sprinter.' },
     { id: 'r_vamp', name: 'Vampire', price: 3200, emoji: '🧛', rarity: 'rare', desc: 'Fast after dark.' },
     { id: 'r_rocket', name: 'Rocket Man', price: 15000, emoji: '🚀', rarity: 'epic', desc: 'Blasts through the track.' },
+    { id: 'r_horse', name: 'Racehorse', price: 1400, emoji: '🐎', desc: 'Gallops away.' },
+    { id: 'r_tiger', name: 'Tiger', price: 3000, emoji: '🐅', rarity: 'rare', desc: 'Fierce sprinter.' },
+    { id: 'r_santa', name: 'Santa', price: 6500, emoji: '🎅', rarity: 'epic', desc: 'Ho ho run!' },
+    { id: 'r_superman', name: 'Flying Hero', price: 30000, emoji: '🦸‍♂️', rarity: 'epic', desc: 'Up, up and away.' },
   ] },
   trail: { title: 'Run trails', emoji: '✨', items: [
     { id: 't_none', name: 'No trail', price: 0, color: '#9aa4b2', fx: 'none', desc: 'Clean and simple.' },
@@ -276,6 +305,9 @@ const SHOP = {
     { id: 't_heart', name: 'Hearts', price: 1200, color: '#ff4d8d', fx: 'spark', desc: 'Pink sparkle love trail.' },
     { id: 't_toxic', name: 'Toxic Smoke', price: 2800, color: '#84cc16', fx: 'galaxy', rarity: 'rare', desc: 'Radioactive green mist.' },
     { id: 't_thunder', name: 'Thunder Bolt', price: 12000, color: '#fde047', fx: 'neon', rarity: 'epic', desc: 'Electric yellow streaks.' },
+    { id: 't_snow', name: 'Snowfall', price: 1800, color: '#e0f2fe', fx: 'ice', desc: 'Soft white flakes.' },
+    { id: 't_lava', name: 'Lava Flow', price: 4500, color: '#ef4444', fx: 'fire', rarity: 'rare', desc: 'Molten red trail.' },
+    { id: 't_cosmic', name: 'Cosmic Ribbon', price: 18000, color: '#c084fc', fx: 'galaxy', rarity: 'epic', desc: 'Violet space ribbon.' },
   ] },
   snake: { title: 'Snake skins', emoji: '🐍', items: [
     { id: 'n_green', name: 'Green', price: 0, c1: '#57d6a0', c2: '#1b9c6b', desc: 'Starter.' },
@@ -292,6 +324,9 @@ const SHOP = {
     { id: 'n_candy', name: 'Candy', price: 1500, c1: '#f9a8d4', c2: '#ec4899', desc: 'Sweet pink scales.' },
     { id: 'n_ocean', name: 'Deep Sea', price: 2200, c1: '#22d3ee', c2: '#0e7490', desc: 'Ocean-blue serpent.' },
     { id: 'n_shadow', name: 'Shadow Viper', price: 7000, c1: '#64748b', c2: '#0f172a', rarity: 'epic', desc: 'Dark and deadly.' },
+    { id: 'n_pink', name: 'Pink Pop', price: 900, c1: '#fbcfe8', c2: '#db2777', desc: 'Bubblegum snake.' },
+    { id: 'n_ember', name: 'Ember', price: 3800, c1: '#fdba74', c2: '#9a3412', desc: 'Glowing embers.' },
+    { id: 'n_royal', name: 'Royal Cobra', price: 15000, c1: '#fde047', c2: '#7e22ce', rarity: 'epic', desc: 'Purple and gold.' },
   ] },
   piece: { title: 'Chess pieces', emoji: '♟️', items: [
     { id: 'p_classic', name: 'Classic', price: 0, w: '#ffffff', b: '#1a1a24', glow: '', desc: 'Starter set.' },
@@ -308,6 +343,9 @@ const SHOP = {
     { id: 'p_royal', name: 'Royal Blue', price: 1800, w: '#bfdbfe', b: '#1e3a8a', glow: '', desc: 'Blue-blooded kings.' },
     { id: 'p_sunset', name: 'Sunset', price: 3800, w: '#fed7aa', b: '#9a3412', glow: '1', desc: 'Warm sunset glow.' },
     { id: 'p_crystal', name: 'Crystal Duel', price: 9500, w: '#e0f2fe', b: '#6d28d9', glow: '1', rarity: 'epic', desc: 'Ice crystal vs amethyst.' },
+    { id: 'p_candy', name: 'Candy Set', price: 2200, w: '#fbcfe8', b: '#be185d', glow: '', desc: 'Sweet pink pieces.' },
+    { id: 'p_steel', name: 'Steel Army', price: 5200, w: '#e2e8f0', b: '#334155', glow: '', desc: 'Cold steel.' },
+    { id: 'p_dragon', name: 'Dragon Set', price: 16000, w: '#fde68a', b: '#991b1b', glow: '1', rarity: 'epic', desc: 'Gold vs crimson dragons.' },
   ] },
   ball: { title: 'Balls', emoji: '⚪', items: [
     { id: 'l_white', name: 'White', price: 0, color: '#ffffff', desc: 'Starter.' },
@@ -324,6 +362,9 @@ const SHOP = {
     { id: 'l_lava', name: 'Lava Ball', price: 1400, color: '#f97316', desc: 'Molten orange.' },
     { id: 'l_sky', name: 'Sky Blue', price: 700, color: '#38bdf8', desc: 'Light and breezy.' },
     { id: 'l_emerald', name: 'Emerald Orb', price: 6000, color: '#34d399', rarity: 'epic', desc: 'Deep green gem.' },
+    { id: 'l_pink', name: 'Bubblegum', price: 800, color: '#f9a8d4', desc: 'Pink and bouncy.' },
+    { id: 'l_black', name: 'Black Hole', price: 3500, color: '#374151', desc: 'Swallows light.' },
+    { id: 'l_aurora', name: 'Aurora Orb', price: 14000, color: '#2dd4bf', rarity: 'epic', desc: 'Northern light glow.' },
   ] },
   dice: { title: 'Ludo dice', emoji: '🎲', items: [
     { id: 'd_classic', name: 'Classic', price: 0, bg: 'linear-gradient(135deg,#00e5ff,#ff3d9a)', fg: '#10061f', glow: '', desc: 'Starter dice.' },
@@ -340,6 +381,9 @@ const SHOP = {
     { id: 'd_sunset', name: 'Sunset Dice', price: 1000, bg: 'linear-gradient(135deg,#f97316,#ec4899)', fg: '#ffffff', glow: '', desc: 'Orange to pink.' },
     { id: 'd_ice', name: 'Ice Dice', price: 2200, bg: '#e0f2fe', fg: '#0369a1', glow: '#7dd3fc', desc: 'Frosty and glowing.' },
     { id: 'd_royal', name: 'Royal Dice', price: 7000, bg: '#4c1d95', fg: '#fde047', glow: '#facc15', rarity: 'epic', desc: 'Purple with golden pips.' },
+    { id: 'd_mint', name: 'Mint Dice', price: 900, bg: '#a7f3d0', fg: '#065f46', glow: '', desc: 'Fresh mint.' },
+    { id: 'd_lava', name: 'Lava Dice', price: 3500, bg: '#7f1d1d', fg: '#fdba74', glow: '#f97316', desc: 'Hot magma pips.' },
+    { id: 'd_rainbow', name: 'Rainbow Dice', price: 12000, bg: 'linear-gradient(135deg,#f43f5e,#facc15,#22d3ee)', fg: '#111827', glow: '#f9a8d4', rarity: 'epic', desc: 'All colours.' },
   ] },
   token: { title: 'Ludo tokens', emoji: '♟', items: [
     { id: 'k_classic', name: 'Classic', price: 0, ring: '#ffffff', dot: '#ffffff', desc: 'Starter tokens.' },
@@ -355,6 +399,9 @@ const SHOP = {
     { id: 'k_ruby', name: 'Ruby', price: 1300, ring: '#e11d48', dot: '#fda4af', desc: 'Red gem tokens.' },
     { id: 'k_sapphire', name: 'Sapphire', price: 2600, ring: '#2563eb', dot: '#93c5fd', desc: 'Deep blue gem.' },
     { id: 'k_aurora', name: 'Aurora', price: 9000, ring: '#34d399', dot: '#c084fc', rarity: 'epic', desc: 'Northern lights.' },
+    { id: 'k_pink', name: 'Rose', price: 900, ring: '#ec4899', dot: '#fbcfe8', desc: 'Pink rose tokens.' },
+    { id: 'k_inferno', name: 'Inferno', price: 4500, ring: '#f97316', dot: '#fde047', rarity: 'rare', desc: 'Burning ring.' },
+    { id: 'k_void', name: 'Void', price: 16000, ring: '#7c3aed', dot: '#111827', rarity: 'epic', desc: 'Dark matter.' },
   ] },
   cardback: { title: 'UNO card backs', emoji: '🃏', items: [
     { id: 'u_classic', name: 'Classic', price: 0, c1: '#e53935', c2: '#111111', desc: 'Starter back.' },
@@ -372,6 +419,9 @@ const SHOP = {
     { id: 'u_mint', name: 'Mint', price: 700, c1: '#6ee7b7', c2: '#064e3b', desc: 'Cool mint green.' },
     { id: 'u_sunset', name: 'Sunset', price: 1600, c1: '#fb923c', c2: '#7c2d12', desc: 'Warm evening sky.' },
     { id: 'u_royal', name: 'Royal Purple', price: 6000, c1: '#a78bfa', c2: '#2e1065', rarity: 'epic', desc: 'Fit for a king.' },
+    { id: 'u_ice', name: 'Ice', price: 800, c1: '#bae6fd', c2: '#0c4a6e', desc: 'Frozen blue.' },
+    { id: 'u_toxic', name: 'Toxic', price: 3000, c1: '#bef264', c2: '#1a2e05', desc: 'Neon green.' },
+    { id: 'u_dragon', name: 'Dragon', price: 14000, c1: '#f87171', c2: '#450a0a', rarity: 'epic', desc: 'Crimson scales.' },
   ] },
   hero: { title: 'Devil heroes', emoji: '😈', items: [
     { id: 'h_shadow', name: 'Shadow', price: 0, color: '#1d2433', hat: '', desc: 'Starter hero.' },
@@ -390,6 +440,9 @@ const SHOP = {
     { id: 'h_alien', name: 'Alien', price: 1800, color: '#3a7d44', hat: '👽', desc: 'Visitor from space.' },
     { id: 'h_vampire', name: 'Vampire', price: 3200, color: '#7a0f2b', hat: '🧛', desc: 'Night stalker.' },
     { id: 'h_phoenix', name: 'Phoenix', price: 9000, color: '#ff6a00', hat: '🔥', rarity: 'epic', desc: 'Rises from the ashes.' },
+    { id: 'h_cop', name: 'Cop', price: 1200, color: '#1d4ed8', hat: '🧢', desc: 'Catches bugs.' },
+    { id: 'h_cowboy', name: 'Cowboy', price: 1800, color: '#a0693a', hat: '🤠', desc: 'Yeehaw!' },
+    { id: 'h_hero', name: 'Super Hero', price: 7500, color: '#dc2626', hat: '🦸', rarity: 'epic', desc: 'Cape on, jump high.' },
   ] },
   racket: { title: 'Rackets', emoji: '🏸', items: [
     { id: 'rk_club', name: 'Club Racket', price: 0, color: '#60e8ff', reach: 1, power: 1, desc: 'Starter racket.' },
@@ -402,6 +455,8 @@ const SHOP = {
     /* ---- NEW (v1.02) ---- */
     { id: 'rk_ice', name: 'Frost Edge', price: 7000, color: '#7dd3fc', reach: 1.2, power: 1.13, glow: 1, rarity: 'epic', desc: '+20% reach. Icy cold.' },
     { id: 'rk_shadow', name: 'Shadow Smash', price: 20000, color: '#6366f1', reach: 1.3, power: 1.18, glow: 1, rarity: 'epic', desc: '+30% reach. Smash master.' },
+    { id: 'rk_fire', name: 'Blaze Smasher', price: 10000, color: '#f97316', reach: 1.24, power: 1.16, glow: 1, rarity: 'epic', desc: '+24% reach. Fiery.' },
+    { id: 'rk_royal', name: 'Royal Crown', price: 35000, color: '#facc15', reach: 1.36, power: 1.24, glow: 1, rarity: 'legendary', desc: '+36% reach. Champion class.' },
   ] },
   shuttle: { title: 'Shuttles', emoji: '🪶', items: [
     { id: 'sh_white', name: 'Classic', price: 0, color: '#ffffff', fx: 'none', desc: 'Standard shuttle.' },
@@ -414,6 +469,8 @@ const SHOP = {
     /* ---- NEW (v1.02) ---- */
     { id: 'sh_lime', name: 'Lime Zip', price: 600, color: '#a3e635', fx: 'none', desc: 'Bright lime shuttle.' },
     { id: 'sh_plasma', name: 'Plasma', price: 6000, color: '#e879f9', fx: 'trail', rarity: 'epic', desc: 'Purple plasma trail.' },
+    { id: 'sh_pink', name: 'Rose Shuttle', price: 700, color: '#f9a8d4', fx: 'none', desc: 'Soft pink.' },
+    { id: 'sh_thunder', name: 'Thunder', price: 12000, color: '#fde047', fx: 'comet', rarity: 'epic', desc: 'Lightning tail.' },
   ] },
   disc: { title: 'C4 discs', emoji: '🔴', items: [
     { id: 'dc_classic', name: 'Classic', price: 0, r: ['#ff9aae', '#ff2d55', '#a80027'], y: ['#fff3a8', '#ffd23f', '#b98600'], desc: 'Red & yellow.' },
@@ -425,6 +482,8 @@ const SHOP = {
     /* ---- NEW (v1.02) ---- */
     { id: 'dc_forest', name: 'Forest', price: 1200, r: ['#fde68a', '#d97706', '#78350f'], y: ['#bbf7d0', '#16a34a', '#14532d'], desc: 'Amber vs green.' },
     { id: 'dc_sunset', name: 'Sunset', price: 3000, r: ['#fecaca', '#f43f5e', '#881337'], y: ['#fed7aa', '#fb923c', '#9a3412'], rarity: 'rare', desc: 'Rose vs orange.' },
+    { id: 'dc_mint', name: 'Mint & Berry', price: 1500, r: ['#fbcfe8', '#db2777', '#831843'], y: ['#a7f3d0', '#10b981', '#064e3b'], desc: 'Berry vs mint.' },
+    { id: 'dc_galaxy', name: 'Galaxy', price: 9000, r: ['#c4b5fd', '#7c3aed', '#2e1065'], y: ['#a5f3fc', '#06b6d4', '#164e63'], rarity: 'epic', desc: 'Purple vs cyan glow.' },
   ] },
   xo: { title: 'X / O styles', emoji: '❌', items: [
     { id: 'xo_classic', name: 'Classic', price: 0, x: '#ff4d9a', o: '#3de1ff', desc: 'Pink X, blue O.' },
@@ -436,6 +495,8 @@ const SHOP = {
     { id: 'xo_candy', name: 'Candy', price: 1400, x: '#f472b6', o: '#fde047', desc: 'Pink & lemon.' },
     { id: 'xo_ocean', name: 'Ocean', price: 3000, x: '#38bdf8', o: '#34d399', rarity: 'rare', desc: 'Sea blue & mint.' },
     { id: 'xo_royal', name: 'Royal', price: 9000, x: '#facc15', o: '#a78bfa', rarity: 'epic', desc: 'Gold & amethyst.' },
+    { id: 'xo_fire2', name: 'Lava & Frost', price: 4500, x: '#ef4444', o: '#67e8f9', rarity: 'rare', desc: 'Red X, ice O.' },
+    { id: 'xo_galaxy', name: 'Galaxy', price: 12000, x: '#e879f9', o: '#818cf8', rarity: 'epic', desc: 'Cosmic marks.' },
   ] },
   hammer: { title: 'Hammers', emoji: '🔨', items: [
     { id: 'hm_wood', name: 'Wood Hammer', price: 0, emoji: '🔨', fx: '#ffffff', desc: 'Starter hammer.' },
@@ -448,6 +509,9 @@ const SHOP = {
     { id: 'hm_pan', name: 'Frying Pan', price: 700, emoji: '🍳', fx: '#fde68a', desc: 'Sizzling smash.' },
     { id: 'hm_shoe', name: 'Flip-Flop', price: 1500, emoji: '🩴', fx: '#fb923c', desc: 'The classic slipper slap.' },
     { id: 'hm_wrench', name: 'Mega Wrench', price: 5500, emoji: '🔧', fx: '#94a3b8', rarity: 'epic', desc: 'Bolt-tight bonks.' },
+    { id: 'hm_mallet', name: 'Rubber Mallet', price: 900, emoji: '🏓', fx: '#fbbf24', desc: 'Boing!' },
+    { id: 'hm_guitar', name: 'Rock Guitar', price: 3500, emoji: '🎸', fx: '#f472b6', rarity: 'rare', desc: 'Smash it like a rockstar.' },
+    { id: 'hm_thor', name: 'Thunder Hammer', price: 30000, emoji: '⚡', fx: '#fde047', rarity: 'legendary', desc: 'Worthy hits only.' },
   ] },
   glove: { title: 'Boxing gloves', emoji: '🥊', items: [
     { id: 'bg_red', name: 'Red Classic', price: 0, color: '#ef4444', power: 1, desc: 'Starter gloves.' },
@@ -458,6 +522,10 @@ const SHOP = {
     { id: 'bg_fire', name: 'Inferno Fists', price: 9000, color: '#f97316', power: 1.16, glow: 1, rarity: 'epic', desc: '+16% power. Flaming gloves.' },
     { id: 'bg_ice', name: 'Frost Knuckles', price: 14000, color: '#7dd3fc', power: 1.18, glow: 1, rarity: 'epic', desc: '+18% power. Ice-cold hits.' },
     { id: 'bg_galaxy', name: 'Galaxy Crusher', price: 45000, color: '#a78bfa', power: 1.24, glow: 1, rarity: 'legendary', desc: '+24% power. Cosmic knockouts.' },
+    { id: 'bg_pink', name: 'Pink Punch', price: 700, color: '#f472b6', power: 1.04, desc: '+4% punch power.' },
+    { id: 'bg_purple', name: 'Violet Viper', price: 2500, color: '#8b5cf6', power: 1.1, desc: '+10% punch power.' },
+    { id: 'bg_steel', name: 'Steel Crusher', price: 7000, color: '#94a3b8', power: 1.14, glow: 1, rarity: 'epic', desc: '+14% power. Metal gloves.' },
+    { id: 'bg_dragon', name: 'Dragon Claw', price: 70000, color: '#dc2626', power: 1.28, glow: 1, rarity: 'legendary', desc: '+28% power. Heavyweight champion.' },
   ] },
 };
 /* Rarity: explicit it.rarity, otherwise worked out from the price. Level-reward items carry it.lvl. */
@@ -493,7 +561,7 @@ const GUN_PARTS = {
   g_nebula: [[0,9,12,12,'a'],[12,6,24,16,'c'],[36,8,12,5,'g'],[36,15,12,5,'g'],[48,9,16,3,'m'],[48,16,16,3,'m'],[16,9,16,3,'g'],[20,22,6,8,'k'],[14,3,10,4,'a'],[26,3,6,3,'g']],
   g_divine: [[0,9,13,11,'a'],[13,7,34,13,'c'],[47,9,16,7,'a'],[63,10,1,5,'g'],[22,3,16,4,'a'],[24,11,22,3,'g'],[26,20,7,9,'k'],[16,4,3,3,'g']],
 };
-GUN_PARTS.g_ak = GUN_PARTS.g_ar; GUN_PARTS.g_burst = GUN_PARTS.g_smg; GUN_PARTS.g_ricochet = GUN_PARTS.g_smg; GUN_PARTS.g_arc = GUN_PARTS.g_laser;
+GUN_PARTS.g_revolver = GUN_PARTS.g_pistol; GUN_PARTS.g_scar = GUN_PARTS.g_ar; GUN_PARTS.g_flame = GUN_PARTS.g_inferno; GUN_PARTS.g_ghostgun = GUN_PARTS.g_sniper; GUN_PARTS.g_thunderbolt = GUN_PARTS.g_storm; GUN_PARTS.g_omega = GUN_PARTS.g_nebula; GUN_PARTS.g_ak = GUN_PARTS.g_ar; GUN_PARTS.g_burst = GUN_PARTS.g_smg; GUN_PARTS.g_ricochet = GUN_PARTS.g_smg; GUN_PARTS.g_arc = GUN_PARTS.g_laser;
 const gunItem = g => (g && (ALL_ITEMS[g.id] || Object.values(ALL_ITEMS).find(i => i.slot === 'gun' && i.name === g.name))) || ALL_ITEMS.g_pistol;
 function gunParts(g) {
   const it = gunItem(g), c = it.color || '#ffd166', pal = { c, a: shade(c, 1.55), k: '#2a2d34', m: '#aeb6c2', g: shade(c, 1.25) };
@@ -771,7 +839,7 @@ const Az = window.Az = {
     return '<div class="fig" style="background:radial-gradient(circle at 50% 60%,#ffcf3a55,transparent 70%)"><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold" style="width:78px;height:78px;filter:drop-shadow(0 4px 10px rgba(255,190,30,.55))"><b style="font-size:20px;color:#ffd54a">+' + n + '</b></div></div>';
   },
   /* app version: bump here AND in version.json for every update */
-  VERSION: '1.02.01',
+  VERSION: '1.03.00',
   /* spin with animation + popup showing the figure of what was won */
   spinPlay(onDone) {
     const cost = Az.spinCost();
@@ -1564,7 +1632,7 @@ function deliverUpdateMail() {
     const gid = 'upd-' + Az.VERSION;
     if (d.verMail === Az.VERSION || d.mail.some(m => m.gid === gid)) { d.verMail = Az.VERSION; return; }
     d.verMail = Az.VERSION;
-    d.mail.push({ gid, title: ('🚀 Update ' + Az.VERSION).slice(0, 60), message: ('Ari Game Zone updated to version ' + Az.VERSION + '. New: Boxing Arena (online too), new shop items in every game, Zone Survivor online now runs like Arena Strike (respawn + kill target).').slice(0, 240), coins: 0, items: [], mode: 'add', ts: Date.now(), claimed: false });
+    d.mail.push({ gid, title: ('🚀 Update ' + Az.VERSION).slice(0, 60), message: ('Ari Game Zone updated to version ' + Az.VERSION + '. Boxing now plays in landscape with in-game buttons, plus many new items for every game (guns, outfits, cars and more).').slice(0, 240), coins: 0, items: [], mode: 'add', ts: Date.now(), claimed: false });
     save(); Az.refresh(); Az.toast && Az.toast('✉️ New mail: Update ' + Az.VERSION + ' is here!', 4500);
     document.dispatchEvent(new Event('az-mail'));
   } catch (e) {}
