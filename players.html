@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head><link rel="manifest" href="manifest.webmanifest?v=20"><link rel="icon" href="./icon-64.png?v=20" type="image/png" sizes="64x64"><link rel="apple-touch-icon" href="apple-touch-icon.png?v=20"><link rel="shortcut icon" href="favicon.ico?v=20"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Ari Games">
+<script src="firebase-config.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0a0614">
+<title>Ari Game Zone — All Player IDs</title>
+<style>
+main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-index:1}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin:14px 0}
+.box h2{margin:0 0 6px;font-size:17px}
+.box p.sub{margin:0 0 10px;color:var(--muted);font-size:13px}
+.big{font-family:Orbitron,system-ui,sans-serif;font-size:30px;color:var(--a4);text-align:center;margin:6px 0}
+.stat{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:6px 0}
+.ok{color:var(--a3)}.no{color:var(--bad)}
+#log{font-size:13px;color:var(--muted);min-height:20px;text-align:center;white-space:pre-line}
+.azinput{width:100%;max-width:260px}
+.coinbig,.azpill.coin,#azcoins,#hC,#hCoin,#mycoins{color:#ffbf24!important}.az-coin-icon{width:1.22em;height:1.22em;object-fit:contain;vertical-align:-.22em;display:inline-block;filter:drop-shadow(0 1px 2px rgba(255,190,30,.35))}</style>
+</head>
+<body>
+<main>
+  <p><a class="azbtn ghost sm" href="owner-admin.html">← Back to Developer Mode</a></p>
+  <h1 style="text-align:center">📋 All Player IDs</h1>
+  <div id="deny" class="box" hidden>
+    <h2>🔒 Access denied</h2>
+    <p class="sub">This page is only for the owner. Log in with the owner Google account.</p>
+    <div class="azrow c"><button class="azbtn" id="dologin">👤 Login</button></div>
+  </div>
+  <div id="panel" hidden>
+    <div class="box">
+      <div class="stat"><span class="azpill">👥 Total IDs: <b id="cnt">0</b></span><span class="azpill">🚫 Banned: <b id="bcnt">0</b></span></div>
+      <div class="azrow c"><input class="azinput" id="q" placeholder="Search ID or username" style="width:100%;max-width:320px;letter-spacing:0;text-transform:none"></div>
+      <div class="azrow c"><button class="azbtn sm" id="reload">🔄 Refresh list</button></div>
+      <p class="sub" style="text-align:center;font-size:12px">Newest activity first. A username appears after that player opens the latest version once; until then it shows "—". Guests (not logged in) have no cloud ID and are not listed.</p>
+    </div>
+    <div id="list"></div>
+    <div id="log"></div>
+  </div>
+</main>
+<script src="az.js?v=24"></script>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const when=t=>t?new Date(t).toLocaleString():'';
+  let all=[];
+  function draw(){
+    const q=$('q').value.trim().toLowerCase();
+    const l=all.filter(p=>!q||p.id.includes(q)||p.name.toLowerCase().includes(q));
+    $('cnt').textContent=all.length;$('bcnt').textContent=all.filter(p=>p.banned).length;
+    $('list').innerHTML=l.length?l.map((p,i)=>'<div class="azitem" style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;text-align:left"><div><b>🆔 '+esc(p.id)+'</b>'+(p.banned?' <span class="no">🚫 banned</span>':'')+'<br><span>👤 '+(p.name?esc(p.name):'—')+'</span>'+(p.ts?'<br><small style="color:var(--muted)">last seen '+esc(when(p.ts))+'</small>':'')+'</div><button class="azbtn sm ghost" data-copy="'+esc(p.id)+'">Copy ID</button></div>').join(''):'<p class="sub" style="text-align:center">No players found.</p>';
+  }
+  function load(){
+    if(!Az.isOwner()||!Az.ownerOK)return;
+    $('list').innerHTML='<p class="sub" style="text-align:center">Loading…</p>';
+    Az.devListPlayers().then(l=>{all=l;draw();}).catch(e=>{$('list').innerHTML='';$('log').textContent='❌ '+(e&&e.message||'Could not load the list. Publish the new database.rules.json in Firebase.');$('log').style.color='var(--bad)';});
+  }
+  function paint(){const o=Az.isOwner();$('deny').hidden=o;$('panel').hidden=!o;}
+  $('dologin').onclick=()=>Az.login();
+  $('reload').onclick=load;$('q').oninput=draw;
+  $('list').onclick=e=>{const b=e.target.closest('[data-copy]');if(!b)return;try{navigator.clipboard.writeText(b.dataset.copy);b.textContent='Copied ✓';}catch(x){}};
+  document.addEventListener('az-ready',()=>{paint();Az.whenAuth().then(paint);});
+  document.addEventListener('az-account',paint);
+  document.addEventListener('az-owner',()=>{paint();if(Az.ownerOK&&!window.__pl){window.__pl=1;load();}});
+})();
+</script>
+</body>
+</html>

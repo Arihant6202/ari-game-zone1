@@ -165,29 +165,29 @@ const SHOP = {
     { id: 'g_nebula', name: 'Nebula Reaper', price: 120000, color: '#e879f9', dmg: 62, rate: 11, pellets: 2, spread: .025, speed: 26, mag: 60, range: 1500, rarity: 'mythic', lvl: 60, desc: 'Cosmic twin-beam. LEVEL 60 REWARD.' },
   ] },
   outfit: { title: 'Outfits', emoji: '🧥', items: [
-    { id: 'o_rookie', name: 'Rookie', price: 0, color: '#4cc9f0', hat: '', hp: 100, desc: 'Starter. 100 HP.' },
-    { id: 'o_ninja', name: 'Shadow Ninja', price: 500, color: '#2b2d42', hat: '🥷', hp: 115, desc: '+15 HP' },
-    { id: 'o_soldier', name: 'Commando', price: 900, color: '#6a994e', hat: '🪖', hp: 130, desc: '+30 HP' },
-    { id: 'o_robot', name: 'Cyber Bot', price: 1500, color: '#adb5bd', hat: '🤖', hp: 150, desc: '+50 HP' },
-    { id: 'o_king', name: 'Battle King', price: 3000, color: '#ffd166', hat: '👑', hp: 175, desc: '+75 HP' },
-    { id: 'o_ghost', name: 'Ghost Lord', price: 4500, color: '#e0aaff', hat: '👻', hp: 200, desc: '+100 HP' },
-    { id: 'o_wizard', name: 'Dark Wizard', price: 2000, color: '#6a4c93', hat: '🧙', hp: 140, desc: '+40 HP' },
-    { id: 'o_pumpkin', name: 'Pumpkin Knight', price: 3500, color: '#ff7f11', hat: '🎃', hp: 160, desc: '+60 HP' },
-    { id: 'o_shinobu', name: 'Shinobu', price: 7000, color: '#b794f4', hat: '🦋', hp: 180, desc: 'Butterfly Hashira. +80 HP' },
-    { id: 'o_karate', name: 'Karate Master', price: 600, color: '#f1f1f1', hat: '🥋', hp: 120, desc: '+20 HP' },
-    { id: 'o_cowboy', name: 'Outlaw Cowboy', price: 900, color: '#a0693a', hat: '🤠', hp: 125, desc: '+25 HP' },
-    { id: 'o_alien', name: 'Alien Invader', price: 1800, color: '#3a7d44', hat: '👽', hp: 145, desc: '+45 HP' },
-    { id: 'o_zombie', name: 'Zombie Brute', price: 2500, color: '#556b2f', hat: '🧟', hp: 155, desc: '+55 HP' },
-    { id: 'o_vampire', name: 'Night Vampire', price: 3200, color: '#7a0f2b', hat: '🧛', hp: 165, desc: '+65 HP' },
-    { id: 'o_hero', name: 'Super Hero', price: 5000, color: '#1d4ed8', hat: '🦸', hp: 190, desc: '+90 HP' },
-    { id: 'o_dragon', name: 'Dragon Warrior', price: 6500, color: '#b91c1c', hat: '🐲', hp: 210, desc: '+110 HP' },
-    { id: 'o_phoenix', name: 'Phoenix Legend', price: 9000, color: '#ff6a00', hat: '🔥', hp: 230, desc: '+130 HP. Legendary.' },
+    { id: 'o_rookie', name: 'Rookie', price: 0, color: '#4cc9f0', hat: '', hp: 100, desc: 'Starter outfit. Style only, no bonus.' },
+    { id: 'o_ninja', name: 'Shadow Ninja', price: 500, color: '#2b2d42', hat: '🥷', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_soldier', name: 'Commando', price: 900, color: '#6a994e', hat: '🪖', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_robot', name: 'Cyber Bot', price: 1500, color: '#adb5bd', hat: '🤖', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_king', name: 'Battle King', price: 3000, color: '#ffd166', hat: '👑', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_ghost', name: 'Ghost Lord', price: 4500, color: '#e0aaff', hat: '👻', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_wizard', name: 'Dark Wizard', price: 2000, color: '#6a4c93', hat: '🧙', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_pumpkin', name: 'Pumpkin Knight', price: 3500, color: '#ff7f11', hat: '🎃', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_shinobu', name: 'Shinobu', price: 7000, color: '#b794f4', hat: '🦋', hp: 100, desc: 'Butterfly Hashira. Style only, no bonus.' },
+    { id: 'o_karate', name: 'Karate Master', price: 600, color: '#f1f1f1', hat: '🥋', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_cowboy', name: 'Outlaw Cowboy', price: 900, color: '#a0693a', hat: '🤠', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_alien', name: 'Alien Invader', price: 1800, color: '#3a7d44', hat: '👽', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_zombie', name: 'Zombie Brute', price: 2500, color: '#556b2f', hat: '🧟', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_vampire', name: 'Night Vampire', price: 3200, color: '#7a0f2b', hat: '🧛', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_hero', name: 'Super Hero', price: 5000, color: '#1d4ed8', hat: '🦸', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_dragon', name: 'Dragon Warrior', price: 6500, color: '#b91c1c', hat: '🐲', hp: 100, desc: 'Style only, no bonus.' },
+    { id: 'o_phoenix', name: 'Phoenix Legend', price: 9000, color: '#ff6a00', hat: '🔥', hp: 100, desc: 'Legendary. Style only, no bonus.' },
     /* ---- NEW (v14) ---- */
-    { id: 'o_samurai', name: 'Ronin Samurai', price: 4200, color: '#c1121f', hat: '⚔️', hp: 170, desc: '+70 HP. Honour & steel.' },
-    { id: 'o_frost', name: 'Frost Giant', price: 12000, color: '#7dd3fc', hat: '❄️', hp: 220, desc: '+120 HP. Cold as ice.' },
-    { id: 'o_reaper', name: 'Shadow Reaper', price: 40000, color: '#1f1235', hat: '💀', hp: 260, rarity: 'epic', desc: '+160 HP. Silent harvest.' },
-    { id: 'o_thunder', name: 'Thunder Lord', price: 70000, color: '#fde047', hat: '⚡', hp: 280, rarity: 'legendary', lvl: 30, desc: '+180 HP. LEVEL 30 REWARD.' },
-    { id: 'o_cosmos', name: 'Cosmic Emperor', price: 150000, color: '#7c3aed', hat: '🌌', hp: 320, rarity: 'mythic', lvl: 75, desc: '+220 HP. LEVEL 75 REWARD.' },
+    { id: 'o_samurai', name: 'Ronin Samurai', price: 4200, color: '#c1121f', hat: '⚔️', hp: 100, desc: 'Honour & steel. Style only, no bonus.' },
+    { id: 'o_frost', name: 'Frost Giant', price: 12000, color: '#7dd3fc', hat: '❄️', hp: 100, desc: 'Cold as ice. Style only, no bonus.' },
+    { id: 'o_reaper', name: 'Shadow Reaper', price: 40000, color: '#1f1235', hat: '💀', hp: 100, rarity: 'epic', desc: 'Silent harvest. Style only, no bonus.' },
+    { id: 'o_thunder', name: 'Thunder Lord', price: 70000, color: '#fde047', hat: '⚡', hp: 100, rarity: 'legendary', lvl: 30, desc: 'Style only, no bonus. LEVEL 30 REWARD.' },
+    { id: 'o_cosmos', name: 'Cosmic Emperor', price: 150000, color: '#7c3aed', hat: '🌌', hp: 100, rarity: 'mythic', lvl: 75, desc: 'Style only, no bonus. LEVEL 75 REWARD.' },
   ] },
   car: { title: 'Cars', emoji: '🏎️', items: [
     { id: 'c_red', name: 'Red Spark', price: 0, color: '#ef233c', speed: 1, desc: 'Starter car.' },
@@ -685,7 +685,7 @@ const Az = window.Az = {
     return '<div class="fig" style="background:radial-gradient(circle at 50% 60%,#ffcf3a55,transparent 70%)"><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold" style="width:78px;height:78px;filter:drop-shadow(0 4px 10px rgba(255,190,30,.55))"><b style="font-size:20px;color:#ffd54a">+' + n + '</b></div></div>';
   },
   /* app version: bump here AND in version.json for every update */
-  VERSION: '1.01.01',
+  VERSION: '1.01.02',
   /* spin with animation + popup showing the figure of what was won */
   spinPlay(onDone) {
     const cost = Az.spinCost();
@@ -783,7 +783,7 @@ Az.name = () => (db().nameSet && db().name) ? db().name : ((fbUser && Az.cleanNa
 Az.cleanName = n => String(n || '').replace(/[\u0000-\u001f<>&"'`\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, 14);
 Az.setName = function (n) {
   n = Az.cleanName(n); if (n.length < 2) return false;
-  db().name = n; db().nameSet = true; db().nameAsked = true; save(); Az.refresh(); return true;
+  db().name = n; db().nameSet = true; db().nameAsked = true; save(); Az.refresh(); syncDir(); return true;
 };
 Az.profile = function (first) {
   const m = Az.modal('<div class="azbig">🆔</div><h2 style="text-align:center">' + (first ? 'Welcome! 👋' : 'Your Profile') + '</h2>' +
@@ -826,7 +826,8 @@ Az.shop = function (slots, startSlot) {
   function draw() {
    try {
     const tabs = slots.map(s => `<button class="azchip ${s === cur ? 'on' : ''}" data-s="${s}">${SHOP[s].emoji} ${SHOP[s].title}</button>`).join('');
-    const items = SHOP[cur].items.slice().sort((a, b) => { const g = x => x.lvl ? 2 : x.spin ? 1 : 0; return (g(a) - g(b)) || (g(a) === 2 ? (a.lvl - b.lvl) : (a.price - b.price)) || 0; }).map(it => {
+    const RK = { common: 0, rare: 1, epic: 2, legendary: 3, mythic: 4 };
+    const items = SHOP[cur].items.slice().sort((x, y) => ((RK[rarityOf(x)] ?? 2) - (RK[rarityOf(y)] ?? 2)) || (x.price - y.price) || ((x.lvl || 0) - (y.lvl || 0))).map(it => {
       const own = Az.owned(it.id), eq = Az.eq(cur).id === it.id;
       const pv = `<div class="pv">${figure(it)}</div>`;
       const btn = (!own && it.spin) ? '<button class="azbtn sm ghost" disabled>🎡 Lucky Spin only</button>' : (!own && it.lvl) ? ('<button class="azbtn sm ghost" disabled>🔒 Level ' + it.lvl + ' reward</button>') : eq ? '<button class="azbtn sm ghost" disabled>✔ Equipped</button>' : own ? `<button class="azbtn sm" data-eq="${it.id}">Equip</button>` : `<button class="azbtn sm" data-buy="${it.id}" ${Az.coins() < it.price ? 'disabled' : ''}><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold A coin"> ${it.price}</button>`;
@@ -999,7 +1000,7 @@ function postLogin(u, seq) {
     .then(() => (alive() && owner) ? fbDb.ref('uidIndex/' + OWNER_UID).set(u.uid).catch(() => {}) : null)
     .then(() => {
       if (!alive()) return;
-      if (String(db().uid) !== OWNER_UID) fbDb.ref('uidIndex/' + db().uid).set(u.uid).catch(() => {});
+      (String(db().uid) !== OWNER_UID ? fbDb.ref('uidIndex/' + db().uid).set(u.uid) : Promise.resolve()).catch(() => {}).then(() => { if (alive()) syncDir(); });
       startGrants(u);
       try { Az.ownerBtn && Az.ownerBtn(); document.dispatchEvent(new Event('az-owner')); } catch (e) {}
     });
@@ -1060,12 +1061,50 @@ Az.devListBans = function () {
   return Promise.resolve().then(() => { needOwner(); return fbDb.ref('banned').once('value'); })
     .then(s => { const v = s.val() || {}; return Object.keys(v).map(k => ({ uid: k, id: String(v[k] && v[k].id || '?'), reason: String(v[k] && v[k].reason || ''), ts: +(v[k] && v[k].ts) || 0 })).sort((a, b) => b.ts - a.ts); });
 };
+Az.sendSupport = function (text) {
+  return Promise.resolve().then(() => {
+    if (!fbDb || !fbUser) throw new Error('Not logged in');
+    text = String(text || '').trim().slice(0, 300); if (!text) throw new Error('Empty message');
+    return fbDb.ref('support/' + fbUser.uid).push({ id: String(db().uid), name: String(Az.name()).slice(0, 30), msg: text, ban: String((banInfo && banInfo.reason) || '').slice(0, 140), ts: firebase.database.ServerValue.TIMESTAMP });
+  });
+};
+Az.devListSupport = function () {
+  return Promise.resolve().then(() => { needOwner(); return fbDb.ref('support').once('value'); }).then(sn => {
+    const v = sn.val() || {}, out = [];
+    Object.keys(v).forEach(u => Object.keys(v[u] || {}).forEach(k => { const m = v[u][k] || {}; out.push({ uid: u, key: k, id: String(m.id || '?'), name: String(m.name || ''), msg: String(m.msg || ''), ban: String(m.ban || ''), ts: +m.ts || 0 }); }));
+    return out.sort((a, b) => b.ts - a.ts);
+  });
+};
+Az.devDeleteSupport = function (uid, key) { return Promise.resolve().then(() => { needOwner(); return fbDb.ref('support/' + uid + '/' + key).remove(); }); };
+/* every Player ID ever created (uidIndex) + the player's name (playerDir, written by the player at login / rename) + ban status */
+Az.devListPlayers = function () {
+  return Promise.resolve().then(() => { needOwner(); return Promise.all([fbDb.ref('uidIndex').once('value'), fbDb.ref('playerDir').once('value').catch(() => null), fbDb.ref('banned').once('value').catch(() => null)]); })
+    .then(r => {
+      const idx = r[0].val() || {}, dir = (r[1] && r[1].val()) || {}, ban = (r[2] && r[2].val()) || {};
+      return Object.keys(idx).map(id => ({ id, name: dir[id] && dir[id].name ? String(dir[id].name) : '', ts: dir[id] ? (+dir[id].ts || 0) : 0, banned: !!ban[idx[id]] }))
+        .sort((a, b) => (b.ts - a.ts) || (a.id < b.id ? -1 : 1));
+    });
+};
+function syncDir() {
+  try {
+    if (!fbDb || !fbUser || !/^\d{8}$/.test(String(db().uid))) return;
+    fbDb.ref('playerDir/' + db().uid).set({ name: String(Az.name()).slice(0, 30), ts: firebase.database.ServerValue.TIMESTAMP }).catch(() => {});
+  } catch (e) {}
+}
 let banRef = null, banInfo = null, banEl = null;
 function hideBan() { if (banEl) { banEl.remove(); banEl = null; } }
 function showBan(v) {
-  hideBan(); banEl = el('div', 'azmodal', '<div class="azbox" style="text-align:center"><div class="azbig">🚫</div><h2>Account banned</h2><p class="sub">Your account (Player ID <b>' + esc(db().uid) + '</b>) has been banned from Ari Game Zone.' + (v && v.reason ? '<br><br>Reason: <b>' + esc(v.reason) + '</b>' : '') + '</p><p class="sub" style="font-size:12px">Progress is not saved to the cloud while banned. Contact the owner if you think this is a mistake.</p><div class="azrow c"><button class="azbtn ghost" id="banout">Logout</button></div></div>');
+  hideBan(); banEl = el('div', 'azmodal', '<div class="azbox" style="text-align:center"><div class="azbig">🚫</div><h2>Account banned</h2><p class="sub">Your account (Player ID <b>' + esc(db().uid) + '</b>) has been banned from Ari Game Zone.' + (v && v.reason ? '<br><br>Reason: <b>' + esc(v.reason) + '</b>' : '') + '</p><p class="sub" style="font-size:12px">Progress is not saved to the cloud while banned. Contact the owner if you think this is a mistake.</p><textarea id="bansup" maxlength="300" rows="3" placeholder="Write a message to the developer (max 300 characters)" style="width:100%;box-sizing:border-box;border-radius:12px;padding:10px;background:rgba(255,255,255,.08);color:inherit;border:1px solid rgba(255,255,255,.2);font:inherit"></textarea><p class="sub" id="bansupmsg" style="font-size:12px;min-height:16px"></p><div class="azrow c"><button class="azbtn" id="bansend">📩 Send to support</button><button class="azbtn ghost" id="banout">Logout</button></div></div>');
   banEl.style.zIndex = 2147483000; document.body.appendChild(banEl);
   const b = banEl.querySelector('#banout'); b.onclick = () => { b.disabled = true; Az.logout && Az.logout(); };
+  const sb = banEl.querySelector('#bansend'), sm = banEl.querySelector('#bansupmsg'), st = banEl.querySelector('#bansup');
+  sb.onclick = () => {
+    const t = st.value.trim(); if (!t) { sm.textContent = 'Write a message first.'; return; }
+    if (Date.now() - (window.__supT || 0) < 30000) { sm.textContent = 'Please wait a few seconds before sending again.'; return; }
+    sb.disabled = true; sm.textContent = 'Sending…';
+    Az.sendSupport(t).then(() => { window.__supT = Date.now(); st.value = ''; sm.textContent = '✅ Sent. The developer will see your message.'; })
+      .catch(e => { sm.textContent = '❌ Could not send: ' + ((e && e.message) || 'try again later'); }).then(() => { sb.disabled = false; });
+  };
 }
 function stopBanWatch() { if (banRef) { try { banRef.off(); } catch (e) {} banRef = null; } banInfo = null; hideBan(); }
 function startBanWatch(u) {
@@ -1430,6 +1469,22 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
+
+/* ------------------------------ update mail ------------------------------
+   Every account (guest or Google) gets one mail per app version, the first time it opens that version. */
+function deliverUpdateMail() {
+  try {
+    const d = db(); if (!d || !Array.isArray(d.mail)) return;
+    const gid = 'upd-' + Az.VERSION;
+    if (d.verMail === Az.VERSION || d.mail.some(m => m.gid === gid)) { d.verMail = Az.VERSION; return; }
+    d.verMail = Az.VERSION;
+    d.mail.push({ gid, title: ('🚀 Update ' + Az.VERSION).slice(0, 60), message: ('Ari Game Zone updated to version ' + Az.VERSION + '. New: character Manish (Lucky Spin), stronger characters, Turbo Racing car health + fair online start, items sorted by rarity, outfits are style only, ban support.').slice(0, 240), coins: 0, items: [], mode: 'add', ts: Date.now(), claimed: false });
+    save(); Az.refresh(); Az.toast && Az.toast('✉️ New mail: Update ' + Az.VERSION + ' is here!', 4500);
+    document.dispatchEvent(new Event('az-mail'));
+  } catch (e) {}
+}
+document.addEventListener('az-account', () => setTimeout(deliverUpdateMail, 800));
+setTimeout(deliverUpdateMail, 2500); setInterval(deliverUpdateMail, 20000);
 
 /* ------------------------------ update popup ------------------------------
    Every open page checks version.json (never cached). If the published version differs from

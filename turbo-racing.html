@@ -213,7 +213,7 @@ function newCar(i,two){
   const car=_newCar(i,two,skin);car.maxHp=car.lives*30;car.hp=car.maxHp;return car;
 }
 function _newCar(i,two,skin){
-  return {i,x:two?(i?RX+RW*.72:RX+RW*.28):(O.mode==='online'?(O.host?RX+RW*.3:RX+RW*.7):W/2),y:CAR_Y,vx:0,w:30,h:54,lives:O.mode==='local'?3:diffCfg(O.mode==='online'?10:O.level,O.diff).lives,nitro:40,boost:false,inv:0,dist:0,alive:true,sf:0,score:0,near:0,combo:0,comboT:0,coins:0,hit:0,color:i?'#ff9f1c':skin.color,spd:two?1:skin.speed,spin:0,dead:0};
+  return {i,x:two?(i?RX+RW*.72:RX+RW*.28):(O.mode==='online'?(O.host?lx(1):lx(2)):W/2),y:CAR_Y,vx:0,w:30,h:54,lives:O.mode==='local'?3:diffCfg(O.mode==='online'?10:O.level,O.diff).lives,nitro:40,boost:false,inv:0,dist:0,alive:true,sf:0,score:0,near:0,combo:0,comboT:0,coins:0,hit:0,color:i?'#ff9f1c':skin.color,spd:two?1:skin.speed,spin:0,dead:0};
 }
 function start(o){
   O=o;const two=o.mode==='local',online=o.mode==='online'&&!!o.net;
@@ -227,7 +227,7 @@ function start(o){
   if(two)G.cars.push(newCar(1,two));
   G.cfg=diffCfg(two?10:online?8:O.level,O.diff);
   for(let i=0;i<14;i++)G.speedLines.push({x:rnd()*W,y:rnd()*H,l:20+rnd()*60});
-  if(online){G.net=O.net;G.opp={x:O.host?RX+RW*.7:RX+RW*.3,tx:O.host?RX+RW*.7:RX+RW*.3,d:0,td:0,sp:0,lt:0,ld:0,lives:G.cars[0].lives,alive:true,boost:false,fin:false,fint:0,dead:false,dd:0,seen:false,col:'#ff9f1c'};G.mt=0;hookNet();}
+  if(online){G.net=O.net;G.hold=true;G.holdT=0;G.rdyT=0;G.opp={x:O.host?lx(2):lx(1),tx:O.host?lx(2):lx(1),d:0,td:0,sp:0,lt:0,ld:0,lives:G.cars[0].lives,alive:true,boost:false,fin:false,fint:0,dead:false,dd:0,seen:false,col:'#ff9f1c'};G.mt=0;hookNet();}
   parts.length=0;floats.length=0;window.__g=G;
   Az.setBadge(two?'2 Players':online?'🌐 Online Race · '+place.emoji+' '+place.name:'Lv '+O.level+' · '+place.emoji+' '+place.name);
   buildCtl();hud();
@@ -249,6 +249,8 @@ function hookNet(){
       op.lt=now;op.ld=m.d;op.td=m.d;op.tx=clamp(+m.x||W/2,RX,RX+RW);op.lives=m.l|0;op.alive=!!m.a;op.boost=!!m.b;op.seen=true;
       if(!op.seen0){op.seen0=1;op.d=op.td;op.x=op.tx;}
     }
+    else if(m.t==='rdy'){if(O.host&&g.hold){g.hold=false;g.net.send({t:'st'});}}
+    else if(m.t==='st'){if(!O.host&&g.hold)g.hold=false;}
     else if(m.t==='fin'){op.fin=true;op.fint=+m.tm||0;op.sp=0;}
     else if(m.t==='dead'){op.dead=true;op.alive=false;op.dd=+m.d||0;op.sp=0;
       if(g.state==='play')setResult(true,'Rival wrecked out');
@@ -339,7 +341,11 @@ function spawnCoins(avoid){
 /* ---------------- update ---------------- */
 function update(dt){
   G.t+=dt;
-  if(G.cd>0){G.cd-=dt;if(G.cd<=0){G.cd=0;Az.sfx('win');}}
+  if(G.hold){            // online: both racers wait here until the rival is ready, then both countdowns start together
+    G.holdT+=dt;G.rdyT-=dt;
+    if(G.rdyT<=0&&G.net&&G.net.open){G.rdyT=.25;G.net.send({t:'rdy'});}
+    if(G.holdT>8)G.hold=false;   // rival never answered: start anyway
+  }else if(G.cd>0){G.cd-=dt;if(G.cd<=0){G.cd=0;Az.sfx('win');}}
   const go=G.cd<=0;
   if(G.two&&go){G.rampLv=Math.min(100,10+G.t*1.5);G.cfg=diffCfg(G.rampLv,O.diff);}
   const alive=G.cars.filter(c=>c.alive);
@@ -355,7 +361,8 @@ function update(dt){
     if(c.nitro<=0){c.nitro=0;c.boost=false;}
     const sp=240+G.rampLv*.9;
     let tv=(c.spin>0?0:inp.dir)*sp;
-    if(!inp.dir&&c.spin<=0&&go){const ln=clamp(Math.round((c.x-RX-LW/2)/LW),0,LN-1),cx=lx(ln);tv=clamp((cx-c.x)*6,-sp,sp);}   // no steering = settle into the nearest lane centre
+    const held=Object.keys(ptrs).length>0||keys.a||keys.d||keys.arrowleft||keys.arrowright;
+    if(!inp.dir&&!held&&c.spin<=0&&go){const ln=clamp(Math.round((c.x-RX-LW/2)/LW),0,LN-1),cx=lx(ln);tv=clamp((cx-c.x)*6,-sp,sp);}   // no steering = settle into the nearest lane centre
     c.vx+=(tv-c.vx)*Math.min(1,dt*12);
     c.x+=c.vx*dt;c.x=clamp(c.x,RX+c.w/2+2,RX+RW-c.w/2-2);
     const ty=CAR_Y-(c.boost?(G.two?70:36):0)-(fin?260:0);c.y+=(ty-c.y)*Math.min(1,dt*5);
@@ -395,7 +402,7 @@ function update(dt){
     if(c.comboT>0){c.comboT-=dt;if(c.comboT<=0)c.combo=0;}
     G.traffic.forEach(t=>{
       if(t.hit)return;
-      const dx=Math.abs(t.x-c.x),dy=Math.abs(t.y-c.y),ox=Math.max((t.w+c.w)/2,LW/2+4),oy=(t.h+c.h)/2;
+      const dx=Math.abs(t.x-c.x),dy=Math.abs(t.y-c.y),ox=Math.max((t.w+c.w)/2,LW/2+6),oy=(t.h+c.h)/2;
       if(dx<ox-4&&dy<oy-5){
         if(c.inv>0&&G.state==='play')return;
         if(G.state!=='play'||G.myFin!=null)return;
@@ -594,7 +601,8 @@ function render(){
     ctx.fillStyle='#fff';ctx.font='bold 9px Poppins,sans-serif';ctx.textAlign='left';ctx.fillText('⚡ NITRO',bx+6,by+9.5);
     if(c.combo>1){ctx.fillStyle='#ffe066';ctx.font='bold 12px Orbitron,sans-serif';ctx.fillText('x'+c.combo,bx,by-6);}
   });
-  if(G.cd>0){ctx.textAlign='center';const n=Math.ceil(G.cd-.2);const fr=(G.cd-.2)%1;ctx.save();ctx.translate(W/2,230);ctx.scale(1+fr*.3,1+fr*.3);ctx.globalAlpha=.4+fr*.6;ctx.fillStyle=acc;ctx.shadowColor=acc;ctx.shadowBlur=24;ctx.font='900 78px Orbitron,sans-serif';ctx.fillText(n>0?n:'GO!',0,0);ctx.restore();}
+  if(G.hold){ctx.textAlign='center';ctx.fillStyle='#fff';ctx.font='700 16px sans-serif';ctx.fillText('Waiting for rival…',W/2,230);}
+  if(G.cd>0&&!G.hold){ctx.textAlign='center';const n=Math.ceil(G.cd-.2);const fr=(G.cd-.2)%1;ctx.save();ctx.translate(W/2,230);ctx.scale(1+fr*.3,1+fr*.3);ctx.globalAlpha=.4+fr*.6;ctx.fillStyle=acc;ctx.shadowColor=acc;ctx.shadowBlur=24;ctx.font='900 78px Orbitron,sans-serif';ctx.fillText(n>0?n:'GO!',0,0);ctx.restore();}
   if(G.t<2.6&&G.cd<=0){ctx.textAlign='center';ctx.globalAlpha=Math.max(0,1-(G.t-1.4)/1.2);ctx.fillStyle='#fff';ctx.font='900 40px Orbitron,sans-serif';ctx.fillText('GO!',W/2,230);ctx.globalAlpha=1;}
   if(G.state==='win'&&!two){ctx.textAlign='center';ctx.fillStyle='#ffd166';ctx.font='900 30px Orbitron,sans-serif';ctx.fillText(G.online&&G.myFin==null?'RIVAL OUT!':'FINISH!',W/2,230);}
   if(G.online&&G.myFin!=null&&G.state==='play'){ctx.textAlign='center';ctx.fillStyle='#ffd166';ctx.font='900 26px Orbitron,sans-serif';ctx.fillText('FINISH!',W/2,230);ctx.font='13px Poppins,sans-serif';ctx.fillStyle='#fff';ctx.fillText('checking the photo finish…',W/2,254);}

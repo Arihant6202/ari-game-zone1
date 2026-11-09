@@ -35,6 +35,25 @@
           ".validate": "!newData.exists() || (newData.hasChildren(['coins', 'ts']) && newData.child('coins').isNumber() && newData.child('coins').val() >= 0 && newData.child('coins').val() <= 1000000000 && (!newData.child('title').exists() || (newData.child('title').isString() && newData.child('title').val().length <= 60)) && (!newData.child('message').exists() || (newData.child('message').isString() && newData.child('message').val().length <= 240)) && (!newData.child('items').exists() || (newData.child('items').isString() && newData.child('items').val().length <= 300)))"
         }
       }
+    },
+    "support": {
+      ".read": "auth != null && (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true)",
+      "$authUid": {
+        "$msgId": {
+          ".write": "auth != null && ((auth.uid === $authUid && !data.exists() && newData.exists()) || (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true))",
+          ".validate": "!newData.exists() || (newData.hasChildren(['id','msg','ts']) && newData.child('id').isString() && newData.child('id').val().matches(/^[0-9]{8}$/) && newData.child('msg').isString() && newData.child('msg').val().length > 0 && newData.child('msg').val().length <= 300 && (!newData.child('name').exists() || (newData.child('name').isString() && newData.child('name').val().length <= 30)) && (!newData.child('ban').exists() || (newData.child('ban').isString() && newData.child('ban').val().length <= 140)))",
+          "$other": {
+            ".validate": "$other === 'id' || $other === 'msg' || $other === 'ts' || $other === 'name' || $other === 'ban'"
+          }
+        }
+      }
+    },
+    "playerDir": {
+      ".read": "auth != null && (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true)",
+      "$gameUid": {
+        ".write": "auth != null && $gameUid.matches(/^[0-9]{8}$/) && root.child('uidIndex').child($gameUid).val() === auth.uid",
+        ".validate": "!newData.exists() || (newData.hasChildren(['name','ts']) && newData.child('name').isString() && newData.child('name').val().length <= 30)"
+      }
     }
   }
 }

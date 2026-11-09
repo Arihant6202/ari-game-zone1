@@ -108,3 +108,10 @@ BUG FIXES
 - Cache version bumped to az.js?v=24.
 IMPORTANT: publish the new database.rules.json (it adds the banned node and item gifts) before using Ban or item mail.
 TESTED: headless Chromium with an in-memory Firebase mock (mail, items, delete/auto-claim, ban/unban, live unban) and a two-client co-op simulation. Not tested on live Firebase / real PeerJS between two devices.
+
+UPDATES (v1.01.02)
+- Every update: change VERSION in az.js AND "version" in version.json. Players get an update popup (Refresh button) and one mail per version.
+- Outfits are style only (no HP/power). Perks exist only on characters.
+- Banned players can send a message to support from the ban screen; the owner reads them in Developer Mode > "Ban support messages".
+- Developer Mode > "All Player IDs list" (players.html) shows every Player ID with username. Names appear after a player opens the latest version once.
+- IMPORTANT: publish the new database.rules.json in Firebase (adds "support" and "playerDir") or support messages / the username list will not work.

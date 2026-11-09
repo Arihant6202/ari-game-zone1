@@ -21,6 +21,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
 <main>
   <p><a class="azbtn ghost sm" href="index.html">← Back to Game Zone</a></p>
   <h1 style="text-align:center">👑 Developer Mode</h1>
+  <p style="text-align:center"><a class="azbtn sm" href="players.html">📋 All Player IDs list</a></p>
   <div id="deny" class="box" hidden>
     <h2>🔒 Access denied</h2>
     <p class="sub">This page is only for owner Player ID <b>97835276</b>. This account's ID: <b id="myid">—</b></p>
@@ -102,6 +103,12 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
       </div>
       <div id="banList"></div>
     </div>
+    <div class="box">
+      <h2>📩 Ban support messages</h2>
+      <p class="sub">Messages that banned players send from their ban screen.</p>
+      <div class="azrow c"><button class="azbtn sm" id="supRefresh">🔄 Refresh messages</button><a class="azbtn sm ghost" href="players.html">📋 All Player IDs</a></div>
+      <div id="supList"></div>
+    </div>
     <div id="log"></div>
   </div>
 </main>
@@ -179,8 +186,22 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
   $('banBtn').onclick=()=>{const gid=$('bid').value.replace(/\D/g,'');if(gid.length!==8)return log('Enter the 8-digit Player ID.',1);if(!confirm('Ban player '+gid+'?'))return;log('Banning…');Az.devBan(gid,$('bReason').value.trim()).then(g=>{log('🚫 Player '+g+' is banned.');drawBans();}).catch(e=>log('❌ '+(e&&e.message||'Could not ban'),1));};
   $('unbanBtn').onclick=()=>{const gid=$('bid').value.replace(/\D/g,'');if(gid.length!==8)return log('Enter the 8-digit Player ID.',1);log('Unbanning…');Az.devUnban(gid).then(g=>{log('✅ Player '+g+' is unbanned.');drawBans();}).catch(e=>log('❌ '+(e&&e.message||'Could not unban'),1));};
   $('banList').onclick=e=>{const b=e.target.closest('[data-unban]');if(!b)return;$('bid').value=b.dataset.unban;$('unbanBtn').click();};
+  /* ---- support messages from banned players ---- */
+  function drawSupport(){
+    $('supList').innerHTML='<p class="sub" style="text-align:center">Loading…</p>';
+    Az.devListSupport().then(list=>{
+      $('supList').innerHTML=list.length?list.map(m=>'<div class="azitem" style="text-align:left"><b>🆔 '+esc(m.id)+'</b>'+(m.name?' · '+esc(m.name):'')+'<br><small style="color:var(--muted)">'+esc(when(m.ts))+(m.ban?' · ban reason: '+esc(m.ban):'')+'</small><p style="margin:6px 0;white-space:pre-wrap">'+esc(m.msg)+'</p><div class="azrow"><button class="azbtn sm" data-sunban="'+esc(m.id)+'">✅ Unban</button><button class="azbtn sm ghost" data-sreply="'+esc(m.id)+'">✉️ Reply</button><button class="azbtn sm ghost" data-sdel="'+esc(m.uid)+'|'+esc(m.key)+'">🗑 Delete</button></div></div>').join(''):'<p class="sub" style="text-align:center">No support messages.</p>';
+    }).catch(e=>{$('supList').innerHTML='';log('❌ '+(e&&e.message||'Could not load messages'),1);});
+  }
+  $('supRefresh').onclick=drawSupport;
+  $('supList').onclick=e=>{
+    const u=e.target.closest('[data-sunban]'),r=e.target.closest('[data-sreply]'),d=e.target.closest('[data-sdel]');
+    if(u){$('bid').value=u.dataset.sunban;$('unbanBtn').click();}
+    else if(r){const t=prompt('Reply to player '+r.dataset.sreply+' (sent as mail):');if(t&&t.trim())Az.devGiveMail(r.dataset.sreply,0,'Support reply',t.trim(),[]).then(()=>log('✅ Reply sent.')).catch(x=>log('❌ '+(x&&x.message||'Error'),1));}
+    else if(d){const p=d.dataset.sdel.split('|');Az.devDeleteSupport(p[0],p[1]).then(drawSupport).catch(x=>log('❌ '+(x&&x.message||'Error'),1));}
+  };
   document.addEventListener('az-ready',()=>{paint();Az.whenAuth().then(paint);});
-  document.addEventListener('az-owner',()=>{if(Az.ownerOK&&!window.__bansLoaded){window.__bansLoaded=1;drawBans();}});
+  document.addEventListener('az-owner',()=>{if(Az.ownerOK&&!window.__bansLoaded){window.__bansLoaded=1;drawBans();drawSupport();}});
   document.addEventListener('az-account',paint);document.addEventListener('az-owner',paint);
   setInterval(()=>{if(Az.isOwner()){$('mycoins').textContent=Az.coins();
     $('selfLevel').textContent=Az.plvl(); $('selfXp').textContent=Az.xp();}},1500);
