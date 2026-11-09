@@ -253,7 +253,7 @@ function drawTop(){const p=Az.plProgress();document.getElementById('xpbar').styl
   const today=new Date().toDateString();document.getElementById('daily').disabled=Az.get('daily')===today;document.getElementById('daily').textContent=Az.get('daily')===today?'✅ Claimed today':'🎁 Daily bonus';}
 document.getElementById('daily').onclick=()=>{const t=new Date().toDateString();if(Az.get('daily')===t)return;Az.set('daily',t);Az.addCoins(Az.DAILY_BONUS);Az.sfx('coin');Az.toast('🎁 +'+Az.DAILY_BONUS+' coins! Come back tomorrow.');drawTop();};
 document.getElementById('shopall').onclick=()=>Az.shop();
-function spinUI(){var c=Az.spinCost();document.getElementById('luckyspin').textContent='🎡 Spin now · '+c+' Gold';document.getElementById('spinnote').textContent='Next spin: '+c+' Gold · +500 after every spin'}
+function spinUI(){var c=Az.spinCost();document.getElementById('luckyspin').textContent='🎡 Spin now · '+c+' Gold';document.getElementById('spinnote').textContent='Every spin: '+c+' Gold'}
 document.getElementById('luckyspin').onclick=()=>{Az.spinPlay(r=>{document.getElementById('luckyresult').textContent=r?'🎉 Last win: '+r.name:'';spinUI()})};
 spinUI();document.addEventListener('az-account',spinUI);
 function rewardItemHTML(it){if(!it)return '';const r=Az.rarity(it);return `<span style="display:block;margin-top:3px;font-size:11px;font-weight:700;color:${r.c}">${Az.SHOP[it.slot].emoji} ${it.name}<br><span style="font-size:9px;letter-spacing:1px">${r.n}</span></span>`;}

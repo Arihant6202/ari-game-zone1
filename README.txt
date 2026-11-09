@@ -54,7 +54,7 @@ TESTING PERFORMED:
 
 --- VERSION 19 UPDATE NOTES ---
 - Space Dodge rebuilt on canvas (ship, falling asteroids, stars, drag/arrow controls, survive-to-win timer). Fixes the blank game screen.
-- Lucky Spin: first spin 2000 Gold, +100 per spin, capped at 10000. Item chance raised to ~18% (still lower than Gold prizes).
+- Lucky Spin: flat 2000 Gold per spin (never increases). Level-reward items are excluded from the spin. Item chance raised to ~18% (still lower than Gold prizes).
 - Removed link underlines on game cards and menus.
 - Cache-busting (?v=20) on logo, favicon, manifest, CSS and JS so the new app logo shows. To refresh the installed app icon: remove the app from the home screen and add it again.
 

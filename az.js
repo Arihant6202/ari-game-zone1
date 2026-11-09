@@ -524,6 +524,7 @@ function figure(it) {
 // Different kinds of items: trails, guns, birds, cars, outfits, runners, snakes, chess sets, balls, dice, tokens, cards, heroes, rackets, shuttles, discs.
 const LEVEL_ITEMS = { 5: 't_fire', 12: 'ch_dhiraj', 77: 'ch_arihant', 10: 'g_ar', 15: 'b_ghost', 20: 'c_royal', 25: 'g_storm', 30: 'o_thunder', 35: 'r_alien', 40: 'n_diamond', 45: 't_aura', 50: 'p_cosmic',
   55: 'l_cosmic', 60: 'g_nebula', 65: 'd_cosmic', 70: 'k_dragon', 75: 'o_cosmos', 80: 'u_cosmic', 85: 'h_cosmic', 90: 'rk_galaxy', 95: 'sh_galaxy', 100: 'dc_cosmic' };
+const isLvlItem = it => !!(it && (it.lvl || Object.values(LEVEL_ITEMS).includes(it.id)));   // level-reward items are never spin prizes
 function grantLevelItems(upto) {
   const got = [];
   Object.keys(LEVEL_ITEMS).map(Number).sort((a, b) => a - b).forEach(lv => {
@@ -656,13 +657,13 @@ const Az = window.Az = {
   char() { return Az.eq('char'); },
   perk() { const p = (Az.eq('char') || {}).perk || {}; return { coin: +p.coin || 0, xp: +p.xp || 0, hp: +p.hp || 0, luck: +p.luck || 0 }; },
   perkText: p => perkText(p || Az.perk()),
-  /* Lucky Spin: first spin costs 2000 Gold, every next spin costs 100 more, capped at 10000. Items are rarer than Gold but do drop. */
-  SPIN_BASE: 2000, SPIN_STEP: 100, SPIN_MAX: 10000, ITEM_CHANCE: 0.18,
+  /* Lucky Spin: every spin costs a flat 2000 Gold (never increases). Level-reward items are never in the spin. Items are rarer than Gold but do drop. */
+  SPIN_BASE: 2000, SPIN_STEP: 0, SPIN_MAX: 2000, ITEM_CHANCE: 0.18,
   spinCost() { return Math.min(Az.SPIN_MAX, Az.SPIN_BASE + Az.SPIN_STEP * (db().spins || 0)); },
   luckySpin() {
     const cost = Az.spinCost();
     if (Az.coins() < cost) { Az.toast('Not enough Gold. This spin costs ' + cost + '.'); return null; }
-    const pool = Object.values(SHOP).flatMap(s => s.items).filter(it => it && it.id && USED[it.slot] && !it.lvl && it.price > 0 && !Az.owned(it.id));
+    const pool = Object.values(SHOP).flatMap(s => s.items).filter(it => it && it.id && USED[it.slot] && !isLvlItem(it) && it.price > 0 && !Az.owned(it.id));
     db().coins -= cost; db().spins = (db().spins || 0) + 1;
     const wpick = (arr, wf) => { let t = arr.reduce((a, x) => a + wf(x), 0), r = Math.random() * t; for (const x of arr) { r -= wf(x); if (r < 0) return x; } return arr[arr.length - 1]; };
     let reward;
@@ -687,7 +688,7 @@ const Az = window.Az = {
     const cost = Az.spinCost();
     if (Az.coins() < cost) { Az.toast('Not enough Gold. This spin costs ' + cost + '.', 3000); return; }
     const r = Az.luckySpin(); if (!r) return;
-    const all = Object.values(SHOP).flatMap(s => s.items).filter(i => i && i.id && USED[i.slot]);
+    const all = Object.values(SHOP).flatMap(s => s.items).filter(i => i && i.id && USED[i.slot] && !isLvlItem(i));
     const m = Az.modal('<div id="spinin" style="text-align:center"></div>', { sticky: true });
     const box = $('#spinin', m);
     let n = 0;
@@ -706,7 +707,7 @@ const Az = window.Az = {
       box.innerHTML = '<h2>🎉 You won!</h2><div class="azitem" style="margin:12px auto;max-width:210px;border-color:' + rr.c + '88;box-shadow:0 0 22px -6px ' + rr.c + '"><div class="pv" style="height:110px">' + (isItem ? figure(r.item) : Az.coinFigure(r.coins)) + '</div>' +
         '<span class="azrar" style="color:' + rr.c + ';border-color:' + rr.c + '66">' + rr.n + '</span><b>' + r.name + '</b>' +
         '<small>' + (isItem ? 'New item added and equipped! Find it in the Shop.' : r.coins + ' Gold added to your balance.') + '</small></div>' +
-        '<p class="sub" style="margin:6px 0 10px">Next spin costs <b style="color:var(--a4)">' + next + '</b> Gold · You have <b>' + Az.coins() + '</b></p>' +
+        '<p class="sub" style="margin:6px 0 10px">Every spin costs <b style="color:var(--a4)">' + next + '</b> Gold · You have <b>' + Az.coins() + '</b></p>' +
         '<div class="azrow c"><button class="azbtn" id="spagain"' + (Az.coins() < next ? ' disabled' : '') + '>🎡 Spin again (' + next + ')</button><button class="azbtn ghost" id="spclose">OK</button></div>';
       $('#spclose', m).onclick = () => { m.close(); onDone && onDone(r); };
       $('#spagain', m).onclick = () => { m.close(); onDone && onDone(r); Az.spinPlay(onDone); };
