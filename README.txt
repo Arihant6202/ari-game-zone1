@@ -117,12 +117,3 @@ UPDATES (v1.01.02)
 - IMPORTANT: publish the new database.rules.json in Firebase (adds "support" and "playerDir") or support messages / the username list will not work.
 
 RELEASE CHECKLIST: for every update change (1) VERSION in az.js, (2) "version" in version.json, (3) the ?v=<version> on az.js / az.css / v17.css in every .html page. Step 3 is what makes browsers load the new files; without it the update popup keeps coming back.
-
-
---- VERSION 1.01.04 UPDATE NOTES ---
-- Zone Survivor online 1v1 Duel: best of 5 rounds, first to 3 round wins takes the match (round score in the HUD, draws replay the round, forfeit = win if rival leaves).
-- Invite links (all games using Az.start): host taps "Copy invite link" / "Share"; the friend opens <game page>?room=CODE and is auto-joined. Code entry still works.
-- Host PeerJS auto-reconnects to the signalling server if it drops.
-- New shop slots: Memory Themes, Math Boards, Dash Styles, Rush Targets (coins, rarities, Lucky Spin-only legendary each). Boxing Gloves / Boxing Rings slots are defined but stay hidden until a boxing game lists 'glove'/'ring' in its GAMES shop array.
-- Fix: Memory Match did not end when the last allowed move was a matching pair.
-- TESTED (headless Chromium): two-client duel with a fake PeerJS (invite link join, 4 rounds, 3-1 result screen), every page loads with 0 JS errors, new items apply in each game, spin pool includes new items. NOT tested on real PeerJS/Firebase between two phones.
