@@ -63,7 +63,7 @@ function normalize(d) {
   d.starter49019468 = !!d.starter49019468;
   if (String(d.uid || '') === '49019468' && !d.starter49019468) { d.coins = Math.max(d.coins, 100000); d.starter49019468 = true; }
   d.xp = (typeof d.xp === 'number' && isFinite(d.xp) && d.xp > 0) ? d.xp : 0;
-  d.spins = (typeof d.spins === 'number' && isFinite(d.spins) && d.spins > 0) ? Math.floor(d.spins) : 0;
+  d.spins = 0;   // spin price is a flat 2000 Gold for everyone (old raised prices are reset)
   d.lv = obj(d.lv); d.best = obj(d.best); d.own = obj(d.own); d.eq = obj(d.eq); d.levelRewards = obj(d.levelRewards); d.mail = Array.isArray(d.mail) ? d.mail : [];
   d.theme = d.theme || 'neon'; d.diff = d.diff || 'medium'; d.sound = d.sound !== false; d.daily = d.daily || '';
   if (!/^\d{8}$/.test(String(d.uid || ''))) d.uid = genUid();
@@ -134,12 +134,13 @@ const PLACES = [
 /* ------------------------------ shop catalog ------------------------------ */
 const SHOP = {
   char: { title: 'Characters', emoji: '🧑‍🎤', items: [
-    { id: 'ch_arnav', name: 'Arnav', price: 0, color: '#3a86ff', look: { skin: '#f1c27d', hair: '#2b1b12', hs: 'short', acc: 'cap' }, perk: { xp: .05 }, desc: 'Starter buddy. Backwards-cap rookie. +5% XP.' },
-    { id: 'ch_atharv', name: 'Atharv', price: 3500, color: '#ff9f1c', look: { skin: '#e8b58a', hair: '#111', hs: 'spiky', acc: 'band' }, perk: { coin: .08 }, desc: 'Fast hustler. +8% Gold from every game.' },
-    { id: 'ch_sahil', name: 'Sahil', price: 8000, color: '#10b981', look: { skin: '#f1c27d', hair: '#5a3a1a', hs: 'side', acc: 'glasses' }, perk: { coin: .05, luck: .03 }, rarity: 'rare', desc: 'Smart & lucky. +5% Gold, +3% Lucky Spin item chance.' },
-    { id: 'ch_dhiraj', name: 'Dhiraj', price: 15000, color: '#64748b', look: { skin: '#d9a066', hair: '#1a1a1a', hs: 'buzz', acc: 'beard' }, perk: { hp: 40, xp: .05 }, rarity: 'epic', lvl: 12, desc: 'Iron guard. +40 HP in shooters, +5% XP. LEVEL 12 REWARD.' },
-    { id: 'ch_himanshu', name: 'Himanshu', price: 25000, color: '#a855f7', look: { skin: '#f1c27d', hair: '#3b2314', hs: 'curly', acc: 'phones' }, perk: { xp: .15, coin: .05 }, rarity: 'epic', spin: true, desc: 'Music-loving brain. +15% XP, +5% Gold. LUCKY SPIN ONLY.' },
-    { id: 'ch_arihant', name: 'Arihant', price: 150000, color: '#facc15', look: { skin: '#f1c27d', hair: '#0b0b0f', hs: 'swoop', acc: 'crown', cape: 1 }, perk: { coin: .12, xp: .12, hp: 50, luck: .03 }, rarity: 'mythic', lvl: 77, desc: 'The Founder. +12% Gold & XP, +50 HP, +3% luck. LEVEL 77 REWARD (free for the owner ID).' },
+    { id: 'ch_arnav', name: 'Arnav', price: 0, color: '#3a86ff', look: { skin: '#f1c27d', hair: '#2b1b12', hs: 'short', acc: 'cap' }, perk: { xp: .06, coin: .02 }, desc: 'Starter buddy. Backwards-cap rookie. +6% XP, +2% Gold.' },
+    { id: 'ch_atharv', name: 'Atharv', price: 3500, color: '#ff9f1c', look: { skin: '#e8b58a', hair: '#111', hs: 'spiky', acc: 'band' }, perk: { coin: .09, xp: .03 }, desc: 'Fast hustler. +9% Gold from every game, +3% XP.' },
+    { id: 'ch_sahil', name: 'Sahil', price: 8000, color: '#10b981', look: { skin: '#f1c27d', hair: '#5a3a1a', hs: 'side', acc: 'glasses' }, perk: { coin: .07, xp: .03, luck: .04 }, rarity: 'rare', desc: 'Smart & lucky. +7% Gold, +3% XP, +4% Lucky Spin item chance.' },
+    { id: 'ch_dhiraj', name: 'Dhiraj', price: 15000, color: '#64748b', look: { skin: '#d9a066', hair: '#1a1a1a', hs: 'buzz', acc: 'beard' }, perk: { hp: 45, xp: .06, coin: .03 }, rarity: 'epic', lvl: 12, desc: 'Iron guard. +45 HP in shooters, +6% XP, +3% Gold. LEVEL 12 REWARD.' },
+    { id: 'ch_himanshu', name: 'Himanshu', price: 25000, color: '#a855f7', look: { skin: '#f1c27d', hair: '#3b2314', hs: 'curly', acc: 'phones' }, perk: { xp: .14, coin: .06, luck: .02 }, rarity: 'epic', spin: true, desc: 'Music-loving brain. +14% XP, +6% Gold, +2% luck. LUCKY SPIN ONLY.' },
+    { id: 'ch_manish', name: 'Manish', price: 60000, color: '#ef4444', look: { skin: '#e8b58a', hair: '#141414', hs: 'buzz', acc: 'band' }, perk: { coin: .10, xp: .10, hp: 45, luck: .03 }, rarity: 'legendary', spin: true, desc: 'Fearless all-rounder. +10% Gold & XP, +45 HP, +3% luck. LUCKY SPIN ONLY.' },
+    { id: 'ch_arihant', name: 'Arihant', price: 150000, color: '#facc15', look: { skin: '#f1c27d', hair: '#0b0b0f', hs: 'swoop', acc: 'crown', cape: 1 }, perk: { coin: .14, xp: .14, hp: 60, luck: .05 }, rarity: 'mythic', lvl: 77, desc: 'The Founder. +14% Gold & XP, +60 HP, +5% luck. Strongest character. LEVEL 77 REWARD (free for the owner ID).' },
   ] },
   gun: { title: 'Guns', emoji: '🔫', items: [
     { id: 'g_pistol', name: 'Pistol', price: 0, color: '#ffd166', dmg: 20, rate: 3, pellets: 1, spread: .04, speed: 9, desc: 'Starter. Balanced.' },
@@ -659,7 +660,7 @@ const Az = window.Az = {
   perkText: p => perkText(p || Az.perk()),
   /* Lucky Spin: every spin costs a flat 2000 Gold (never increases). Level-reward items are never in the spin. Items are rarer than Gold but do drop. */
   SPIN_BASE: 2000, SPIN_STEP: 0, SPIN_MAX: 2000, ITEM_CHANCE: 0.18,
-  spinCost() { return Math.min(Az.SPIN_MAX, Az.SPIN_BASE + Az.SPIN_STEP * (db().spins || 0)); },
+  spinCost() { return Az.SPIN_BASE; },
   luckySpin() {
     const cost = Az.spinCost();
     if (Az.coins() < cost) { Az.toast('Not enough Gold. This spin costs ' + cost + '.'); return null; }
@@ -683,6 +684,8 @@ const Az = window.Az = {
   coinFigure(n) {
     return '<div class="fig" style="background:radial-gradient(circle at 50% 60%,#ffcf3a55,transparent 70%)"><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold" style="width:78px;height:78px;filter:drop-shadow(0 4px 10px rgba(255,190,30,.55))"><b style="font-size:20px;color:#ffd54a">+' + n + '</b></div></div>';
   },
+  /* app version: bump here AND in version.json for every update */
+  VERSION: '1.01.01',
   /* spin with animation + popup showing the figure of what was won */
   spinPlay(onDone) {
     const cost = Az.spinCost();
@@ -823,7 +826,7 @@ Az.shop = function (slots, startSlot) {
   function draw() {
    try {
     const tabs = slots.map(s => `<button class="azchip ${s === cur ? 'on' : ''}" data-s="${s}">${SHOP[s].emoji} ${SHOP[s].title}</button>`).join('');
-    const items = SHOP[cur].items.map(it => {
+    const items = SHOP[cur].items.slice().sort((a, b) => { const g = x => x.lvl ? 2 : x.spin ? 1 : 0; return (g(a) - g(b)) || (g(a) === 2 ? (a.lvl - b.lvl) : (a.price - b.price)) || 0; }).map(it => {
       const own = Az.owned(it.id), eq = Az.eq(cur).id === it.id;
       const pv = `<div class="pv">${figure(it)}</div>`;
       const btn = (!own && it.spin) ? '<button class="azbtn sm ghost" disabled>🎡 Lucky Spin only</button>' : (!own && it.lvl) ? ('<button class="azbtn sm ghost" disabled>🔒 Level ' + it.lvl + ' reward</button>') : eq ? '<button class="azbtn sm ghost" disabled>✔ Equipped</button>' : own ? `<button class="azbtn sm" data-eq="${it.id}">Equip</button>` : `<button class="azbtn sm" data-buy="${it.id}" ${Az.coins() < it.price ? 'disabled' : ''}><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold A coin"> ${it.price}</button>`;
@@ -1426,4 +1429,38 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
     place();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+/* ------------------------------ update popup ------------------------------
+   Every open page checks version.json (never cached). If the published version differs from
+   the version this page was loaded with, the player gets a popup with a Refresh button. */
+(function () {
+  var shown = false, dismissed = '';
+  function vnum(v) { return String(v || '0').split('.').map(function (n) { return parseInt(n, 10) || 0; }); }
+  function newer(a, b) { var x = vnum(a), y = vnum(b); for (var i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; }
+  function refreshNow() {
+    try { if (window.caches) caches.keys().then(function (k) { k.forEach(function (n) { caches.delete(n); }); }); } catch (e) {}
+    var u = location.href.split('#')[0].replace(/([?&])_v=\d+&?/, '$1').replace(/[?&]$/, '');
+    location.replace(u + (u.indexOf('?') < 0 ? '?' : '&') + '_v=' + Date.now());
+  }
+  function popup(info) {
+    if (shown || dismissed === info.version) return; shown = true;
+    var notes = (info.notes || []).map(function (n) { return '<li>' + String(n).replace(/[<>&]/g, '') + '</li>'; }).join('');
+    var m = Az.modal('<div style="text-align:center"><div style="font-size:46px">🚀</div><h2 style="margin:6px 0">New Update Available!</h2>' +
+      '<p style="margin:4px 0"><b style="color:var(--a4)">Version ' + String(info.version).replace(/[<>&]/g, '') + '</b> <span style="opacity:.7">(you have ' + Az.VERSION + ')</span></p>' +
+      (notes ? '<ul style="text-align:left;font-size:13px;margin:10px 0 12px 18px;padding:0">' + notes + '</ul>' : '') +
+      '<div class="azrow c"><button class="azbtn" id="azupd">🔄 Refresh now</button><button class="azbtn ghost" id="azupl">Later</button></div></div>', { sticky: true });
+    var b = m && m.querySelector ? m.querySelector('#azupd') : document.getElementById('azupd');
+    var l = m && m.querySelector ? m.querySelector('#azupl') : document.getElementById('azupl');
+    if (b) b.onclick = refreshNow;
+    if (l) l.onclick = function () { dismissed = info.version; shown = false; try { m.close(); } catch (e) {} };
+  }
+  function check() {
+    if (location.protocol === 'file:') return;
+    fetch('version.json?_=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      if (j && j.version && newer(j.version, Az.VERSION)) popup(j);
+    }).catch(function () {});
+  }
+  function start() { setTimeout(check, 2500); setInterval(check, 60000); document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); }); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
