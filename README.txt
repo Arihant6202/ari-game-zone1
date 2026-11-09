@@ -3,7 +3,7 @@ ARI GAME ZONE — PROJECT README
 A mobile-friendly HTML5 gaming site with Firebase account saves, player IDs, Google sign-in, Gold Coins, a shop, claimable Mail, multiplayer emoji reactions, and per-game progression.
 
 GAMES
-- Zone Survivor and Arena Strike
+- Zone Survivor, Arena Strike and Boxing Arena
 - Turbo Racing, Royal Chess, Tic Tac Toe, Connect Four, Ludo, UNO
 - Sky Flyer, Snake Evolution, Brick Breaker, Whack-a-Mole, Level Devil, Stone Paper Scissor
 - Neon Runner and Badminton Rally
@@ -117,3 +117,15 @@ UPDATES (v1.01.02)
 - IMPORTANT: publish the new database.rules.json in Firebase (adds "support" and "playerDir") or support messages / the username list will not work.
 
 RELEASE CHECKLIST: for every update change (1) VERSION in az.js, (2) "version" in version.json, (3) the ?v=<version> on az.js / az.css / v17.css in every .html page. Step 3 is what makes browsers load the new files; without it the update popup keeps coming back.
+
+
+--- VERSION 1.02.00 UPDATE NOTES ---
+NEW GAME: Boxing Arena (boxing.html)
+- Side-view boxing: move, jab, power punch, block. Stamina, guard-break, best of 3 rounds (60s each), KO or win on points.
+- Modes: vs Computer (100 levels, easy/medium/hard), 2 Players on one device, and Online (room code, PeerJS).
+- Online sync: each player simulates their own boxer; the attacker reports a hit, the defender applies damage (so blocking is judged on the defender's screen); the room creator (host) decides round end and match end.
+- Shop: new "Boxing gloves" slot (power bonus) + outfits are used as trunks/hat.
+NEW ITEMS: new items added to every game slot (guns, outfits, cars, birds, runners, trails, snakes, chess sets, balls, dice, tokens, card backs, heroes, rackets, shuttles, discs, X/O, hammers). None are level rewards.
+ZONE SURVIVOR ONLINE FIX: online used to end after one kill (battle royale with no respawn). Online now uses the Arena Strike engine: respawn after 3s, kill target (first to 5 in 1v1 duel), and Co-op vs Bots. Solo Zone Survivor is unchanged.
+RELEASE: VERSION 1.02.00 (az.js, version.json, ?v= on every page). database.rules.json is unchanged.
+TESTED: headless Chromium - every page loads with zero JS errors; every game starts; shop renders every slot; two-client simulated online match for Boxing (rounds, KO, match end synced) and for Zone Survivor online (kill -> respawn -> game continues). NOT tested over real PeerJS between two devices.
