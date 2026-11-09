@@ -123,7 +123,7 @@ a{color:inherit}
   <div class="azmsg" id="msg" style="min-height:20px;font-size:13px">Loot crates 🩹🛡️⚡🔫 · stay inside the blue zone · last one alive wins</div>
   <div class="azctl"><button class="azbtn ghost sm" id="rst">🔄 Restart</button><button class="azbtn ghost sm" id="gfx">🎨 Graphics</button></div>
 </main>
-<script src="az.js?v=1.01.03"></script>
+<script src="az.js?v=1.01.04"></script>
 <script>
 /* Top-down shooter engine for Zone Survivor (battle royale) and Arena Strike (team deathmatch).
    Shooter.run({cv, mode:'br'|'arena', level, diff, hud(fn), end(fn)}) -> {stop(), S} */
@@ -422,7 +422,7 @@ function run(o){
       else if(m.t==='b'){for(const a of m.a){const e=S.ents[a[0]];if(!e||!e.puppet)continue;e.tx=a[1];e.ty=a[2];e.ang=a[3];e.hp=a[4];e.alive=!!a[5];if(e.gun.name!==a[6]){const g=guns.find(x=>x.name===a[6]);if(g)e.gun=mkGun(g);}}}});
     net.onclose(()=>{if(S.over)return;if(!coop)endGame(true,'Rival left the game');else if(net.host){R.alive=false;S.msg='Ally left the game';}else endGame(false,'Host left the game');});}
   raf=requestAnimationFrame(loop);
-  return{S,stop(){stopped=true;if(net)net.on(()=>{});if(T){try{T.rd.domElement.remove();T.rd.dispose();}catch(e){}T=null;}cancelAnimationFrame(raf);removeEventListener('keydown',kd);removeEventListener('keyup',ku);document.removeEventListener('visibilitychange',vis);}};
+  return{S,stop(){stopped=true;if(net){if(net.detach)net.detach();else net.on(()=>{});}if(T){try{T.rd.domElement.remove();T.rd.dispose();}catch(e){}T=null;}cancelAnimationFrame(raf);removeEventListener('keydown',kd);removeEventListener('keyup',ku);document.removeEventListener('visibilitychange',vis);}};
 }
 return{run};
 })();
@@ -430,13 +430,57 @@ return{run};
 </script>
 <script>
 (function(){
-const $=id=>document.getElementById(id);let G=null,O,level;
+const $=id=>document.getElementById(id);let G=null,O,level,M=null;
 function hud(h){
-  const pills=[['❤️ '+h.hp+'/'+h.maxhp,h.hp<h.maxhp*.3],['🛡️ '+h.armor,0],['🔫 '+h.gun+' '+(h.reload?'⟳ reloading':h.ammo+'/'+h.mag)+(h.boost?' ⚡':''),0],['👥 '+h.alive+' alive',0],['☠️ '+h.kills,0],['🌀 '+h.zone,!h.inZone]];
+  const pills=[...(M&&!M.over?[['⚔️ Round '+(M.me+M.opp+1)+'/'+M.total+' · '+M.me+'–'+M.opp,0]]:[]),['❤️ '+h.hp+'/'+h.maxhp,h.hp<h.maxhp*.3],['🛡️ '+h.armor,0],['🔫 '+h.gun+' '+(h.reload?'⟳ reloading':h.ammo+'/'+h.mag)+(h.boost?' ⚡':''),0],['👥 '+h.alive+' alive',0],['☠️ '+h.kills,0],['🌀 '+h.zone,!h.inZone]];
   $('hud').innerHTML=pills.map(p=>'<span class="azpill '+(p[1]?'low':'')+'">'+p[0]+'</span>').join('');
   if(h.msg)$('msg').textContent=h.msg;
 }
+/* ---------- 1v1 Duel: best of 5 rounds, first to 3 round wins takes the match ---------- */
+function banner(t,ms){let b=$('rnd');if(!b){b=document.createElement('div');b.id='rnd';b.style.cssText='position:fixed;left:0;right:0;top:30%;text-align:center;z-index:60;pointer-events:none;font:900 26px Orbitron,sans-serif;color:#fff;text-shadow:0 2px 14px #000,0 0 18px #00e5ff;padding:0 14px;line-height:1.4';document.body.appendChild(b);}
+  b.innerHTML=t;b.style.display=t?'block':'none';clearTimeout(b._t);if(ms)b._t=setTimeout(()=>{b.style.display='none';},ms);}
+function matchNet(net){   /* one wrapper for the whole match: tags every game packet with the round number and buffers packets between rounds */
+  let h=null,cl=null;const buf=[];
+  const p={host:net.host,send:o=>net.send(Object.assign({},o,{rd:M.round})),sendEmoji:e=>net.sendEmoji&&net.sendEmoji(e),
+    on(f){h=f;buf.splice(0).forEach(f);},detach(){h=null;},onclose(f){cl=f;if(!net.open)f();},close:()=>net.close()};
+  Object.defineProperty(p,'peer',{get:()=>net.peer});Object.defineProperty(p,'open',{get:()=>net.open});
+  net.on(m=>{if(!m||!M)return;
+    if(m.t==='Mrdy'){M.oppRdy=Math.max(M.oppRdy,m.n);tryLaunch();return;}
+    if(m.t==='Mres'){M.oppRes[m.n]=m.w;resolveCheck();return;}
+    if(m.rd!=null&&m.rd!==M.round)return;
+    if(h)h(m);else if(buf.length<500)buf.push(m);});
+  net.onclose(()=>{if(M){M.closed=true;if(!M.over&&!G)finishMatch(true,'Rival left the game');}if(cl)cl();});
+  return p;}
+function startMatch(){
+  Az.setBadge('1v1 Duel · Best of 5');
+  M={me:0,opp:0,round:1,kills:0,over:false,oppRdy:0,oppRes:{},myRes:null,ready:false,launched:0,resolved:0,closed:false,total:5,target:3};
+  M.mnet=matchNet(O.net);prepRound();}
+function prepRound(){
+  if(!M||M.over)return;if(G){G.stop();G=null;}
+  M.myRes=null;M.mnet.detach();$('msg').textContent='First to '+M.target+' round wins takes the match · stay inside the zone';
+  banner('ROUND '+(M.me+M.opp+1)+' / '+M.total+'<br><span style="font-size:15px">You '+M.me+' – '+M.opp+' Rival · waiting for rival…</span>');
+  M.ready=true;O.net.send({t:'Mrdy',n:M.round});tryLaunch();}
+function tryLaunch(){
+  if(!M||M.over||!M.ready||M.oppRdy<M.round||M.launched===M.round)return;
+  M.launched=M.round;M.ready=false;banner('ROUND '+(M.me+M.opp+1)+'<br>⚔️ FIGHT!',1500);
+  G=Shooter.run({cv:$('cv'),mode:'br',level:1,diff:O.diff,net:M.mnet,extra:O.extra,hud,end:roundEnd});}
+function roundEnd(r){
+  if(!M||M.over)return;M.kills+=r.kills||0;
+  if(M.closed){finishMatch(true,'Rival left the game');return;}
+  const n=M.round;M.myRes=r.won?1:0;O.net.send({t:'Mres',n,w:M.myRes});resolveCheck();
+  setTimeout(()=>{if(M&&!M.over&&M.round===n&&M.oppRes[n]==null){M.oppRes[n]=1-M.myRes;resolveCheck();}},6000);}
+function resolveCheck(){
+  if(!M||M.over||M.myRes==null||M.oppRes[M.round]==null||M.resolved===M.round)return;
+  const n=M.round,mine=M.myRes,op=M.oppRes[n];M.resolved=n;let txt;
+  if(mine&&!op){M.me++;txt='🏆 You won the round!';}else if(!mine&&op){M.opp++;txt='💀 Rival won the round';}else txt='🤝 Both down — round replays';
+  if(M.me>=M.target||M.opp>=M.target){finishMatch(M.me>M.opp,'Final score '+M.me+' – '+M.opp);return;}
+  banner(txt+'<br><span style="font-size:16px">You '+M.me+' – '+M.opp+' Rival</span>',2600);
+  setTimeout(()=>{if(!M||M.over)return;M.round++;prepRound();},2800);}
+function finishMatch(won,sub){
+  if(!M||M.over)return;M.over=true;banner('');if(G){G.stop();G=null;}
+  Az.finish({game:'br',level:1,diff:O.diff,won,progress:false,base:50+M.kills*10+(won?60:0),score:M.kills,title:won?'🏆 Match Winner!':'Match Lost',sub,retry:()=>location.reload()});}
 function begin(lv){
+  if(O&&O.mode==='online'&&((O.extra&&O.extra.mode)||'duel')==='duel'){startMatch();return;}
   if(G)G.stop();level=lv;const pl=Az.place(level);Az.setBadge('Lv '+level+' · '+pl.emoji+' '+pl.name);$('msg').textContent='Loot crates 🩹🛡️⚡🔫 · stay inside the blue zone · last one alive wins';
   G=Shooter.run({cv:$('cv'),mode:'br',level,diff:O.diff,net:O.mode==='online'?O.net:null,extra:O.extra,hud,end:r=>{
     Az.finish({game:'br',level,diff:O.diff,won:r.won,progress:O.mode!=='online',base:60+r.kills*10,score:r.kills,title:r.won?'🏆 Winner Winner!':'Eliminated!',sub:r.sub,next:lv=>begin(lv),retry:lv=>O.mode==='online'?location.reload():begin(lv)});}});

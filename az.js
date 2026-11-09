@@ -108,11 +108,11 @@ const GAMES = [
   { id: 'uno', file: 'uno.html', name: 'UNO', emoji: '🃏', cat: 'Cards', max: 1, modes: ['single', 'local', 'online'], shop: ['cardback'], desc: 'Classic colour-and-number card game: vs computer bots, pass-and-play, or online 1v1 with a friend.' },
   { id: 'runner', file: 'runner.html', name: 'Neon Runner', emoji: '🏃', cat: 'Arcade', max: 1, modes: ['single', 'online'], shop: ['runner', 'trail'], desc: 'Endless runner v2: jump, slide, double-jump, grab coins & shields. Race a friend online!' },
   { id: 'badminton', file: 'badminton.html', name: 'Badminton Rally', emoji: '🏸', cat: 'Sports', max: 100, modes: ['single', 'online'], shop: ['racket', 'shuttle'], desc: 'Move, clear, drop and smash against a smart AI.' },
-  { id: 'memory', file: 'memory-match.html', name: 'Memory Match', emoji: '🧠', cat: 'Puzzle', max: 100, modes: ['single'], shop: [], desc: 'Flip cards and find matching pairs with the fewest moves.' },
-  { id: 'quickmath', file: 'quick-math.html', name: 'Quick Math', emoji: '➗', cat: 'Puzzle', max: 100, modes: ['single'], shop: [], desc: 'Solve rapid-fire arithmetic before the timer runs out.' },
-  { id: 'colordash', file: 'color-dash.html', name: 'Color Dash', emoji: '🎨', cat: 'Arcade', max: 100, modes: ['single'], shop: [], desc: 'Match the target color as the pace gets faster.' },
+  { id: 'memory', file: 'memory-match.html', name: 'Memory Match', emoji: '🧠', cat: 'Puzzle', max: 100, modes: ['single'], shop: ['mtheme'], desc: 'Flip cards and find matching pairs with the fewest moves.' },
+  { id: 'quickmath', file: 'quick-math.html', name: 'Quick Math', emoji: '➗', cat: 'Puzzle', max: 100, modes: ['single'], shop: ['qboard'], desc: 'Solve rapid-fire arithmetic before the timer runs out.' },
+  { id: 'colordash', file: 'color-dash.html', name: 'Color Dash', emoji: '🎨', cat: 'Arcade', max: 100, modes: ['single'], shop: ['cstyle'], desc: 'Match the target color as the pace gets faster.' },
   { id: 'rps', file: 'stone-paper-scissor.html', name: 'Stone Paper Scissor', emoji: '✊', cat: 'Online', max: 1, modes: ['single', 'local', 'online'], shop: [], desc: 'Classic Rock Paper Scissors: challenge the computer, play on one device, or battle a friend online.' },
-  { id: 'taprush', file: 'tap-rush.html', name: 'Tap Rush', emoji: '⚡', cat: 'Fun', max: 100, modes: ['single'], shop: [], desc: 'Hit the targets quickly and build a high score.' },
+  { id: 'taprush', file: 'tap-rush.html', name: 'Tap Rush', emoji: '⚡', cat: 'Fun', max: 100, modes: ['single'], shop: ['ttarget'], desc: 'Hit the targets quickly and build a high score.' },
 ];
 
 /* ------------------------------ places (change as levels go up) ------------------------------ */
@@ -374,6 +374,51 @@ const SHOP = {
     { id: 'hm_sword', name: 'Hero Sword', price: 2500, emoji: '🗡️', fx: '#9be7ff', rarity: 'rare', desc: 'Slash the moles.' },
     { id: 'hm_wand', name: 'Magic Wand', price: 6000, emoji: '🪄', fx: '#e879f9', rarity: 'epic', desc: 'Sparkly whacks.' },
     { id: 'hm_trident', name: 'Golden Trident', price: 25000, emoji: '🔱', fx: '#ffd700', rarity: 'legendary', desc: 'Poseidon\'s power.' },
+  ] },
+  mtheme: { title: 'Memory Themes', emoji: '🧠', items: [
+    { id: 'mt_fruit', name: 'Classic Pack', price: 0, emoji: '🍒', syms: ['🍒','🚀','🐼','⭐','🎧','🍀','🦊','💎','🐙','🍕'], back: '#7c3aed', desc: 'Starter card set.' },
+    { id: 'mt_animal', name: 'Animal Pals', price: 400, emoji: '🐯', syms: ['🐼','🦊','🐯','🦁','🐸','🐵','🐧','🦉','🐙','🐢'], back: '#16a34a', desc: 'Cute animal cards.' },
+    { id: 'mt_food', name: 'Yummy Cards', price: 1200, emoji: '🍔', syms: ['🍕','🍔','🍟','🌮','🍩','🍦','🍣','🍰','🍿','🥐'], back: '#ea580c', desc: 'Pizza party!' },
+    { id: 'mt_space', name: 'Space Cards', price: 2500, emoji: '🪐', syms: ['🚀','🛸','🪐','🌙','☄️','🌍','👽','🛰️','🌌','🌠'], back: '#1d4ed8', rarity: 'rare', desc: 'Cards from outer space.' },
+    { id: 'mt_gem', name: 'Royal Gems', price: 6000, emoji: '👑', syms: ['💎','👑','🏆','🔮','💍','🪙','🧿','📿','⚜️','🎖️'], back: '#b45309', rarity: 'epic', desc: 'Shiny royal treasure.' },
+    { id: 'mt_dragon', name: 'Dragon Realm', price: 30000, emoji: '🐉', syms: ['🐉','🔥','⚔️','🛡️','🏰','🧙','🦄','🌋','🐲','👹'], back: '#dc2626', rarity: 'legendary', spin: true, desc: 'Lucky Spin only.' },
+  ] },
+  qboard: { title: 'Math Boards', emoji: '➗', items: [
+    { id: 'qb_plain', name: 'Plain Board', price: 0, emoji: '📝', col: '#00e5ff', bg: 'transparent', desc: 'Starter look.' },
+    { id: 'qb_chalk', name: 'Chalkboard', price: 400, emoji: '🧑‍🏫', col: '#e2e8f0', bg: '#14532d', desc: 'Classroom vibes.' },
+    { id: 'qb_neon', name: 'Neon Grid', price: 1200, emoji: '🟣', col: '#f0abfc', bg: '#2e1065', desc: 'Glowing neon numbers.' },
+    { id: 'qb_gold', name: 'Golden Slate', price: 2500, emoji: '🥇', col: '#fde047', bg: '#713f12', rarity: 'rare', desc: 'Math for champions.' },
+    { id: 'qb_matrix', name: 'Matrix Code', price: 6000, emoji: '🟩', col: '#4ade80', bg: '#022c22', rarity: 'epic', desc: 'Hacker green.' },
+    { id: 'qb_galaxy', name: 'Galaxy Board', price: 30000, emoji: '🌌', col: '#c4b5fd', bg: '#1e1b4b', rarity: 'legendary', spin: true, desc: 'Lucky Spin only.' },
+  ] },
+  cstyle: { title: 'Dash Styles', emoji: '🎨', items: [
+    { id: 'cs_basic', name: 'Basic Glow', price: 0, emoji: '🎨', frame: '', glow: 18, desc: 'Starter style.' },
+    { id: 'cs_fire', name: 'Fire Frame', price: 400, emoji: '🔥', frame: '🔥', glow: 26, desc: 'Words on fire.' },
+    { id: 'cs_star', name: 'Star Frame', price: 1200, emoji: '⭐', frame: '⭐', glow: 30, desc: 'Shiny stars around the word.' },
+    { id: 'cs_ice', name: 'Ice Frame', price: 2500, emoji: '❄️', frame: '❄️', glow: 34, rarity: 'rare', desc: 'Cool and calm.' },
+    { id: 'cs_bolt', name: 'Thunder Frame', price: 6000, emoji: '⚡', frame: '⚡', glow: 42, rarity: 'epic', desc: 'Electric colours.' },
+    { id: 'cs_crown', name: 'Crown Frame', price: 30000, emoji: '👑', frame: '👑', glow: 50, rarity: 'legendary', spin: true, desc: 'Lucky Spin only.' },
+  ] },
+  ttarget: { title: 'Rush Targets', emoji: '🎯', items: [
+    { id: 'tt_bolt', name: 'Lightning', price: 0, emoji: '⚡', bg: 'linear-gradient(135deg,#7c3aed,#00e5ff)', desc: 'Starter target.' },
+    { id: 'tt_dart', name: 'Bullseye', price: 400, emoji: '🎯', bg: 'linear-gradient(135deg,#ef4444,#f97316)', desc: 'Right on target.' },
+    { id: 'tt_coin', name: 'Gold Coin', price: 1200, emoji: '🪙', bg: 'linear-gradient(135deg,#f59e0b,#fde047)', desc: 'Tap the shiny coin.' },
+    { id: 'tt_alien', name: 'Alien Blob', price: 2500, emoji: '👾', bg: 'linear-gradient(135deg,#16a34a,#84cc16)', rarity: 'rare', desc: 'Zap the alien.' },
+    { id: 'tt_orb', name: 'Magic Orb', price: 6000, emoji: '🔮', bg: 'linear-gradient(135deg,#9333ea,#ec4899)', rarity: 'epic', desc: 'Mystic target.' },
+    { id: 'tt_dragon', name: 'Dragon Egg', price: 30000, emoji: '🥚', bg: 'linear-gradient(135deg,#dc2626,#fbbf24)', rarity: 'legendary', spin: true, desc: 'Lucky Spin only.' },
+  ] },
+  /* Boxing slots: hidden until a game lists 'glove' / 'ring' in its shop array (see GAMES). */
+  glove: { title: 'Boxing Gloves', emoji: '🥊', items: [
+    { id: 'gl_red', name: 'Red Gloves', price: 0, emoji: '🥊', color: '#ef4444', power: 0, desc: 'Starter gloves.' },
+    { id: 'gl_blue', name: 'Blue Gloves', price: 600, emoji: '🥊', color: '#3b82f6', power: 0, desc: 'Cool blue.' },
+    { id: 'gl_gold', name: 'Golden Gloves', price: 3000, emoji: '🥇', color: '#facc15', power: 0, rarity: 'rare', desc: 'For champions.' },
+    { id: 'gl_flame', name: 'Flame Gloves', price: 9000, emoji: '🔥', color: '#f97316', power: 0, rarity: 'epic', desc: 'Burning knuckles.' },
+    { id: 'gl_thunder', name: 'Thunder Gloves', price: 35000, emoji: '⚡', color: '#a78bfa', power: 0, rarity: 'legendary', spin: true, desc: 'Lucky Spin only.' },
+  ] },
+  ring: { title: 'Boxing Rings', emoji: '🏟️', items: [
+    { id: 'rg_classic', name: 'Classic Ring', price: 0, emoji: '🏟️', floor: '#334155', rope: '#ef4444', desc: 'Starter ring.' },
+    { id: 'rg_neon', name: 'Neon Arena', price: 1500, emoji: '🌃', floor: '#1e1b4b', rope: '#22d3ee', desc: 'Glowing ropes.' },
+    { id: 'rg_gold', name: 'Gold Stage', price: 7000, emoji: '🏆', floor: '#78350f', rope: '#fde047', rarity: 'epic', desc: 'World-title night.' },
   ] },
 };
 /* Rarity: explicit it.rarity, otherwise worked out from the price. Level-reward items carry it.lvl. */
@@ -685,7 +730,7 @@ const Az = window.Az = {
     return '<div class="fig" style="background:radial-gradient(circle at 50% 60%,#ffcf3a55,transparent 70%)"><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold" style="width:78px;height:78px;filter:drop-shadow(0 4px 10px rgba(255,190,30,.55))"><b style="font-size:20px;color:#ffd54a">+' + n + '</b></div></div>';
   },
   /* app version: bump here AND in version.json for every update */
-  VERSION: '1.01.03',
+  VERSION: '1.01.04',
   /* spin with animation + popup showing the figure of what was won */
   spinPlay(onDone) {
     const cost = Az.spinCost();
@@ -1289,6 +1334,10 @@ Az.login = function () {
 /* ------------------------------ start screen ------------------------------ */
 /* Az.start({game:'chess', extra:[{key:'side',label:'Play as',options:[['w','White'],['b','Black']]}], onStart(o){...}})
    o = { mode:'single'|'local'|'online', diff:'easy'|'medium'|'hard', level:n, extra:{...}, net:Net|null, seed:n, host:bool } */
+/* Invite link: <this game page>?room=CODE . Opening it auto-joins the room (works for every online game that uses Az.start). */
+function roomLink(code) { return location.origin + location.pathname + '?room=' + code; }
+function linkRoomCode() { try { const c = (new URLSearchParams(location.search).get('room') || '').toUpperCase().trim(); return /^[A-Z0-9]{4}$/.test(c) ? c : ''; } catch (e) { return ''; } }
+Az.roomLink = roomLink;
 Az.start = function (cfg) {
   const g = Az.game(cfg.game); const st = { mode: g.modes[0], diff: db().diff, level: Az.level(g.id), extra: {} };
   (cfg.extra || []).forEach(x => st.extra[x.key] = x.options[0][0]);
@@ -1318,7 +1367,8 @@ Az.start = function (cfg) {
         const tryOpen = n => {
           const code = code4(); peer = new Peer('azgz-' + code, PCFG);
           peer.on('error', e => { if (e.type === 'unavailable-id' && n < 4) { cleanup(); tryOpen(n + 1); } else err('Online error: ' + (e.type || e)); });
-          peer.on('open', () => info(`<div class="azcode">${code}</div><p class="sub" style="text-align:center">Share this code with your friend and wait… ⏳</p>`));
+          peer.on('open', () => { const link = roomLink(code); info(`<div class="azcode">${code}</div><p class="sub" style="text-align:center">Share this link or code with your friend and wait… ⏳</p><div class="azrow c"><button class="azbtn sm" id="cplink" data-link="${link}">🔗 Copy invite link</button><button class="azbtn ghost sm" id="shlink" data-link="${link}">📤 Share</button></div>`); });
+          peer.on('disconnected', () => { try { peer && !peer.destroyed && peer.reconnect(); } catch (e) {} });
           peer.on('connection', conn => {
             if (peer._used) { conn.close(); return; } peer._used = 1;
             const net = mkNet(conn, true); const s = settings();
@@ -1333,7 +1383,7 @@ Az.start = function (cfg) {
         peer.on('open', () => {
           const conn = peer.connect('azgz-' + code, { reliable: true }); const net = mkNet(conn, false);
           net._start = s => { if (done) return; done = true; begin({ mode: 'online', diff: s.diff, level: 1, extra: s.extra || {}, seed: s.seed, net, host: false }); };
-          setTimeout(() => { if (!done) { err('Could not connect. Check the code, keep both devices online, and try the same WiFi.'); info(''); } }, 25000);
+          setTimeout(() => { if (!done) { err('Could not connect. Ask your friend to keep the game open on the room screen, check internet on both phones, then tap Join again.'); info(''); } }, 25000);
         });
       }
     }).catch(e => { err(e.message); info(''); });
@@ -1347,10 +1397,18 @@ Az.start = function (cfg) {
     else if (t.id === 'go') begin({ mode: st.mode, diff: st.diff, level: st.mode === 'single' ? st.level : 1, extra: st.extra, net: null, seed: Math.floor(Math.random() * 1e9), host: true });
     else if (t.id === 'sh') Az.shop(g.shop.length ? g.shop : null);
     else if (t.id === 'chg') { const sm = Az.shop(['char']); const iv = setInterval(() => { if (!document.body.contains(sm)) { clearInterval(iv); draw(); } }, 400); }
+    else if (t.id === 'cplink') { const l = t.dataset.link; const ok = () => Az.toast && Az.toast('🔗 Link copied! Send it to your friend'); (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(l).then(ok, () => prompt('Copy this link:', l)) : prompt('Copy this link:', l)); }
+    else if (t.id === 'shlink') { const l = t.dataset.link; if (navigator.share) navigator.share({ title: g.name + ' · Ari Game Zone', text: 'Join my ' + g.name + ' room!', url: l }).catch(() => {}); else if (navigator.clipboard) navigator.clipboard.writeText(l).then(() => Az.toast && Az.toast('🔗 Link copied!')); else prompt('Copy this link:', l); }
     else if (t.id === 'mk') online('host');
     else if (t.id === 'jn') online('join', $('#jc', m).value);
   });
-  draw(); return m;
+  draw();
+  const lc = linkRoomCode();
+  if (lc && g.modes.indexOf('online') >= 0) {      // opened from an invite link -> jump straight into online mode and join
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    st.mode = 'online'; draw(); const jc = $('#jc', m); if (jc) jc.value = lc; setTimeout(() => online('join', lc), 60);
+  }
+  return m;
 };
 
 /* ------------------------------ result screen ------------------------------ */
@@ -1478,7 +1536,7 @@ function deliverUpdateMail() {
     const gid = 'upd-' + Az.VERSION;
     if (d.verMail === Az.VERSION || d.mail.some(m => m.gid === gid)) { d.verMail = Az.VERSION; return; }
     d.verMail = Az.VERSION;
-    d.mail.push({ gid, title: ('🚀 Update ' + Az.VERSION).slice(0, 60), message: ('Ari Game Zone updated to version ' + Az.VERSION + '. Fixes: update popup no longer repeats, ban support box, Turbo Racing fair start + car health, Manish character, items sorted by rarity.').slice(0, 240), coins: 0, items: [], mode: 'add', ts: Date.now(), claimed: false });
+    d.mail.push({ gid, title: ('🚀 Update ' + Az.VERSION).slice(0, 60), message: ('Ari Game Zone updated to version ' + Az.VERSION + '. New: Zone Survivor best-of-5 duel, invite links for online rooms, new shop items & spin prizes for Memory/Math/Color Dash/Tap Rush.').slice(0, 240), coins: 0, items: [], mode: 'add', ts: Date.now(), claimed: false });
     save(); Az.refresh(); Az.toast && Az.toast('✉️ New mail: Update ' + Az.VERSION + ' is here!', 4500);
     document.dispatchEvent(new Event('az-mail'));
   } catch (e) {}
