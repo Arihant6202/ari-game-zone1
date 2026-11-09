@@ -15,7 +15,8 @@ ARI GAME ZONE — FIREBASE / DEVELOPER SETUP
 - Developer Mode can send Gold Coins and a text message to one registered 8-digit Player ID.
 - The player receives a Mail entry and must claim the Gold Coins in the Mail inbox.
 - Message-only Mail is shown as read-only announcement text.
-- The Diwali action queues 500 claimable Gold Coins for every account currently listed in uidIndex. It requires the owner to sign in and press the confirmation button. It does not run automatically.
+- Developer Mode > Send Mail can target one Player ID or ALL existing players, with message, coins and items.
+- Developer Mode > Ban / Unban blocks a Player ID (must have logged in with Google once).
 - A player must have opened the game and registered their Player ID at least once to be included.
 
 4) Security notes

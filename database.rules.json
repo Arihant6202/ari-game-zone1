@@ -5,12 +5,20 @@
     "users": {
       "$authUid": {
         ".read": "auth != null && auth.uid === $authUid",
-        ".write": "auth != null && auth.uid === $authUid"
+        ".write": "auth != null && auth.uid === $authUid && !root.child('banned').child(auth.uid).exists()"
       }
     },
     "admin": {
       ".read": "auth != null && (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true)",
       ".write": "auth != null && (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true)"
+    },
+    "banned": {
+      ".read": "auth != null && (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true)",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true)",
+        ".validate": "!newData.exists() || (newData.hasChildren(['id','ts']) && newData.child('id').isString() && newData.child('id').val().matches(/^[0-9]{8}$/) && (!newData.child('reason').exists() || (newData.child('reason').isString() && newData.child('reason').val().length <= 140)))"
+      }
     },
     "uidIndex": {
       "$gameUid": {
@@ -24,7 +32,7 @@
         ".read": "auth != null && (auth.uid === $target || (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true))",
         "$grantId": {
           ".write": "auth != null && ((auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true) || (auth.uid === $target && !newData.exists()))",
-          ".validate": "!newData.exists() || (newData.hasChildren(['coins', 'ts']) && newData.child('coins').isNumber() && newData.child('coins').val() >= 0 && newData.child('coins').val() <= 1000000000 && (!newData.child('title').exists() || newData.child('title').isString()) && (!newData.child('message').exists() || newData.child('message').isString()))"
+          ".validate": "!newData.exists() || (newData.hasChildren(['coins', 'ts']) && newData.child('coins').isNumber() && newData.child('coins').val() >= 0 && newData.child('coins').val() <= 1000000000 && (!newData.child('title').exists() || (newData.child('title').isString() && newData.child('title').val().length <= 60)) && (!newData.child('message').exists() || (newData.child('message').isString() && newData.child('message').val().length <= 240)) && (!newData.child('items').exists() || (newData.child('items').isString() && newData.child('items').val().length <= 300)))"
         }
       }
     }

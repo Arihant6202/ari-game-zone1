@@ -47,19 +47,31 @@ function genUid() {
   catch (e) { s = String(10000000 + Math.floor(Math.random() * 89999999)); }
   return s === OWNER_ID ? genUid() : s;
 }
+// One-time Gold Coin gifts, keyed by Player ID. Applied once per ID (d.bonus[uid] flag), then synced to the cloud.
+const BONUS = { '49019468': 199999, '56067071': 299999 };
+let bonusJustApplied = 0;
+const bonusPending = raw => !!(raw && BONUS[String(raw.uid || '')] && !(raw.bonus && raw.bonus[String(raw.uid)]));
+function announceBonus() {
+  const n = bonusJustApplied; bonusJustApplied = 0; if (!n) return;
+  setTimeout(() => { try { Az.toast && Az.toast('🎁 Gift: +' + n + ' Gold Coins added!', 5000); Az.sfx && Az.sfx('coin'); } catch (e) {} }, 1200);
+}
 // Firebase Realtime DB drops empty objects ({}), so cloud data must be re-filled before use.
 function normalize(d) {
   if (!d || typeof d !== 'object') d = {};
   const obj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
   d.coins = (typeof d.coins === 'number' && isFinite(d.coins) && d.coins >= 0) ? d.coins : (d.coins == null ? 150 : 0);
   d.starter49019468 = !!d.starter49019468;
-  if (String(d.uid || '') === '49019468' && !d.starter49019468) { d.coins = 100000; d.starter49019468 = true; }
+  if (String(d.uid || '') === '49019468' && !d.starter49019468) { d.coins = Math.max(d.coins, 100000); d.starter49019468 = true; }
   d.xp = (typeof d.xp === 'number' && isFinite(d.xp) && d.xp > 0) ? d.xp : 0;
   d.spins = (typeof d.spins === 'number' && isFinite(d.spins) && d.spins > 0) ? Math.floor(d.spins) : 0;
   d.lv = obj(d.lv); d.best = obj(d.best); d.own = obj(d.own); d.eq = obj(d.eq); d.levelRewards = obj(d.levelRewards); d.mail = Array.isArray(d.mail) ? d.mail : [];
   d.theme = d.theme || 'neon'; d.diff = d.diff || 'medium'; d.sound = d.sound !== false; d.daily = d.daily || '';
   if (!/^\d{8}$/.test(String(d.uid || ''))) d.uid = genUid();
   d.uid = String(d.uid);
+  d.bonus = obj(d.bonus);
+  if (BONUS[d.uid] && !d.bonus[d.uid]) {            // one-time Gold Coin gift for this Player ID (flag is saved, so it can never repeat)
+    d.coins = Math.min(999999999, d.coins + BONUS[d.uid]); d.bonus[d.uid] = 1; bonusJustApplied = BONUS[d.uid];
+  }
   d.name = typeof d.name === 'string' ? d.name : ''; d.nameSet = !!d.nameSet; d.nameAsked = !!d.nameAsked;
   d.rev = (typeof d.rev === 'number' && d.rev > 0) ? d.rev : 0;
   d.ts = (typeof d.ts === 'number' && d.ts > 0) ? d.ts : 0;
@@ -70,8 +82,10 @@ function db() {
   if (D) return D;
   let raw = null, had = false;
   try { raw = JSON.parse(LS.get(ACTIVE_KEY) || 'null'); had = !!raw; } catch (e) { raw = null; }
+  const pend = bonusPending(raw);
   D = normalize(raw);
-  if (!had) LS.set(ACTIVE_KEY, JSON.stringify(D));   // brand-new account: create its record with a NEW uid
+  if (!had || pend) LS.set(ACTIVE_KEY, JSON.stringify(D));   // brand-new account (NEW uid) or a gift was just applied: store it
+  announceBonus();
   return D;
 }
 function save() { db().rev++; D.ts = Date.now(); LS.set(ACTIVE_KEY, JSON.stringify(D)); if (window.__azPush) window.__azPush(); }
@@ -80,7 +94,7 @@ function save() { db().rev++; D.ts = Date.now(); LS.set(ACTIVE_KEY, JSON.stringi
 // modes: single (vs computer) | local (2 players, one device) | online (room code)
 const GAMES = [
   { id: 'br', file: 'battle-royale.html', name: 'Zone Survivor', emoji: '🪂', cat: 'Shooter', max: 100, modes: ['single', 'online'], shop: ['gun', 'outfit'], desc: 'Battle royale! Drop in, loot, shoot and be the last one alive as the zone shrinks.' },
-  { id: 'arena', file: 'arena-strike.html', name: 'Arena Strike', emoji: '🔫', cat: 'Shooter', max: 100, modes: ['single', 'online'], shop: ['gun', 'outfit'], desc: 'Fast team deathmatch. Respawn, fight bots and reach the kill target first.' },
+  { id: 'arena', file: 'arena-strike.html', name: 'Arena Strike', emoji: '🔫', cat: 'Shooter', max: 100, modes: ['single', 'online'], shop: ['gun', 'outfit'], desc: 'Fast team deathmatch. Respawn, fight bots and reach the kill target first. Online: 1v1 duel or 🤝 2-player co-op vs bots.' },
   { id: 'race', file: 'turbo-racing.html', name: 'Turbo Racing', emoji: '🏎️', cat: 'Racing', max: 100, modes: ['single', 'local', 'online'], shop: ['car'], desc: 'Dodge traffic at crazy speed. Solo, 2 players on one device, or race a friend online!' },
   { id: 'chess', file: 'chess.html', name: 'Royal Chess', emoji: '♟️', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: ['piece'], desc: 'Full chess with a smart computer (50 levels), 2 players, or play online.' },
   { id: 'ttt', file: 'tic-tac-toe.html', name: 'Tic Tac Toe', emoji: '⭕', cat: 'Board', max: 50, modes: ['single', 'local', 'online'], shop: ['xo'], desc: 'Classic X and O. Beat the AI, play a friend or go online.' },
@@ -522,6 +536,22 @@ function grantLevelItems(upto) {
   return got;
 }
 
+/* ------------------------------ mail rewards (coins + items) ------------------------------ */
+const rewardText = (coins, items) => [coins > 0 ? '+' + coins + ' coins' : '', ...items.map(it => it.name)].filter(Boolean).join(' + ') || 'nothing';
+function mailItemIds(m) {
+  const a = Array.isArray(m.items) ? m.items : (typeof m.items === 'string' ? m.items.split(',') : []);
+  return [...new Set(a.map(x => String(x).trim()))].filter(id => ALL_ITEMS[id]).slice(0, 10);
+}
+const mailReward = m => !!m && !m.claimed && (Math.round(+m.coins || 0) > 0 || mailItemIds(m).length > 0);
+function applyMail(m) {          // give the coins + items of one mail to the account (an item the player already owns becomes 500 coins, like level rewards)
+  const n = Math.max(0, Math.round(+m.coins || 0)), got = []; let dup = 0;
+  if (m.mode === 'set') db().coins = Math.max(0, Math.min(MAXC, n)); else db().coins = Math.max(0, Math.min(MAXC, db().coins + n));
+  mailItemIds(m).forEach(id => { if (Az.owned(id)) dup += 500; else { db().own[id] = 1; got.push(ALL_ITEMS[id]); } });
+  if (dup) db().coins = Math.min(MAXC, db().coins + dup);
+  m.claimed = true; m.read = true; m.claimedAt = Date.now();
+  return { coins: n + dup, items: got, text: rewardText(n + dup, got) };
+}
+
 /* ------------------------------ core API ------------------------------ */
 const Az = window.Az = {
   BASE, GAMES, PLACES, SHOP, COIN_RATE, DAILY_BONUS, figure, gunSVG, gunParts, personSVG, drawGun, gunItem,
@@ -558,20 +588,52 @@ const Az = window.Az = {
 
   mailCount: () => db().mail.filter(m => !m.claimed && !m.read).length,
   markMailRead(i) { const m=db().mail[i]; if(!m || m.claimed || m.read) return false; m.read=true; m.readAt=Date.now(); save(); Az.refresh(); return true; },
-  claimMail(i) {
+  /* Mail rewards: coins and/or shop items. Claiming adds them to the account. Deleting a mail that still has an unclaimed reward claims it first, so nothing is ever lost. */
+  mailItems: m => mailItemIds(m),
+  mailHasReward: m => mailReward(m),
+  claimMail(i, quiet) {
     const m = db().mail[i]; if (!m || m.claimed) return false;
-    const n = Math.round(+m.coins || 0);
-    if (m.mode === 'set') db().coins = Math.max(0, Math.min(MAXC, n)); else db().coins = Math.max(0, Math.min(MAXC, db().coins + n));
-    m.claimed = true; m.claimedAt = Date.now(); save(); Az.refresh(); Az.toast('🎁 Mail claimed: +' + n + ' coins'); return true;
+    const r = applyMail(m); save(); Az.refresh(); if (!quiet) Az.toast('🎁 Mail claimed: ' + r.text, 3500); return true;
+  },
+  deleteMail(i) {
+    const m = db().mail[i]; if (!m) return false;
+    let r = null; if (mailReward(m)) r = applyMail(m);
+    db().mail.splice(i, 1); save(); Az.refresh();
+    Az.toast(r ? '🗑 Mail deleted — auto-claimed: ' + r.text : '🗑 Mail deleted', 3500); return true;
+  },
+  claimAllMail() {
+    let n = 0; const tot = { coins: 0, items: [] };
+    db().mail.forEach(m => { if (!m.claimed && mailReward(m)) { const r = applyMail(m); tot.coins += r.coins; tot.items.push(...r.items); n++; } else if (!m.claimed) { m.read = true; m.claimed = true; } });
+    save(); Az.refresh(); if (n) Az.toast('🎁 Claimed ' + n + ' mail(s): ' + rewardText(tot.coins, tot.items), 4000); return n;
+  },
+  deleteAllMail() {
+    const n = db().mail.length; if (!n) return 0;
+    const tot = { coins: 0, items: [] }, had = [];
+    db().mail.forEach(m => { if (!m.claimed && mailReward(m)) { const r = applyMail(m); tot.coins += r.coins; tot.items.push(...r.items); had.push(1); } });
+    db().mail = []; save(); Az.refresh();
+    Az.toast('🗑 ' + n + ' mail(s) deleted' + (had.length ? ' — auto-claimed: ' + rewardText(tot.coins, tot.items) : ''), 4000); return n;
   },
   mailbox() {
     const m = Az.modal('<div id="azmailbox"></div>');
     const draw = () => {
-      const list = db().mail.slice().reverse();
-      const rows = list.length ? list.map((v,j) => { const i=db().mail.length-1-j; return `<div class="azitem"><b>✉️ ${esc(v.title || 'Message from Ari Game Zone')}</b>${v.message?`<p class="sub">${esc(v.message)}</p>`:''}<small>${v.coins?`🪙 ${v.coins} Gold Coins`:'Game update / announcement'}</small>${v.claimed?'<span class="azpill">✅ Claimed / Read</span>':(v.coins>0?`<button class="azbtn sm" data-claim="${i}">Claim reward</button>`:`<button class="azbtn sm ghost" data-read="${i}">Mark as read</button>`)}</div>`; }).join('') : '<p class="sub">No messages yet. Gifts and updates will appear here.</p>';
-      document.getElementById('azmailbox').innerHTML = `<h2>✉️ Mail</h2><p class="sub">Claim gifts sent to your Player ID.</p><div class="azshopgrid">${rows}</div><div class="azrow c"><button class="azbtn ghost" id="mailclose">Close</button></div>`;
+      const all = db().mail, list = all.slice().reverse();
+      const rows = list.length ? list.map((v,j) => {
+        const i = all.length-1-j, ids = mailItemIds(v), coins = Math.round(+v.coins||0), rew = mailReward(v);
+        const what = [coins > 0 ? `🪙 ${coins} Gold Coins` : '', ...ids.map(id => (SHOP[ALL_ITEMS[id].slot].emoji || '🎁') + ' ' + esc(ALL_ITEMS[id].name))].filter(Boolean);
+        const state = v.claimed ? '<span class="azpill">✅ Claimed / Read</span>' : (rew ? `<button class="azbtn sm" data-claim="${i}">🎁 Claim</button>` : `<button class="azbtn sm ghost" data-read="${i}">Mark as read</button>`);
+        const del = `<button class="azbtn sm ghost" data-del="${i}" title="${rew ? 'Deleting claims the reward automatically' : 'Delete'}">🗑 Delete${rew ? ' (auto-claims)' : ''}</button>`;
+        return `<div class="azitem"><b>✉️ ${esc(v.title || 'Message from Ari Game Zone')}</b>${v.message?`<p class="sub">${esc(v.message)}</p>`:''}<small>${what.length ? what.join(' · ') : 'Game update / announcement'}</small><div class="azrow c" style="margin-top:6px">${state}${del}</div></div>`;
+      }).join('') : '<p class="sub">No messages yet. Gifts and updates will appear here.</p>';
+      const bulk = all.length ? '<div class="azrow c"><button class="azbtn sm" id="mailclaimall">🎁 Claim all</button><button class="azbtn sm ghost" id="maildelall">🗑 Delete all</button></div>' : '';
+      document.getElementById('azmailbox').innerHTML = `<h2>✉️ Mail</h2><p class="sub">Claim gifts sent to your Player ID. Deleting a mail with an unclaimed coin / item reward claims it automatically.</p>${bulk}<div class="azshopgrid">${rows}</div><div class="azrow c"><button class="azbtn ghost" id="mailclose">Close</button></div>`;
     };
-    m.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.claim!==undefined){Az.claimMail(+b.dataset.claim);draw();}if(b.dataset.read!==undefined){Az.markMailRead(+b.dataset.read);draw();}if(b.id==='mailclose')m.close();});
+    m.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+      if(b.dataset.claim!==undefined){Az.claimMail(+b.dataset.claim);draw();}
+      else if(b.dataset.read!==undefined){Az.markMailRead(+b.dataset.read);draw();}
+      else if(b.dataset.del!==undefined){Az.deleteMail(+b.dataset.del);draw();}
+      else if(b.id==='mailclaimall'){Az.claimAllMail();draw();}
+      else if(b.id==='maildelall'){if(confirm('Delete ALL mail? Any unclaimed coins / items will be claimed automatically first.')){Az.deleteAllMail();draw();}}
+      else if(b.id==='mailclose')m.close();});
     draw(); return m;
   },
   level: id => db().lv[id] || 1,                       // highest unlocked level of a game
@@ -839,7 +901,7 @@ function setLoginBtn() {
 }
 function doPush() {                    // write the CURRENT account's data to its own cloud node
   if (!fbUser || !fbDb || cloudUid !== fbUser.uid || !D) return Promise.resolve(false);
-  try { return fbDb.ref(gdPath(fbUser.uid)).set(JSON.parse(JSON.stringify(D))).then(() => true).catch(e => { Az.toast && Az.toast('Cloud save failed: ' + (e.message || 'check database rules')); return false; }); }
+  try { return fbDb.ref(gdPath(fbUser.uid)).set(JSON.parse(JSON.stringify(D))).then(() => true).catch(e => { if (!Az.isBanned || !Az.isBanned()) Az.toast && Az.toast('Cloud save failed: ' + (e.message || 'check database rules')); return false; }); }
   catch (e) { return Promise.resolve(false); }
 }
 function flushPush() { if (pushT) { clearTimeout(pushT); pushT = null; return doPush(); } return Promise.resolve(); }
@@ -899,15 +961,22 @@ function startGrants(u) {
   ref.on('value', snap => {
     if (!fbUser || fbUser.uid !== u.uid || cloudUid !== u.uid) return;
     const v = snap.val(); if (!v || typeof v !== 'object') return;
+    let added = 0; const ids = [];
     Object.keys(v).forEach(id => {
-      if (seenGrants[id]) return; seenGrants[id] = 1; const g = v[id];
-      ref.child(id).remove().then(() => {
-        if (g && typeof g.coins === 'number' && fbUser && fbUser.uid === u.uid) {
-          db().mail.push({ title: g.title || 'Gift from Ari Game Zone', message: String(g.message || '').slice(0,240), coins: Math.max(0,Math.round(+g.coins||0)), mode: 'add', ts: g.ts || Date.now(), claimed: false });
-          save(); Az.refresh(); Az.toast('✉️ New mail received! Open Mail to read or claim it.', 4500);
-          document.dispatchEvent(new Event('az-mail')); try { if (document.getElementById('mailcount')) Az.refresh(); } catch(e) {}
-        }
-      }).catch(() => { delete seenGrants[id]; });
+      if (seenGrants[id]) return; seenGrants[id] = 1; const g = v[id]; ids.push(id);
+      if (!g || typeof g !== 'object') return;
+      if (db().mail.some(m => m.gid === id)) return;                       // already delivered earlier (queue entry could not be removed last time)
+      db().mail.push({ gid: id, title: String(g.title || 'Gift from Ari Game Zone').slice(0,60), message: String(g.message || '').slice(0,240), coins: Math.max(0, Math.min(1e9, Math.round(+g.coins||0))), items: mailItemIds({ items: g.items }), mode: 'add', ts: (typeof g.ts === 'number' ? g.ts : Date.now()), claimed: false });
+      added++;
+    });
+    if (!ids.length) return;
+    if (db().mail.length > 150) { const keep = db().mail.filter(m => !m.claimed), old = db().mail.filter(m => m.claimed).slice(-(150 - Math.min(keep.length, 150))); db().mail = db().mail.filter(m => keep.includes(m) || old.includes(m)); }
+    if (added) { save(); Az.refresh(); Az.toast('✉️ New mail received! Open Mail to read or claim it.', 4500); document.dispatchEvent(new Event('az-mail')); }
+    // Remove the queue entries ONLY after the mail is safely saved in the cloud, so a closed tab can never lose a gift.
+    clearTimeout(pushT); pushT = null;
+    doPush().then(ok => {
+      if (ok || !added) { ids.forEach(id => { ref.child(id).remove().catch(() => { delete seenGrants[id]; }); }); }
+      else ids.forEach(id => { delete seenGrants[id]; });                       // cloud save failed: keep the queue entries, retry on the next update
     });
   }, () => {});
 }
@@ -947,31 +1016,60 @@ Az.devSetPlayerLevel = function (level) {
   const items = grantLevelItems(after); save(); Az.refresh();
   return { level: after, rewards: items.length };
 };
-Az.devGiveMail = function (gid, coins, title='Gift from Ari Game Zone', message='') {
-  return Promise.resolve().then(() => {
-    if (!Az.isOwner()) throw new Error('This is only for the owner account.');
-    if (!fbUser || !fbDb) throw new Error('Log in with Google/Phone first.');
-    if (!Az.ownerOK) throw new Error('Owner not verified. Publish database.rules.json in Firebase.');
-    gid = String(gid || '').replace(/\D/g, ''); coins = Math.round(+coins || 0);
-    title = String(title||'Game Zone Mail').slice(0,60); message = String(message||'').slice(0,240);
-    if (!/^\d{8}$/.test(gid)) throw new Error('Player ID must be 8 digits.');
-    if (!isFinite(coins) || coins < 0 || coins > 1e9) throw new Error('Enter a valid positive coin amount.');
-    return fbDb.ref('uidIndex/' + gid).once('value').then(s => {
-      const target=s.val(); if(!target) throw new Error('Player not found. They must log in once.');
-      return fbDb.ref('adminGrants/' + target).push({ coins, title, message, ts:firebase.database.ServerValue.TIMESTAMP }).then(()=>gid);
-    });
+const cleanGrantItems = items => [...new Set((Array.isArray(items) ? items : String(items || '').split(',')).map(x => String(x).trim()))].filter(id => ALL_ITEMS[id]).slice(0, 10);
+function grantBody(coins, title, message, items) {
+  coins = Math.round(+coins || 0); title = String(title || 'Ari Game Zone Mail').slice(0, 60); message = String(message || '').slice(0, 240); items = cleanGrantItems(items);
+  if (!isFinite(coins) || coins < 0 || coins > 1e9) throw new Error('Enter a valid positive coin amount.');
+  if (!coins && !message.trim() && !items.length) throw new Error('Write a message, or add coins / an item.');
+  const b = { coins, title, message, ts: firebase.database.ServerValue.TIMESTAMP }; if (items.length) b.items = items.join(',');
+  return b;
+}
+const needOwner = () => { if (!Az.isOwner()) throw new Error('This is only for the owner account.'); if (!fbUser || !fbDb) throw new Error('Log in with Google first.'); if (!Az.ownerOK) throw new Error('Owner not verified. Publish database.rules.json in Firebase and log in with the owner Gmail.'); };
+const lookupUid = gid => { gid = String(gid || '').replace(/\D/g, ''); if (!/^\d{8}$/.test(gid)) return Promise.reject(new Error('Player ID must be 8 digits.')); return fbDb.ref('uidIndex/' + gid).once('value').then(s => { const t = s.val(); if (!t || typeof t !== 'string') throw new Error('Player ' + gid + ' not found. They must log in with Google once.'); return { gid, uid: t }; }); };
+Az.devGiveMail = function (gid, coins, title, message, items) {
+  return Promise.resolve().then(() => { needOwner(); const body = grantBody(coins, title || 'Gift from Ari Game Zone', message, items); return lookupUid(gid).then(t => fbDb.ref('adminGrants/' + t.uid).push(body).then(() => t.gid)); });
+};
+/* Mail to EVERY existing registered player (every Player ID in uidIndex). Written in chunks so a big player list never exceeds one write. */
+Az.devBroadcastMail = function (coins, title, message, items) {
+  return Promise.resolve().then(async () => {
+    needOwner(); const body = grantBody(coins, title || 'Ari Game Zone Mail', message, items);
+    const snap = await fbDb.ref('uidIndex').once('value'), ids = snap.val() || {}, targets = [...new Set(Object.values(ids).filter(x => typeof x === 'string' && x))];
+    if (!targets.length) throw new Error('No registered Player IDs found.');
+    for (let i = 0; i < targets.length; i += 200) {
+      const batch = {}; targets.slice(i, i + 200).forEach(uid => { const key = fbDb.ref('adminGrants/' + uid).push().key; batch['adminGrants/' + uid + '/' + key] = body; });
+      await fbDb.ref().update(batch);
+    }
+    return targets.length;
   });
 };
-Az.devBroadcastMail = function(coins,title,message){
-  return Promise.resolve().then(async()=>{
-    if(!Az.isOwner()||!fbUser||!fbDb||!Az.ownerOK) throw new Error('Owner login and Firebase owner permission are required.');
-    coins=Math.max(0,Math.min(1e9,Math.round(+coins||0))); title=String(title||'Ari Game Zone Bonus').slice(0,60); message=String(message||'').slice(0,240);
-    const snap=await fbDb.ref('uidIndex').once('value'), ids=snap.val()||{}, targets=[...new Set(Object.values(ids).filter(x=>typeof x==='string'&&x))];
-    if(!targets.length) throw new Error('No registered Player IDs found.');
-    const batch={}; targets.forEach(uid=>{const key=fbDb.ref('adminGrants/'+uid).push().key;batch['adminGrants/'+uid+'/'+key]={coins,title,message,ts:firebase.database.ServerValue.TIMESTAMP};});
-    await fbDb.ref().update(batch); return targets.length;
-  });
+Az.devItemCatalog = () => Object.keys(SHOP).filter(k => USED[k]).map(k => ({ slot: k, title: SHOP[k].title, emoji: SHOP[k].emoji || '🎁', items: SHOP[k].items.filter(i => i.price !== 0 || i.lvl || i.spin).map(i => ({ id: i.id, name: i.name, rarity: rarityOf(i) })) })).filter(g => g.items.length);
+/* ---- Ban / unban (stored at banned/<firebaseUid>; Firebase rules then block that account's cloud saves; the game shows a ban screen) ---- */
+Az.devBan = function (gid, reason) {
+  return Promise.resolve().then(() => { needOwner(); gid = String(gid || '').replace(/\D/g, ''); if (gid === OWNER_UID) throw new Error('The owner ID cannot be banned.'); return lookupUid(gid); })
+    .then(t => { if (t.uid === fbUser.uid) throw new Error('You cannot ban your own account.'); return fbDb.ref('banned/' + t.uid).set({ id: t.gid, reason: String(reason || '').slice(0, 140), ts: firebase.database.ServerValue.TIMESTAMP }).then(() => t.gid); });
 };
+Az.devUnban = function (gid) {
+  return Promise.resolve().then(() => { needOwner(); gid = String(gid || '').replace(/\D/g, ''); if (!/^\d{8}$/.test(gid)) throw new Error('Player ID must be 8 digits.'); return fbDb.ref('banned').once('value'); })
+    .then(s => { const v = s.val() || {}, uid = Object.keys(v).find(k => v[k] && String(v[k].id) === gid); if (!uid) throw new Error('Player ' + gid + ' is not banned.'); return fbDb.ref('banned/' + uid).remove().then(() => gid); });
+};
+Az.devListBans = function () {
+  return Promise.resolve().then(() => { needOwner(); return fbDb.ref('banned').once('value'); })
+    .then(s => { const v = s.val() || {}; return Object.keys(v).map(k => ({ uid: k, id: String(v[k] && v[k].id || '?'), reason: String(v[k] && v[k].reason || ''), ts: +(v[k] && v[k].ts) || 0 })).sort((a, b) => b.ts - a.ts); });
+};
+let banRef = null, banInfo = null, banEl = null;
+function hideBan() { if (banEl) { banEl.remove(); banEl = null; } }
+function showBan(v) {
+  hideBan(); banEl = el('div', 'azmodal', '<div class="azbox" style="text-align:center"><div class="azbig">🚫</div><h2>Account banned</h2><p class="sub">Your account (Player ID <b>' + esc(db().uid) + '</b>) has been banned from Ari Game Zone.' + (v && v.reason ? '<br><br>Reason: <b>' + esc(v.reason) + '</b>' : '') + '</p><p class="sub" style="font-size:12px">Progress is not saved to the cloud while banned. Contact the owner if you think this is a mistake.</p><div class="azrow c"><button class="azbtn ghost" id="banout">Logout</button></div></div>');
+  banEl.style.zIndex = 2147483000; document.body.appendChild(banEl);
+  const b = banEl.querySelector('#banout'); b.onclick = () => { b.disabled = true; Az.logout && Az.logout(); };
+}
+function stopBanWatch() { if (banRef) { try { banRef.off(); } catch (e) {} banRef = null; } banInfo = null; hideBan(); }
+function startBanWatch(u) {
+  stopBanWatch(); if (!fbDb || isOwnerAcct(u)) return;
+  const ref = banRef = fbDb.ref('banned/' + u.uid);
+  ref.on('value', snap => { if (!fbUser || fbUser.uid !== u.uid) return; const v = snap.val(); if (v) { banInfo = (typeof v === 'object') ? v : {}; if (!banEl || !document.body.contains(banEl)) showBan(banInfo); } else { banInfo = null; hideBan(); } }, () => {});
+}
+Az.isBanned = () => !!banInfo;
 
 Az.ownerBtn = function () {       // home-page button: visible ONLY on the owner ID
   const cb = document.getElementById('admincoins'); if (!cb) return;
@@ -982,7 +1080,7 @@ Az.whenAuth = () => { if (!LS.get('az_login')) return Promise.resolve(null); ret
 
 function afterLogout() {
   // 'az_login' is the cross-tab "a session is still open" flag: whoever sees it first does the cleanup once.
-  fbUser = null; cloudUid = null; loadSeq++; clearTimeout(pushT); pushT = null; stopGrants(); Az.ownerOK = false;
+  fbUser = null; cloudUid = null; loadSeq++; clearTimeout(pushT); pushT = null; stopGrants(); try { stopBanWatch(); } catch (e) {} Az.ownerOK = false;
   // NOTE: the guest id is NOT rotated any more: after logout you are back on the SAME guest you had before,
   // and every other guest stays saved on this device (see Az.guests / Az.switchGuest / Az.newGuest).
   LS.del('az_login'); LS.del('az_active_key');
@@ -998,6 +1096,7 @@ function afterLogin(u) {
   const key = 'az2:user:' + u.uid, hadLocal = !!LS.get(key);
   stopGrants(); Az.ownerOK = false;
   fbUser = u; cloudUid = null; clearTimeout(pushT); pushT = null;
+  startBanWatch(u);
   ACTIVE_KEY = key; D = null;
   LS.set('az_login', '1'); LS.set('az_active_key', key);
   setLoginBtn();
@@ -1016,9 +1115,11 @@ function afterLogin(u) {
     const existed = !!cloud;                                          // did this Gmail already have an account (an ID)?
     if (cloud) {
       const needsStarter49019468 = String(cloud.uid || '') === '49019468' && !cloud.starter49019468;
+      const needsBonus = bonusPending(cloud);
       cloud = normalize(cloud);
       if (hadLocal && localD.rev > cloud.rev) { cloudUid = u.uid; doPush(); }   // this device is ahead (cloud write was lost)
-      else { D = cloud; LS.set(ACTIVE_KEY, JSON.stringify(D)); cloudUid = u.uid; if (needsStarter49019468) doPush(); }
+      else { D = cloud; LS.set(ACTIVE_KEY, JSON.stringify(D)); cloudUid = u.uid; if (needsStarter49019468 || needsBonus) doPush(); }
+      announceBonus();
     } else {
       cloudUid = u.uid; D = db(); doPush();
     }
@@ -1158,7 +1259,7 @@ Az.start = function (cfg) {
     const modes = g.modes.length > 1 ? `<div class="azlbl">Mode</div><div class="azrow">${g.modes.map(x => `<button class="azchip ${st.mode === x ? 'on' : ''}" data-mode="${x}">${M[x]}</button>`).join('')}</div>` : '';
     const diff = cfg.noDiff ? '' : `<div class="azlbl">Difficulty</div><div class="azrow">${['easy', 'medium', 'hard'].map(d => `<button class="azchip ${st.diff === d ? 'on' : ''}" data-diff="${d}">${{ easy: '😊 Easy', medium: '😎 Medium', hard: '🔥 Hard' }[d]}</button>`).join('')}</div>`;
     const lvl = (st.mode === 'single' && !cfg.noLevels) ? `<div class="azlbl">Level (unlocked ${unl} / ${g.max})</div><div class="azstep"><button data-lv="-10">«</button><button data-lv="-1">−</button><b>Level ${st.level}<br><small style="color:var(--muted)">${pl.emoji} ${pl.name}</small></b><button data-lv="1">+</button><button data-lv="10">»</button></div>` : '';
-    const extra = (cfg.extra || []).map(x => `<div class="azlbl">${x.label}</div><div class="azrow">${x.options.map(op => `<button class="azchip ${st.extra[x.key] === op[0] ? 'on' : ''}" data-ex="${x.key}" data-v="${op[0]}">${op[1]}</button>`).join('')}</div>`).join('');
+    const extra = (cfg.extra || []).filter(x => !x.only || x.only === st.mode).map(x => `<div class="azlbl">${x.label}</div><div class="azrow">${x.options.map(op => `<button class="azchip ${st.extra[x.key] === op[0] ? 'on' : ''}" data-ex="${x.key}" data-v="${op[0]}">${op[1]}</button>`).join('')}</div>`).join('');
     let play;
     if (st.mode === 'online') play = `<div class="azlbl">Online room</div><div class="azrow c"><button class="azbtn" id="mk">➕ Create room</button><span style="align-self:center;color:var(--muted)">or</span><input class="azinput" id="jc" maxlength="4" placeholder="CODE"><button class="azbtn ghost" id="jn">Join</button></div><div class="azerr" id="neterr"></div><div id="netinfo"></div>`;
     else play = `<div class="azrow c" style="margin-top:18px"><button class="azbtn" id="go" style="font-size:17px;padding:13px 34px">▶ Play</button></div>`;

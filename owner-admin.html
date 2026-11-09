@@ -68,21 +68,44 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     </div>
 
     <div class="box">
-      <h2>✉️ Mail gift for another player</h2>
-      <p class="sub">Enter the player's 8-digit ID. Coins are delivered to the player's Mail inbox. They can claim the gift when they open the game.</p>
-      <div class="azrow c"><input class="azinput" id="gid" inputmode="numeric" maxlength="8" placeholder="Player ID (8 digit)"></div>
-      <div class="azrow c"><input class="azinput" id="gAmt" type="number" inputmode="numeric" placeholder="Gold Coins (0 for message only)"></div>
-      <div class="azrow c"><input class="azinput" id="gTitle" maxlength="60" placeholder="Mail title" style="width:100%;max-width:320px;letter-spacing:0;text-transform:none"></div>
-      <div class="azrow c"><input class="azinput" id="gMessage" maxlength="240" placeholder="Message (optional)" style="width:100%;max-width:320px;letter-spacing:0;text-transform:none"></div>
+      <h2>✉️ Send Mail (message + coins + items)</h2>
+      <p class="sub">Write a mail and send it to <b>one player</b> (by Player ID) or to <b>every existing player</b> at once. Coins and items are claimed by the player from their Mail inbox. If a player deletes the mail, the reward is claimed automatically.</p>
       <div class="azrow c">
-        <button class="azbtn sm" id="gAdd">✉️ Send Mail</button>
+        <button class="azchip on" id="toOne">👤 One player (ID)</button>
+        <button class="azchip" id="toAll">👥 All existing players</button>
+      </div>
+      <div class="azrow c" id="gidRow"><input class="azinput" id="gid" inputmode="numeric" maxlength="8" placeholder="Player ID (8 digit)"></div>
+      <div class="azrow c"><input class="azinput" id="gTitle" maxlength="60" placeholder="Mail title" style="width:100%;max-width:320px;letter-spacing:0;text-transform:none"></div>
+      <div class="azrow c"><textarea class="azinput" id="gMessage" maxlength="240" rows="3" placeholder="Write your message here (max 240 characters)" style="width:100%;max-width:320px;letter-spacing:0;text-transform:none;resize:vertical"></textarea></div>
+      <div class="azrow c"><input class="azinput" id="gAmt" type="number" inputmode="numeric" min="0" placeholder="Gold Coins (0 = none)"></div>
+      <div class="azlbl" style="text-align:center">🎁 Items to gift (optional)</div>
+      <div class="azrow c">
+        <select class="azinput" id="itSlot" style="max-width:150px;letter-spacing:0;text-transform:none"></select>
+        <select class="azinput" id="itItem" style="max-width:190px;letter-spacing:0;text-transform:none"></select>
+        <button class="azbtn sm ghost" id="itAdd">➕ Add item</button>
+      </div>
+      <div class="stat" id="itChips"></div>
+      <div class="azrow c">
+        <button class="azbtn" id="gSend">✉️ Send Mail</button>
       </div>
     </div>
-    <div class="box"><h2>🪔 Diwali bonus — all registered players</h2><p class="sub">Send a one-time 500 Gold Coins claimable Mail to every Player ID already registered in uidIndex. This requires the updated Firebase rules below.</p><button class="azbtn" id="diwali">🪙 Send 500 coins to all existing IDs</button></div>
+
+    <div class="box">
+      <h2>🚫 Ban / Unban a Player ID</h2>
+      <p class="sub">A banned account sees a ban screen and its cloud saves are blocked by Firebase. The player must have logged in with Google at least once (guests cannot be banned). The owner ID cannot be banned.</p>
+      <div class="azrow c"><input class="azinput" id="bid" inputmode="numeric" maxlength="8" placeholder="Player ID (8 digit)"></div>
+      <div class="azrow c"><input class="azinput" id="bReason" maxlength="140" placeholder="Reason (optional, player will see it)" style="width:100%;max-width:320px;letter-spacing:0;text-transform:none"></div>
+      <div class="azrow c">
+        <button class="azbtn sm" id="banBtn">🚫 Ban</button>
+        <button class="azbtn sm ghost" id="unbanBtn">✅ Unban</button>
+        <button class="azbtn sm ghost" id="banRefresh">🔄 Banned list</button>
+      </div>
+      <div id="banList"></div>
+    </div>
     <div id="log"></div>
   </div>
 </main>
-<script src="az.js?v=22"></script>
+<script src="az.js?v=24"></script>
 <script>
 (function(){
   const $=id=>document.getElementById(id);
@@ -101,7 +124,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     $('stLogin').className='azpill '+(acc?'ok':'no');
     $('stOwner').textContent=Az.ownerOK?'🔑 Owner verified':'🔑 Not verified';
     $('stOwner').className='azpill '+(Az.ownerOK?'ok':'no');
-    $('stHelp').textContent=Az.ownerOK?'All ready: you can send coins to other players.':(acc?'To send coins to other players, publish the new database.rules.json in Firebase Rules and log in with kumararihant625@gmail.com.':'To send coins to other players, log in with Google first. You can still change your own coins.');
+    $('stHelp').textContent=Az.ownerOK?'All ready: you can send mail, coins and items, and ban / unban players.':(acc?'To send coins to other players, publish the new database.rules.json in Firebase Rules and log in with kumararihant625@gmail.com.':'To send coins to other players, log in with Google first. You can still change your own coins.');
   }
   const num=id=>{const v=Math.round(+$(id).value);return isFinite(v)&&$(id).value!==''?v:null;};
   $('dologin').onclick=()=>Az.login();
@@ -111,16 +134,53 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
   $('selfMax').onclick=()=>{Az.devSetCoins(999999999);paint();log('✅ MAX coins set.');};
   $('selfLevelSet').onclick=()=>{const n=num('selfLevelAmt');if(n==null||n<1||n>100000)return log('Enter a whole player level from 1 to 100000.',1);const r=Az.devSetPlayerLevel(n);if(!r)return log('Could not set player level. Owner access required.',1);paint();log('✅ Player level set to '+r.level+'. '+r.rewards+' level reward item(s) unlocked.');};
   document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{Az.devAddCoins(+b.dataset.q);paint();log('✅ Now '+Az.coins()+' coins.');});
-  function give(sign,mode){
-    const n=num('gAmt');
+  /* ---- mail composer ---- */
+  let toAll=false; const picked=[];
+  const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const cat=Az.devItemCatalog();
+  const slotSel=$('itSlot'), itemSel=$('itItem');
+  slotSel.innerHTML=cat.map((g,i)=>'<option value="'+i+'">'+g.emoji+' '+esc(g.title)+'</option>').join('');
+  function fillItems(){const g=cat[+slotSel.value]||cat[0];itemSel.innerHTML=g?g.items.map(i=>'<option value="'+esc(i.id)+'">'+esc(i.name)+' ('+i.rarity+')</option>').join(''):'';}
+  slotSel.onchange=fillItems; fillItems();
+  const nameOf=id=>{for(const g of cat){const it=g.items.find(x=>x.id===id);if(it)return g.emoji+' '+it.name;}return id;};
+  function drawChips(){$('itChips').innerHTML=picked.length?picked.map((id,i)=>'<span class="azpill">'+esc(nameOf(id))+' <b data-rm="'+i+'" style="cursor:pointer;padding:0 4px">✖</b></span>').join(''):'<span class="sub">No items added.</span>';}
+  $('itChips').onclick=e=>{const b=e.target.closest('[data-rm]');if(b){picked.splice(+b.dataset.rm,1);drawChips();}};
+  $('itAdd').onclick=()=>{const id=itemSel.value;if(!id)return;if(picked.includes(id))return log('That item is already added.',1);if(picked.length>=10)return log('Maximum 10 items per mail.',1);picked.push(id);drawChips();log('');};
+  drawChips();
+  function setTarget(all){toAll=all;$('toAll').classList.toggle('on',all);$('toOne').classList.toggle('on',!all);$('gidRow').style.display=all?'none':'';}
+  $('toOne').onclick=()=>setTarget(false); $('toAll').onclick=()=>setTarget(true);
+  $('gSend').onclick=()=>{
+    const n=$('gAmt').value===''?0:num('gAmt');
     if(n==null||n<0)return log('Enter a valid coin amount (0 or more).',1);
-    const gid=$('gid').value.replace(/\D/g,'');
-    log('Sending mail…');
-    Az.devGiveMail(gid,n,$('gTitle').value||'Gift from Ari Game Zone',$('gMessage').value).then(g=>log('✅ Mail sent to player '+g+'. '+n+' Gold Coins.')).catch(e=>log('❌ '+(e&&e.message||'Error: check database rules'),1));
+    const title=$('gTitle').value.trim()||'Message from Ari Game Zone', msg=$('gMessage').value.trim();
+    if(!n&&!msg&&!picked.length)return log('Write a message, or add coins / an item.',1);
+    const what=[msg?'a message':'',n?n+' coins':'',picked.length?picked.length+' item(s)':''].filter(Boolean).join(' + ');
+    const btn=$('gSend');
+    if(toAll){
+      if(!confirm('Send "'+title+'" ('+what+') to EVERY existing registered player? This cannot be undone.'))return;
+      btn.disabled=true;log('Sending to all players…');
+      Az.devBroadcastMail(n,title,msg,picked.slice()).then(c=>log('✅ Mail sent to '+c+' existing players ('+what+').')).catch(e=>log('❌ '+(e&&e.message||'Could not send'),1)).then(()=>btn.disabled=false);
+    }else{
+      const gid=$('gid').value.replace(/\D/g,'');
+      if(gid.length!==8)return log('Enter the 8-digit Player ID.',1);
+      btn.disabled=true;log('Sending mail…');
+      Az.devGiveMail(gid,n,title,msg,picked.slice()).then(g=>log('✅ Mail sent to player '+g+' ('+what+').')).catch(e=>log('❌ '+(e&&e.message||'Error: check database rules'),1)).then(()=>btn.disabled=false);
+    }
+  };
+  /* ---- ban / unban ---- */
+  const when=t=>t?new Date(t).toLocaleString():'';
+  function drawBans(){
+    $('banList').innerHTML='<p class="sub" style="text-align:center">Loading…</p>';
+    Az.devListBans().then(list=>{
+      $('banList').innerHTML=list.length?list.map(b=>'<div class="azitem" style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap"><div><b>🆔 '+esc(b.id)+'</b><br><small style="color:var(--muted)">'+esc(b.reason||'No reason')+(b.ts?' · '+esc(when(b.ts)):'')+'</small></div><button class="azbtn sm ghost" data-unban="'+esc(b.id)+'">✅ Unban</button></div>').join(''):'<p class="sub" style="text-align:center">No banned players.</p>';
+    }).catch(e=>{$('banList').innerHTML='';log('❌ '+(e&&e.message||'Could not load the list'),1);});
   }
-  $('gAdd').onclick=()=>give(1,'add');
-  $('diwali').onclick=()=>{if(!confirm('Send 500 claimable Gold Coins to every existing registered Player ID? This cannot be undone.'))return;log('Sending Diwali bonus…');Az.devBroadcastMail(500,'🪔 Diwali Bonus','Happy Diwali! Claim your 500 Gold Coins bonus.').then(n=>log('✅ Diwali bonus mail queued for '+n+' existing accounts.')).catch(e=>log('❌ '+(e&&e.message||'Could not send bonus'),1));};
+  $('banRefresh').onclick=drawBans;
+  $('banBtn').onclick=()=>{const gid=$('bid').value.replace(/\D/g,'');if(gid.length!==8)return log('Enter the 8-digit Player ID.',1);if(!confirm('Ban player '+gid+'?'))return;log('Banning…');Az.devBan(gid,$('bReason').value.trim()).then(g=>{log('🚫 Player '+g+' is banned.');drawBans();}).catch(e=>log('❌ '+(e&&e.message||'Could not ban'),1));};
+  $('unbanBtn').onclick=()=>{const gid=$('bid').value.replace(/\D/g,'');if(gid.length!==8)return log('Enter the 8-digit Player ID.',1);log('Unbanning…');Az.devUnban(gid).then(g=>{log('✅ Player '+g+' is unbanned.');drawBans();}).catch(e=>log('❌ '+(e&&e.message||'Could not unban'),1));};
+  $('banList').onclick=e=>{const b=e.target.closest('[data-unban]');if(!b)return;$('bid').value=b.dataset.unban;$('unbanBtn').click();};
   document.addEventListener('az-ready',()=>{paint();Az.whenAuth().then(paint);});
+  document.addEventListener('az-owner',()=>{if(Az.ownerOK&&!window.__bansLoaded){window.__bansLoaded=1;drawBans();}});
   document.addEventListener('az-account',paint);document.addEventListener('az-owner',paint);
   setInterval(()=>{if(Az.isOwner()){$('mycoins').textContent=Az.coins();
     $('selfLevel').textContent=Az.plvl(); $('selfXp').textContent=Az.xp();}},1500);

@@ -123,7 +123,7 @@ a{color:inherit}
   <div class="azmsg" id="msg" style="min-height:20px;font-size:13px">Team deathmatch — first team to the kill target wins. You respawn after 3s.</div>
   <div class="azctl"><button class="azbtn ghost sm" id="rst">🔄 Restart</button></div>
 </main>
-<script src="az.js?v=22"></script>
+<script src="az.js?v=24"></script>
 <script>
 /* Top-down shooter engine for Zone Survivor (battle royale) and Arena Strike (team deathmatch).
    Shooter.run({cv, mode:'br'|'arena', level, diff, hud(fn), end(fn)}) -> {stop(), S} */
@@ -134,7 +134,8 @@ function shade(hex,f){const n=parseInt(hex.slice(1),16);let r=n>>16,g=(n>>8)&255
 function lum(hex){const n=parseInt(hex.slice(1),16);return(((n>>16)*.3+((n>>8)&255)*.59+(n&255)*.11))/255;}
 
 function run(o){
-  const net=o.net||null;
+  const net=o.net||null,coop=!!(net&&o.coop),isHost=!net||!!net.host;
+  const ghosts=new Map();   // co-op guest: host-simulated enemy bots, drawn from snapshots
   const cv=o.cv,ctx=cv.getContext('2d'),L=o.level,D=o.diff,mode=o.mode,place=Az.place(L);
   const dm=Az.pick(D,.75,1,1.3),br=mode==='br',WORLD=br?2600:1400;
   const rng=Az.rng(L*977+(br?1:2)+(D==='hard'?5:D==='easy'?3:0));
@@ -158,11 +159,12 @@ function run(o){
   function mk(o2){const e=Object.assign({x:0,y:0,r:16,vx:0,vy:0,ang:0,cool:0,reload:0,armor:0,kills:0,alive:true,dead:0,boost:0,inv:0,tgt:null,think:0,goal:null,react:0,stuck:0,lastp:{x:0,y:0},sf:1+rng()*2,id:S.ents.length},o2);e.maxhp=e.hp;e.ammo=e.gun.mag;return e;}
   function spawnPlayer(){const p=br?freeSpot(300,300,WORLD-300,WORLD-300):freeSpot(60,WORLD/2-250,220,WORLD/2+250);return p;}
   const P=mk({player:true,team:br?0:0,hp:outfit.hp+Az.perk().hp,color:outfit.color,hat:outfit.hat,gun:mkGun(pg),name:Az.name(),...spawnPlayer()});P.inv=2.5;S.ents.push(P);S.P=P;
-  const nBots=net?0:br?Math.min(39,9+Math.floor(L*.3)):Math.min(7,3+Math.floor(L/22));
+  const nBots=net?(coop&&net.host?Az.pick(D,4,5,7):0):br?Math.min(39,9+Math.floor(L*.3)):Math.min(7,3+Math.floor(L/22));
   const botHp=Math.round((55+L*.9)*Az.pick(D,.8,1,1.2)),botErr=Math.max(.025,(.34-L*.0029))*Az.pick(D,1.5,1,.7),botDmg=(.55+L*.0075)*dm;
   function botGun(){const tier=Math.min(5,Math.floor(rng()*(1.2+L/18)));return mkGun(guns[tier]);}
   function mkBot(team,x,y,i){const hue=br?Math.floor(rng()*360):(team===0?200:0);const b=mk({team:br?i+1:team,hp:botHp,color:br?'hsl('+hue+' 70% 55%)':(team===0?'hsl('+(190+i*10)+' 80% 55%)':'hsl('+(i*12)+' 85% 52%)'),hat:['','🪖','🎩','🧢',''][i%5],gun:botGun(),name:'Bot'+(i+1),bot:true,x,y,speed:(108+L*.55)*Az.pick(D,.85,1,1.1),turn:3+L*.05,reactT:Math.max(.12,.7-L*.006)*Az.pick(D,1.4,1,.75),dmgMul:botDmg,err:botErr});S.ents.push(b);return b;}
   if(br){for(let i=0;i<nBots;i++){const p=freeSpot(150,150,WORLD-150,WORLD-150);mkBot(0,p.x,p.y,i);}}
+  else if(coop){if(net.host)for(let i=0;i<nBots;i++){const e=freeSpot(WORLD-260,WORLD/2-300,WORLD-60,WORLD/2+300);mkBot(1,e.x,e.y,i+20);}}
   else{for(let i=0;i<nBots;i++){const a=freeSpot(60,WORLD/2-300,260,WORLD/2+300),e=freeSpot(WORLD-260,WORLD/2-300,WORLD-60,WORLD/2+300);if(i<nBots-1)mkBot(0,a.x,a.y,i);mkBot(1,e.x,e.y,i+20);}}
   /* loot (battle royale) */
   if(br){for(let i=0;i<46;i++){const p=freeSpot(100,100,WORLD-100,WORLD-100),r=rng(),type=r<.34?'med':r<.6?'armor':r<.78?'boost':'gun';const tier=Math.min(5,1+Math.floor(rng()*rng()*5));S.loot.push({x:p.x,y:p.y,type,g:type==='gun'?guns[tier]:null,bob:rng()*6});}
@@ -173,13 +175,14 @@ function run(o){
     const g=e.gun;e.cool=1/g.rate;e.ammo--;
     for(let i=0;i<g.pellets;i++){const a=e.ang+(Math.random()-.5)*2*(g.spread+(e.err||0));S.bul.push({x:e.x+Math.cos(e.ang)*18,y:e.y+Math.sin(e.ang)*18,vx:Math.cos(a)*g.speed*60,vy:Math.sin(a)*g.speed*60,dmg:g.dmg*(e.dmgMul||1)*(e.boost>0?1.5:1),team:e.team,o:e,life:g.range/(g.speed*60),col:g.color});}
     if(net&&e.player)net.send({t:'f',b:S.bul.slice(-g.pellets).map(q=>({x:q.x,y:q.y,vx:q.vx,vy:q.vy,dmg:q.dmg,life:q.life,col:q.col}))});
+    else if(coop&&net.host&&e.bot)net.send({t:'bf',i:e.id,b:S.bul.slice(-g.pellets).map(q=>({x:q.x,y:q.y,vx:q.vx,vy:q.vy,dmg:q.dmg,life:q.life,col:q.col}))});
     if(e.player){Az.sfx('shoot');S.shake=Math.min(6,S.shake+(g.dmg>50?5:1.5));}
     S.parts.push({x:e.x+Math.cos(e.ang)*22,y:e.y+Math.sin(e.ang)*22,vx:0,vy:0,l:.07,s:9,c:'#fff'});}
   function hurt(e,d,by){if(!e.alive||e.inv>0)return;if(e.remote){S.txt.push({x:e.x,y:e.y-18,t:Math.round(d),l:.7,c:'#fff'});if(by&&by.player)Az.sfx('hit');return;}S.txt.push({x:e.x,y:e.y-18,t:Math.round(d),l:.7,c:e.player?'#ff6b6b':'#fff'});
     if(e.armor>0){const a=Math.min(e.armor,d*.6);e.armor-=a;d-=a*.5;}e.hp-=d;if(e.player){S.shake=Math.min(8,S.shake+3);S.hurt=.25;Az.sfx('hit');}else if(by&&by.player)Az.sfx('hit');
     for(let i=0;i<3;i++)S.parts.push({x:e.x,y:e.y,vx:(Math.random()-.5)*160,vy:(Math.random()-.5)*160,l:.3,s:4,c:'#ff4d6d'});
     if(e.hp<=0)die(e,by);}
-  function die(e,by){if(net&&e.player&&by&&by.remote)net.send({t:'k'});e.alive=false;e.hp=0;if(by&&by!==e)by.kills++;S.feed.unshift({t:(by&&by.name?by.name:'Zone')+' ⚔ '+e.name,l:5});S.feed.length=Math.min(S.feed.length,4);
+  function die(e,by){if(net&&!coop&&e.player&&by&&by.remote)net.send({t:'k'});if(coop&&!net.host&&e.player)net.send({t:'d'});e.alive=false;e.hp=0;if(by&&by!==e)by.kills++;S.feed.unshift({t:(by&&by.name?by.name:'Zone')+' ⚔ '+e.name,l:5});S.feed.length=Math.min(S.feed.length,4);if(coop&&net.host)net.send({t:'fd',s:S.feed[0].t});
     for(let i=0;i<14;i++)S.parts.push({x:e.x,y:e.y,vx:(Math.random()-.5)*300,vy:(Math.random()-.5)*300,l:.6,s:5,c:e.color});Az.sfx(e.player?'boom':'pop');
     if(br){if(!e.player)S.loot.push({x:e.x,y:e.y,type:Math.random()<.5?'med':'armor',bob:0});}
     else{if(by&&by!==e&&by.team!==e.team)S.teamKills[by.team]++;e.dead=3;}}
@@ -231,11 +234,13 @@ function run(o){
     if(fireNow)fire(p);if(p.ammo<=0&&!p.reload)p.reload=1.1;
     if(br)for(const l of S.loot)if(!l.gone&&rad(l.x-p.x,l.y-p.y)<26)pick(p,l);}
   /* ---------- main update ---------- */
-  function endGame(won,sub){if(S.over)return;S.over=true;setTimeout(()=>o.end({won,kills:P.kills,sub}),900);}
+  function endGame(won,sub){if(S.over)return;S.over=true;if(coop&&net.host)net.send({t:'end',w:won?1:0,s:sub});setTimeout(()=>o.end({won,kills:P.kills,sub}),900);}
   function update(dt){S.t+=dt;if(S.over){for(const e of S.ents)if(e.bot)botAI;return;}
     for(const e of S.ents){e.cool-=dt;e.inv-=dt;e.boost-=dt;if(e.reload>0){e.reload-=dt;if(e.reload<=0)e.ammo=e.gun.mag;}
-      if(!e.alive&&!br&&e.dead>0&&!e.remote){e.dead-=dt;if(e.dead<=0){const p=(e.team===0)!==!!(net&&!net.host)?freeSpot(60,WORLD/2-300,260,WORLD/2+300):freeSpot(WORLD-260,WORLD/2-300,WORLD-60,WORLD/2+300);e.x=p.x;e.y=p.y;e.hp=e.maxhp;e.alive=true;e.inv=2;e.ammo=e.gun.mag;e.armor=0;if(e.player)e.gun=mkGun(Az.eq('gun'));}}}
-    if(net){netT-=dt;if(netT<=0){netT=.05;net.send({t:'s',x:P.x,y:P.y,a:P.ang,hp:P.hp,ar:P.armor,al:P.alive?1:0,gn:P.gun.name});}if(R){R.x+=(R.tx-R.x)*Math.min(1,dt*20);R.y+=(R.ty-R.y)*Math.min(1,dt*20);}}
+      if(!e.alive&&!br&&e.dead>0&&!e.remote){e.dead-=dt;if(e.dead<=0){const left=coop?e.team===0:((e.team===0)!==!!(net&&!net.host));const p=left?freeSpot(60,WORLD/2-300,260,WORLD/2+300):freeSpot(WORLD-260,WORLD/2-300,WORLD-60,WORLD/2+300);e.x=p.x;e.y=p.y;e.hp=e.maxhp;e.alive=true;e.inv=2;e.ammo=e.gun.mag;e.armor=0;if(e.player)e.gun=mkGun(Az.eq('gun'));}}}
+    if(net){netT-=dt;if(netT<=0){netT=.05;net.send({t:'s',x:P.x,y:P.y,a:P.ang,hp:P.hp,ar:P.armor,al:P.alive?1:0,gn:P.gun.name});}if(R){R.x+=(R.tx-R.x)*Math.min(1,dt*20);R.y+=(R.ty-R.y)*Math.min(1,dt*20);}
+      for(const g of ghosts.values()){g.x+=(g.tx-g.x)*Math.min(1,dt*18);g.y+=(g.ty-g.y)*Math.min(1,dt*18);}
+      if(coop&&net.host){snapT-=dt;if(snapT<=0){snapT=.05;net.send({t:'b',l:S.ents.filter(e=>e.bot).map(e=>[e.id,Math.round(e.x),Math.round(e.y),+e.ang.toFixed(2),Math.round(e.hp),e.alive?1:0,Math.max(0,guns.findIndex(q=>q.name===e.gun.name))]),tk:S.teamKills,k:[P.kills,R?R.kills:0],tm:Math.round(S.time)});}}}
     playerUpdate(dt);for(const e of S.ents)if(e.bot)botAI(e,dt);
     for(const b of S.bul){const steps=Math.ceil(rad(b.vx,b.vy)*dt/10);for(let s=0;s<steps&&b.life>0;s++){b.x+=b.vx*dt/steps;b.y+=b.vy*dt/steps;
       if(blocked(b.x,b.y)){b.life=0;S.parts.push({x:b.x,y:b.y,vx:0,vy:0,l:.15,s:6,c:'#ccc'});break;}
@@ -245,10 +250,11 @@ function run(o){
     for(const p of S.parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.l-=dt;}S.parts=S.parts.filter(p=>p.l>0);for(const t of S.txt){t.y-=30*dt;t.l-=dt;}S.txt=S.txt.filter(t=>t.l>0);for(const f of S.feed)f.l-=dt;S.feed=S.feed.filter(f=>f.l>0);
     S.shake*=Math.pow(.02,dt);if(S.hurt>0)S.hurt-=dt;
     if(br){zoneUpdate(dt);const alive=S.ents.filter(e=>e.alive).length;if(!P.alive)endGame(false,'You placed #'+(alive+1)+' · Kills '+P.kills);else if(alive<=1)endGame(true,'🏆 Winner winner! Kills '+P.kills);}
+    else if(coop&&!net.host){S.time-=dt;}
     else{S.time-=dt;const t0=S.teamKills[0],t1=S.teamKills[1];if(t0>=S.killTarget)endGame(true,'Your team won '+t0+'–'+t1);else if(t1>=S.killTarget)endGame(false,'Enemy team won '+t1+'–'+t0);else if(S.time<=0)endGame(t0>t1,(t0>t1?'Time up — you lead ':'Time up — you trail ')+t0+'–'+t1);}
     hudTick(dt);}
   let hacc=0;function hudTick(dt){hacc+=dt;if(hacc<.12)return;hacc=0;const z=S.zone;
-    o.hud({hp:Math.max(0,Math.ceil(P.hp)),maxhp:P.maxhp,armor:Math.round(P.armor),ammo:P.ammo,mag:P.gun.mag,reload:P.reload>0,gun:P.gun.name,boost:P.boost>0,alive:S.ents.filter(e=>e.alive).length,kills:P.kills,teamKills:S.teamKills,target:S.killTarget,time:Math.max(0,Math.ceil(S.time)),dead:P.alive?0:Math.ceil(P.dead),
+    o.hud({hp:Math.max(0,Math.ceil(P.hp)),maxhp:P.maxhp,armor:Math.round(P.armor),ammo:P.ammo,mag:P.gun.mag,reload:P.reload>0,gun:P.gun.name,boost:P.boost>0,alive:S.ents.filter(e=>e.alive).length,kills:P.kills,teamKills:S.teamKills,target:S.killTarget,time:Math.max(0,Math.ceil(S.time)),dead:P.alive?0:Math.ceil(P.dead),ally:(coop&&R)?{n:R.name,hp:Math.max(0,Math.ceil(R.hp)),mh:R.maxhp,al:R.alive,gone:!!R.gone}:null,
       zone:z?(z.k>=5&&z.state==='wait'?'Final zone':(z.state==='wait'?'Shrinks in '+Math.ceil(z.timer)+'s':'Shrinking!')):'',inZone:z?rad(P.x-z.x,P.y-z.y)<=z.r:true,msg:S.msg});}
   /* ---------- render ---------- */
   function resize(){const r=cv.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1);CW=Math.max(100,r.width);CH=Math.max(100,r.height);if(cv.width!==Math.round(CW*dpr)||cv.height!==Math.round(CH*dpr)){cv.width=Math.round(CW*dpr);cv.height=Math.round(CH*dpr);}ctx.setTransform(dpr,0,0,dpr,0,0);zoom=clamp(CW/560,.74,1.1);}
@@ -304,16 +310,27 @@ function run(o){
     for(const id in sticks){const s=sticks[id],dx=s.x-s.ox,dy=s.y-s.oy,d=Math.min(50,rad(dx,dy)),a=Math.atan2(dy,dx);ctx.strokeStyle=s.kind==='aim'?'rgba(255,90,120,.7)':'rgba(120,220,255,.7)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(s.ox,s.oy,50,0,TAU);ctx.stroke();ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.arc(s.ox+Math.cos(a)*d,s.oy+Math.sin(a)*d,20,0,TAU);ctx.fill();}
     if(!Object.keys(sticks).length&&S.t<6&&'ontouchstart' in window){ctx.fillStyle='rgba(255,255,255,.7)';ctx.font='13px Poppins,sans-serif';ctx.textAlign='center';ctx.fillText('◀ drag left to MOVE   ·   drag right to AIM+FIRE ▶',CW/2,CH-16);}}
   /* ---------- online 1v1 (victim-authoritative) ---------- */
-  let R=null,netT=0;
-  if(net){S.killTarget=5;const mine=net.host?freeSpot(60,WORLD/2-250,220,WORLD/2+250):freeSpot(WORLD-260,WORLD/2-250,WORLD-60,WORLD/2+250);P.x=mine.x;P.y=mine.y;P.ang=net.host?0:Math.PI;
-    R=mk({team:1,hp:100,color:'#ff6b6b',hat:'',gun:mkGun(guns[0]),name:(net.peer&&net.peer.name)||'Rival',remote:true,x:net.host?WORLD-200:140,y:WORLD/2});R.tx=R.x;R.ty=R.y;S.ents.push(R);
+  let R=null,netT=0,snapT=0;
+  if(net){S.killTarget=coop?Az.pick(D,12,15,20):5;if(coop)S.time=240;
+    const mine=(coop||net.host)?freeSpot(60,WORLD/2-250,220,WORLD/2+250):freeSpot(WORLD-260,WORLD/2-250,WORLD-60,WORLD/2+250);P.x=mine.x;P.y=mine.y;P.ang=(coop||net.host)?0:Math.PI;
+    R=mk({team:coop?0:1,hp:100,color:coop?'#3dd9ff':'#ff6b6b',hat:'',gun:mkGun(guns[0]),name:(net.peer&&net.peer.name)||(coop?'Teammate':'Rival'),remote:true,x:coop?140:(net.host?WORLD-200:140),y:WORLD/2});R.tx=R.x;R.ty=R.y;S.ents.push(R);
     net.send({t:'hi',c:P.color,h:P.hat,mh:P.maxhp});
+    if(coop&&net.host)net.send({t:'bm',l:S.ents.filter(e=>e.bot).map(e=>[e.id,e.name,e.color,e.hat,e.maxhp])});
+    function ghostFor(meta){let g=ghosts.get(meta[0]);if(!g){g=mk({team:1,hp:meta[4],color:meta[2],hat:meta[3]||'',gun:mkGun(guns[0]),name:meta[1],remote:true,alive:false,x:-999,y:-999});g.tx=g.x;g.ty=g.y;g.hid=meta[0];ghosts.set(meta[0],g);S.ents.push(g);}return g;}
     net.on(m=>{if(!m||S.over)return;
       if(m.t==='s'){R.tx=m.x;R.ty=m.y;R.ang=m.a;R.hp=m.hp;R.armor=m.ar;R.alive=!!m.al;const g=guns.find(x=>x.name===m.gn);if(g&&R.gun.name!==g.name)R.gun=mkGun(g);}
       else if(m.t==='hi'){R.name=(net.peer&&net.peer.name)||R.name;R.color=m.c;R.hat=m.h;R.maxhp=m.mh;}
-      else if(m.t==='f'){for(const q of m.b)S.bul.push({x:q.x,y:q.y,vx:q.vx,vy:q.vy,dmg:q.dmg,life:q.life,col:q.col,team:1,o:R});}
-      else if(m.t==='k'){S.teamKills[0]++;P.kills++;S.feed.unshift({t:'You ⚔ Rival',l:5});}});
-    net.onclose(()=>{if(!S.over)endGame(true,'Rival left the game');});}
+      else if(m.t==='f'){for(const q of m.b)S.bul.push({x:q.x,y:q.y,vx:q.vx,vy:q.vy,dmg:q.dmg,life:q.life,col:q.col,team:coop?0:1,o:R});}
+      else if(m.t==='k'&&!coop){S.teamKills[0]++;P.kills++;S.feed.unshift({t:'You ⚔ Rival',l:5});}
+      else if(coop&&!net.host){
+        if(m.t==='bm'){for(const meta of m.l)ghostFor(meta);}
+        else if(m.t==='b'){for(const r of m.l){const g=ghosts.get(r[0]);if(!g)continue;if(!g.seen){g.x=r[1];g.y=r[2];g.seen=1;}g.tx=r[1];g.ty=r[2];g.ang=r[3];g.hp=r[4];g.alive=!!r[5];const gn=guns[r[6]];if(gn&&g.gun.name!==gn.name)g.gun=mkGun(gn);}
+          S.teamKills=m.tk;P.kills=m.k[1];R.kills=m.k[0];S.time=m.tm;}
+        else if(m.t==='bf'){const g=ghosts.get(m.i);for(const q of m.b)S.bul.push({x:q.x,y:q.y,vx:q.vx,vy:q.vy,dmg:q.dmg,life:q.life,col:q.col,team:1,o:g||null});}
+        else if(m.t==='fd'){S.feed.unshift({t:String(m.s),l:5});S.feed.length=Math.min(S.feed.length,4);}
+        else if(m.t==='end'){endGame(!!m.w,String(m.s||''));}}
+      else if(coop&&net.host&&m.t==='d'){S.teamKills[1]++;const t=(R.name||'Teammate')+' was knocked out';S.feed.unshift({t,l:5});S.feed.length=Math.min(S.feed.length,4);net.send({t:'fd',s:t});}});
+    net.onclose(()=>{if(S.over)return;if(coop&&net.host){R.alive=false;R.gone=true;S.feed.unshift({t:(R.name||'Teammate')+' left the game',l:6});}else if(coop)endGame(false,'Host left the game');else endGame(true,'Rival left the game');});}
   /* ---------- loop ---------- */
   let raf,last=performance.now(),stopped=false,paused=false;
   function loop(t){if(stopped)return;raf=requestAnimationFrame(loop);let dt=(t-last)/1000;last=t;if(dt>.05)dt=.05;if(!paused){update(dt);render();}}
@@ -329,17 +346,17 @@ return{run};
 (function(){
 const $=id=>document.getElementById(id);let G=null,O,level;
 function hud(h){
-  const pills=[['❤️ '+h.hp+'/'+h.maxhp,h.hp<h.maxhp*.3],['🛡️ '+h.armor,0],['🔫 '+h.gun+' '+(h.reload?'⟳ reloading':h.ammo+'/'+h.mag)+(h.boost?' ⚡':''),0],['🔵 '+h.teamKills[0]+' - '+h.teamKills[1]+' 🔴 (to '+h.target+')',0],['☠️ '+h.kills,0],['⏱ '+h.time+'s',0]];
+  const pills=[['❤️ '+h.hp+'/'+h.maxhp,h.hp<h.maxhp*.3],...(h.ally?[['🤝 '+String(h.ally.n).slice(0,10)+' '+(h.ally.gone?'left':h.ally.al?'❤️ '+h.ally.hp+'/'+h.ally.mh:'💤 down'),h.ally.al&&h.ally.hp<h.ally.mh*.3]]:[]),['🛡️ '+h.armor,0],['🔫 '+h.gun+' '+(h.reload?'⟳ reloading':h.ammo+'/'+h.mag)+(h.boost?' ⚡':''),0],['🔵 '+h.teamKills[0]+' - '+h.teamKills[1]+' 🔴 (to '+h.target+')',0],['☠️ '+h.kills,0],['⏱ '+h.time+'s',0]];
   $('hud').innerHTML=pills.map(p=>'<span class="azpill '+(p[1]?'low':'')+'">'+p[0]+'</span>').join('');
   if(h.msg)$('msg').textContent=h.msg;
 }
 function begin(lv){
-  if(G)G.stop();level=lv;const pl=Az.place(level);Az.setBadge('Lv '+level+' · '+pl.emoji+' '+pl.name);$('msg').textContent='Team deathmatch — first team to the kill target wins. You respawn after 3s.';
-  G=Shooter.run({cv:$('cv'),mode:'arena',level,diff:O.diff,net:O.mode==='online'?O.net:null,hud,end:r=>{
+  if(G)G.stop();level=lv;const pl=Az.place(level);Az.setBadge('Lv '+level+' · '+pl.emoji+' '+pl.name);$('msg').textContent=(O.mode==='online'&&O.extra&&O.extra.otype==='coop')?'🤝 Co-op: you and your friend are one team vs computer bots. Reach the team kill target together. You respawn after 3s.':'Team deathmatch — first team to the kill target wins. You respawn after 3s.';
+  G=Shooter.run({cv:$('cv'),mode:'arena',level,diff:O.diff,net:O.mode==='online'?O.net:null,coop:O.mode==='online'&&!!(O.extra&&O.extra.otype==='coop'),hud,end:r=>{
     Az.finish({game:'arena',level,diff:O.diff,won:r.won,progress:O.mode!=='online',base:55+r.kills*10,score:r.kills,title:r.won?'🏆 Team Victory!':'Team Defeated',sub:r.sub,next:lv=>begin(lv),retry:lv=>O.mode==='online'?location.reload():begin(lv)});}});
 }
 $('rst').onclick=()=>O&&O.mode!=='online'&&begin(O.level);
-Az.start({game:'arena',onStart:o=>{O=o;begin(o.level);}});
+Az.start({game:'arena',extra:[{key:'otype',label:'Online type (room creator chooses)',only:'online',options:[['duel','⚔️ 1v1 Duel'],['coop','🤝 Co-op vs Bots']]}],onStart:o=>{O=o;begin(o.level);}});
 window.__sh={get G(){return G;},begin:l=>{O=O||{diff:'medium'};begin(l);}};
 })();
 </script>

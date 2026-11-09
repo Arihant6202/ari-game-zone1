@@ -85,3 +85,26 @@ BUG FIXES
 - Cache version bumped to az.js?v=22 so installed apps load the new files.
 
 KNOWN LIMIT (not fixed, needs a server): all coins/items live in the player's own Firebase node, so a technical player can edit their own balance with browser DevTools. Real protection needs Cloud Functions.
+
+
+--- VERSION 23 UPDATE NOTES ---
+- One-time Gold Coin gifts: Player ID 49019468 gets +199,999 and Player ID 56067071 gets +299,999. Applied once per ID (saved flag "bonus" in the account, synced to Firebase), so it can never repeat after reload, logout/login or on another device. Gift toast shown once.
+- Fixed: the old 49019468 starter bonus used to OVERWRITE the balance with 100,000 (could wipe coins). It now only tops up to at least 100,000.
+- Cache version bumped to az.js?v=23 on every page.
+- All pages load with zero JavaScript errors (tested in headless Chromium).
+
+
+--- VERSION 24 UPDATE NOTES ---
+NEW (owner / Developer Mode)
+- Ban / Unban by Player ID (with reason, banned list, one-tap unban). Stored at banned/<firebaseUid>. A banned account sees a full-screen ban notice (live, no reload needed) and Firebase rules block its cloud saves. Owner ID cannot be banned. Guests (never logged in with Google) cannot be banned.
+- New Mail composer: write title + message + Gold Coins + any shop items/characters, send to ONE Player ID or to EVERY existing player (no ID needed). Diwali bonus box removed.
+NEW (players)
+- Mail: Delete, Delete all, Claim all. Deleting a mail with an unclaimed coin/item reward claims it automatically first. An item the player already owns is converted to 500 coins (same as level rewards).
+NEW GAME MODE
+- Arena Strike -> Online -> "Co-op vs Bots": 2 players (room code) are one team against computer bots. Host simulates bots, friend sees them live; shared team kill target; both see win/lose screen. 1v1 Duel is unchanged.
+BUG FIXES
+- Mail gifts could be lost if the tab closed right after arriving (queue entry was deleted before the mail was saved). Now saved to the cloud first, de-duplicated by grant id.
+- Cloud-save error toast no longer spams a banned account.
+- Cache version bumped to az.js?v=24.
+IMPORTANT: publish the new database.rules.json (it adds the banned node and item gifts) before using Ban or item mail.
+TESTED: headless Chromium with an in-memory Firebase mock (mail, items, delete/auto-claim, ban/unban, live unban) and a two-client co-op simulation. Not tested on live Firebase / real PeerJS between two devices.
