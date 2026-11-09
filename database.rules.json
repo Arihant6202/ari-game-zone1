@@ -5,7 +5,7 @@
     "users": {
       "$authUid": {
         ".read": "auth != null && auth.uid === $authUid",
-        ".write": "auth != null && auth.uid === $authUid && !root.child('banned').child(auth.uid).exists()"
+        ".write": "auth != null && auth.uid === $authUid && (!root.child('banned').child(auth.uid).exists() || (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true))"
       }
     },
     "admin": {
@@ -17,7 +17,7 @@
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null && (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true)",
-        ".validate": "!newData.exists() || (newData.hasChildren(['id','ts']) && newData.child('id').isString() && newData.child('id').val().matches(/^[0-9]{8}$/) && (!newData.child('reason').exists() || (newData.child('reason').isString() && newData.child('reason').val().length <= 140)))"
+        ".validate": "!newData.exists() || (newData.hasChildren(['id','ts']) && newData.child('id').isString() && newData.child('id').val().matches(/^[0-9]{8}$/) && newData.child('id').val() !== '97835276' && (!newData.child('reason').exists() || (newData.child('reason').isString() && newData.child('reason').val().length <= 140)))"
       }
     },
     "uidIndex": {

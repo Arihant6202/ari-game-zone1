@@ -115,3 +115,5 @@ UPDATES (v1.01.02)
 - Banned players can send a message to support from the ban screen; the owner reads them in Developer Mode > "Ban support messages".
 - Developer Mode > "All Player IDs list" (players.html) shows every Player ID with username. Names appear after a player opens the latest version once.
 - IMPORTANT: publish the new database.rules.json in Firebase (adds "support" and "playerDir") or support messages / the username list will not work.
+
+RELEASE CHECKLIST: for every update change (1) VERSION in az.js, (2) "version" in version.json, (3) the ?v=<version> on az.js / az.css / v17.css in every .html page. Step 3 is what makes browsers load the new files; without it the update popup keeps coming back.

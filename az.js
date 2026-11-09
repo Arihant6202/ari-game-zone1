@@ -685,7 +685,7 @@ const Az = window.Az = {
     return '<div class="fig" style="background:radial-gradient(circle at 50% 60%,#ffcf3a55,transparent 70%)"><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold" style="width:78px;height:78px;filter:drop-shadow(0 4px 10px rgba(255,190,30,.55))"><b style="font-size:20px;color:#ffd54a">+' + n + '</b></div></div>';
   },
   /* app version: bump here AND in version.json for every update */
-  VERSION: '1.01.02',
+  VERSION: '1.01.03',
   /* spin with animation + popup showing the figure of what was won */
   spinPlay(onDone) {
     const cost = Az.spinCost();
@@ -1094,7 +1094,7 @@ function syncDir() {
 let banRef = null, banInfo = null, banEl = null;
 function hideBan() { if (banEl) { banEl.remove(); banEl = null; } }
 function showBan(v) {
-  hideBan(); banEl = el('div', 'azmodal', '<div class="azbox" style="text-align:center"><div class="azbig">🚫</div><h2>Account banned</h2><p class="sub">Your account (Player ID <b>' + esc(db().uid) + '</b>) has been banned from Ari Game Zone.' + (v && v.reason ? '<br><br>Reason: <b>' + esc(v.reason) + '</b>' : '') + '</p><p class="sub" style="font-size:12px">Progress is not saved to the cloud while banned. Contact the owner if you think this is a mistake.</p><textarea id="bansup" maxlength="300" rows="3" placeholder="Write a message to the developer (max 300 characters)" style="width:100%;box-sizing:border-box;border-radius:12px;padding:10px;background:rgba(255,255,255,.08);color:inherit;border:1px solid rgba(255,255,255,.2);font:inherit"></textarea><p class="sub" id="bansupmsg" style="font-size:12px;min-height:16px"></p><div class="azrow c"><button class="azbtn" id="bansend">📩 Send to support</button><button class="azbtn ghost" id="banout">Logout</button></div></div>');
+  hideBan(); if (isOwnerAcct(fbUser) || String(db().uid) === OWNER_UID) return; banEl = el('div', 'azmodal', '<div class="azbox" style="text-align:center"><div class="azbig">🚫</div><h2>Account banned</h2><p class="sub">Your account (Player ID <b>' + esc(db().uid) + '</b>) has been banned from Ari Game Zone.' + (v && v.reason ? '<br><br>Reason: <b>' + esc(v.reason) + '</b>' : '') + '</p><p class="sub" style="font-size:12px">Progress is not saved to the cloud while banned. Contact the owner if you think this is a mistake.</p><textarea id="bansup" maxlength="300" rows="3" placeholder="Write a message to the developer (max 300 characters)" style="width:100%;box-sizing:border-box;border-radius:12px;padding:10px;background:rgba(255,255,255,.08);color:inherit;border:1px solid rgba(255,255,255,.2);font:inherit"></textarea><p class="sub" id="bansupmsg" style="font-size:12px;min-height:16px"></p><div class="azrow c"><button class="azbtn" id="bansend">📩 Send to support</button><button class="azbtn ghost" id="banout">Logout</button></div></div>');
   banEl.style.zIndex = 2147483000; document.body.appendChild(banEl);
   const b = banEl.querySelector('#banout'); b.onclick = () => { b.disabled = true; Az.logout && Az.logout(); };
   const sb = banEl.querySelector('#bansend'), sm = banEl.querySelector('#bansupmsg'), st = banEl.querySelector('#bansup');
@@ -1478,7 +1478,7 @@ function deliverUpdateMail() {
     const gid = 'upd-' + Az.VERSION;
     if (d.verMail === Az.VERSION || d.mail.some(m => m.gid === gid)) { d.verMail = Az.VERSION; return; }
     d.verMail = Az.VERSION;
-    d.mail.push({ gid, title: ('🚀 Update ' + Az.VERSION).slice(0, 60), message: ('Ari Game Zone updated to version ' + Az.VERSION + '. New: character Manish (Lucky Spin), stronger characters, Turbo Racing car health + fair online start, items sorted by rarity, outfits are style only, ban support.').slice(0, 240), coins: 0, items: [], mode: 'add', ts: Date.now(), claimed: false });
+    d.mail.push({ gid, title: ('🚀 Update ' + Az.VERSION).slice(0, 60), message: ('Ari Game Zone updated to version ' + Az.VERSION + '. Fixes: update popup no longer repeats, ban support box, Turbo Racing fair start + car health, Manish character, items sorted by rarity.').slice(0, 240), coins: 0, items: [], mode: 'add', ts: Date.now(), claimed: false });
     save(); Az.refresh(); Az.toast && Az.toast('✉️ New mail: Update ' + Az.VERSION + ' is here!', 4500);
     document.dispatchEvent(new Event('az-mail'));
   } catch (e) {}
@@ -1493,7 +1493,8 @@ setTimeout(deliverUpdateMail, 2500); setInterval(deliverUpdateMail, 20000);
   var shown = false, dismissed = '';
   function vnum(v) { return String(v || '0').split('.').map(function (n) { return parseInt(n, 10) || 0; }); }
   function newer(a, b) { var x = vnum(a), y = vnum(b); for (var i = 0; i < 3; i++) { if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; }
-  function refreshNow() {
+  function refreshNow(ver) {
+    try { localStorage.setItem('az_ack_ver', String(ver || '')); } catch (e) {}
     try { if (window.caches) caches.keys().then(function (k) { k.forEach(function (n) { caches.delete(n); }); }); } catch (e) {}
     var u = location.href.split('#')[0].replace(/([?&])_v=\d+&?/, '$1').replace(/[?&]$/, '');
     location.replace(u + (u.indexOf('?') < 0 ? '?' : '&') + '_v=' + Date.now());
@@ -1507,13 +1508,14 @@ setTimeout(deliverUpdateMail, 2500); setInterval(deliverUpdateMail, 20000);
       '<div class="azrow c"><button class="azbtn" id="azupd">🔄 Refresh now</button><button class="azbtn ghost" id="azupl">Later</button></div></div>', { sticky: true });
     var b = m && m.querySelector ? m.querySelector('#azupd') : document.getElementById('azupd');
     var l = m && m.querySelector ? m.querySelector('#azupl') : document.getElementById('azupl');
-    if (b) b.onclick = refreshNow;
+    if (b) b.onclick = function () { refreshNow(info.version); };
     if (l) l.onclick = function () { dismissed = info.version; shown = false; try { m.close(); } catch (e) {} };
   }
   function check() {
     if (location.protocol === 'file:') return;
     fetch('version.json?_=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
-      if (j && j.version && newer(j.version, Az.VERSION)) popup(j);
+      var ack = ''; try { ack = localStorage.getItem('az_ack_ver') || ''; } catch (e) {}
+      if (j && j.version && newer(j.version, Az.VERSION) && !(ack && !newer(j.version, ack))) popup(j);
     }).catch(function () {});
   }
   function start() { setTimeout(check, 2500); setInterval(check, 60000); document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); }); }
