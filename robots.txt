@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://arihant6202.github.io/ari-game-zone1/sitemap.xml
