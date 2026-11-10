@@ -112,7 +112,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     <div id="log"></div>
   </div>
 </main>
-<script src="az.js?v=1.04.00"></script>
+<script src="az.js?v=1.06.00"></script>
 <script>
 (function(){
   const $=id=>document.getElementById(id);
@@ -166,7 +166,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     if(toAll){
       if(!confirm('Send "'+title+'" ('+what+') to EVERY existing registered player? This cannot be undone.'))return;
       btn.disabled=true;log('Sending to all players…');
-      Az.devBroadcastMail(n,title,msg,picked.slice()).then(c=>log('✅ Mail sent to '+c+' existing players ('+what+').')).catch(e=>log('❌ '+(e&&e.message||'Could not send'),1)).then(()=>btn.disabled=false);
+      Az.devBroadcastMail(n,title,msg,picked.slice()).then(r=>log('📨 Delivered to '+r.sent+'/'+r.total+' registered player accounts ('+what+').'+(r.failed?' ⚠️ Failed for Player ID(s): '+r.failedIds.join(', ')+'. Check these accounts/Firebase Rules and retry.':''),r.failed?1:0)).catch(e=>log('❌ '+(e&&e.message||'Could not send'),1)).then(()=>btn.disabled=false);
     }else{
       const gid=$('gid').value.replace(/\D/g,'');
       if(gid.length!==8)return log('Enter the 8-digit Player ID.',1);

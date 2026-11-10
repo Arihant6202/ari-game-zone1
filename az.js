@@ -8,7 +8,7 @@ const OWNER_ID = '97835276';   // reserved: only the verified owner Gmail may ev
 const COIN_RATE = 0.5;
 const DAILY_BONUS = 50;
 // Global progress reset: bump this string to wipe progress of EVERY account (coins, XP, levels, items, mail) the next time it opens.
-const RESET_EPOCH = 'reset-2026-11-10';
+const RESET_EPOCH = 'reset-2026-11-11';
 /* ---- safe localStorage helpers + account keys ----
    Every account has its OWN local record:
      guest   -> az2:guest:<guestId>   (many guests can live on one device; logout NEVER deletes them)
@@ -849,7 +849,7 @@ const Az = window.Az = {
     return '<div class="fig" style="background:radial-gradient(circle at 50% 60%,#ffcf3a55,transparent 70%)"><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold" style="width:78px;height:78px;filter:drop-shadow(0 4px 10px rgba(255,190,30,.55))"><b style="font-size:20px;color:#ffd54a">+' + n + '</b></div></div>';
   },
   /* app version: bump here AND in version.json for every update */
-  VERSION: '1.04.00',
+  VERSION: '1.05.00',
   /* spin with animation + popup showing the figure of what was won */
   spinPlay(onDone) {
     const cost = Az.spinCost();
@@ -1162,9 +1162,16 @@ function postLogin(u, seq) {
   (owner ? fbDb.ref('admin/ping').once('value').then(() => { if (alive()) Az.ownerOK = true; }) : Promise.resolve())
     .catch(() => { if (alive()) Az.ownerOK = false; })
     .then(() => (alive() && owner) ? fbDb.ref('uidIndex/' + OWNER_UID).set(u.uid).catch(() => {}) : null)
-    .then(() => {
+    .then(async () => {
       if (!alive()) return;
-      (String(db().uid) !== OWNER_UID ? fbDb.ref('uidIndex/' + db().uid).set(u.uid) : Promise.resolve()).catch(() => {}).then(() => { if (alive()) syncDir(); });
+      try {
+        // Keep the dynamic All Players index current for every account at login.
+        if (String(db().uid) !== OWNER_UID) await fbDb.ref('uidIndex/' + db().uid).set(u.uid);
+        if (alive()) syncDir();
+      } catch (e) {
+        if (alive()) Az.toast && Az.toast('⚠️ Player ID registration failed. Ask the owner to check Firebase Rules.', 5000);
+      }
+      if (!alive()) return;
       startGrants(u);
       try { Az.ownerBtn && Az.ownerBtn(); document.dispatchEvent(new Event('az-owner')); } catch (e) {}
     });
@@ -1198,17 +1205,56 @@ const lookupUid = gid => { gid = String(gid || '').replace(/\D/g, ''); if (!/^\d
 Az.devGiveMail = function (gid, coins, title, message, items) {
   return Promise.resolve().then(() => { needOwner(); const body = grantBody(coins, title || 'Gift from Ari Game Zone', message, items); return lookupUid(gid).then(t => fbDb.ref('adminGrants/' + t.uid).push(body).then(() => t.gid)); });
 };
-/* Mail to EVERY existing registered player (every Player ID in uidIndex). Written in chunks so a big player list never exceeds one write. */
+/* Mail to every registered Player ID. Deliver each grant to that account's Firebase UID,
+   retry transient failures, and report the exact Player IDs that could not be reached. */
 Az.devBroadcastMail = function (coins, title, message, items) {
   return Promise.resolve().then(async () => {
-    needOwner(); const body = grantBody(coins, title || 'Ari Game Zone Mail', message, items);
-    const snap = await fbDb.ref('uidIndex').once('value'), ids = snap.val() || {}, targets = [...new Set(Object.values(ids).filter(x => typeof x === 'string' && x))];
-    if (!targets.length) throw new Error('No registered Player IDs found.');
-    for (let i = 0; i < targets.length; i += 200) {
-      const batch = {}; targets.slice(i, i + 200).forEach(uid => { const key = fbDb.ref('adminGrants/' + uid).push().key; batch['adminGrants/' + uid + '/' + key] = body; });
-      await fbDb.ref().update(batch);
+    needOwner();
+    const body = grantBody(coins, title || 'Ari Game Zone Mail', message, items);
+
+    // Always read the live index at send-time: new players are included after
+    // their first successful Google login / UID registration.
+    const snap = await fbDb.ref('uidIndex').once('value');
+    const index = snap.val() || {};
+    const byUid = new Map();
+    Object.entries(index).forEach(([gid, rawUid]) => {
+      const uid = typeof rawUid === 'string' ? rawUid.trim() : '';
+      if (!/^\d{8}$/.test(String(gid)) || !uid || uid.length > 128 || /[.#$\/\[\]]/.test(uid)) return;
+      if (!byUid.has(uid)) byUid.set(uid, []);
+      byUid.get(uid).push(String(gid));
+    });
+
+    const targets = [...byUid.entries()];
+    if (!targets.length) throw new Error('No registered players found. Players must sign in with Google at least once so their Player ID is registered.');
+
+    let sent = 0;
+    const failed = [];
+    // One stable grant key per account makes retries idempotent: a timeout after
+    // a successful server write cannot create duplicate rewards.
+    for (let i = 0; i < targets.length; i += 5) {
+      await Promise.all(targets.slice(i, i + 5).map(async ([uid, gids]) => {
+        const grantRefForPlayer = fbDb.ref('adminGrants/' + uid).push();
+        let lastError = '';
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            await grantRefForPlayer.set(body);
+            sent++;
+            return;
+          } catch (e) {
+            lastError = String(e && e.message || e);
+            if (attempt < 3) await new Promise(resolve => setTimeout(resolve, attempt * 700));
+          }
+        }
+        failed.push({ ids: gids, uid, error: lastError });
+      }));
     }
-    return targets.length;
+    return {
+      sent,
+      failed: failed.length,
+      total: targets.length,
+      failedIds: failed.flatMap(x => x.ids),
+      errors: failed.slice(0, 10).map(x => x.error)
+    };
   });
 };
 Az.devItemCatalog = () => Object.keys(SHOP).filter(k => USED[k]).map(k => ({ slot: k, title: SHOP[k].title, emoji: SHOP[k].emoji || '🎁', items: SHOP[k].items.filter(i => i.price !== 0 || i.lvl || i.spin).map(i => ({ id: i.id, name: i.name, rarity: rarityOf(i) })) })).filter(g => g.items.length);
@@ -1538,7 +1584,7 @@ Az.finish = function (r) {
   Az.sfx(r.won ? 'win' : 'lose');
   const m = Az.modal(`<div class="azbig">${r.won ? '🏆' : '💥'}</div><h2 style="text-align:center">${r.title || (r.won ? 'You Win!' : 'Game Over')}</h2><p class="sub" style="text-align:center">${r.sub || ''}</p>
     <div class="azstat"><div><b>+${coins}</b><small><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="A gold coin"> coins</small></div><div><b>+${xp}</b><small>⭐ XP</small></div>${r.score != null ? `<div><b>${r.score}</b><small>${newBest ? '🎉 New best!' : 'score'}</small></div>` : ''}</div>${note}
-    <div class="azrow c">${(r.won && r.next && lvl < g.max && r.progress !== false) ? '<button class="azbtn" id="fn">Next level ▶</button>' : ''}<button class="azbtn ${r.won ? 'ghost' : ''}" id="fr">🔄 ${r.won ? 'Play again' : 'Try again'}</button></div>
+    <div class="azrow c">${(r.won && r.next && lvl < g.max && r.progress !== false) ? '<button class="azbtn" id="fn">Next level ▶</button>' : ''}<button class="azbtn ${r.won ? 'ghost' : ''}" id="fr">🔄 ${r.won ? 'Play again' : 'Restart'}</button></div>
     <div class="azrow c"><button class="azbtn ghost sm" id="fm">⚙️ Change mode</button><button class="azbtn ghost sm" id="fs">🛒 Shop</button><a class="azbtn ghost sm" href="${BASE}index.html">🏠 Home</a></div>`, { sticky: true });
   m.addEventListener('click', e => {
     const t = e.target.closest('button'); if (!t) return;
@@ -1642,7 +1688,7 @@ function deliverUpdateMail() {
     const gid = 'upd-' + Az.VERSION;
     if (d.verMail === Az.VERSION || d.mail.some(m => m.gid === gid)) { d.verMail = Az.VERSION; return; }
     d.verMail = Az.VERSION;
-    d.mail.push({ gid, title: ('🚀 Update ' + Az.VERSION).slice(0, 60), message: ('Ari Game Zone updated to version ' + Az.VERSION + '. All progress was reset to 0 (your Player ID is kept). Arena Strike solo now has 3 hearts and gets harder with every level.').slice(0, 240), coins: 0, items: [], mode: 'add', ts: Date.now(), claimed: false });
+    d.mail.push({ gid, title: ('🚀 Update ' + Az.VERSION).slice(0, 60), message: ('Ari Game Zone updated to version ' + Az.VERSION + '. Your Player ID is kept; player level, game levels, coins and inventory have been reset. Arena Strike restarts when health reaches zero and difficulty scales with level.').slice(0, 240), coins: 0, items: [], mode: 'add', ts: Date.now(), claimed: false });
     save(); Az.refresh(); Az.toast && Az.toast('✉️ New mail: Update ' + Az.VERSION + ' is here!', 4500);
     document.dispatchEvent(new Event('az-mail'));
   } catch (e) {}

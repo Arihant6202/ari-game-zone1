@@ -1,1 +1,12 @@
-{"version": "1.04.00", "notes": ["Everyone's progress reset to 0 (Player IDs kept)", "Arena Strike solo: 3 hearts, lose all = game over", "Enemies get tougher and more numerous as level goes up"]}
+{
+  "version": "1.06.00",
+  "notes": [
+    "Player IDs and Firebase UIDs stay unchanged; player/game progress starts fresh as configured in v36",
+    "Arena Strike Solo: health depleted = restart",
+    "Arena Strike Co-op: restart only after both teammates are down; host and guest death states now sync both ways",
+    "Difficulty is determined by level; no manual Easy / Medium / Hard selection",
+    "Fixed All Players mail ID filter so valid 8-digit Player IDs are discovered from the live Firebase uidIndex",
+    "All Players sends one stable grant per Firebase account with safe retries to avoid duplicate rewards",
+    "Player UID index registration is awaited at login and registration errors are surfaced"
+  ]
+}
