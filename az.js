@@ -1304,9 +1304,8 @@ function syncDir() {
 let banRef = null, banInfo = null, banEl = null;
 function hideBan() { if (banEl) { banEl.remove(); banEl = null; } }
 function showBan(v) {
-  hideBan(); if (isOwnerAcct(fbUser) || String(db().uid) === OWNER_UID) return; banEl = el('div', 'azmodal', '<div class="azbox" style="text-align:center"><div class="azbig">🚫</div><h2>Account banned</h2><p class="sub">Your account (Player ID <b>' + esc(db().uid) + '</b>) has been banned from Ari Game Zone.' + (v && v.reason ? '<br><br>Reason: <b>' + esc(v.reason) + '</b>' : '') + '</p><p class="sub" style="font-size:12px">Progress is not saved to the cloud while banned. Contact the owner if you think this is a mistake.</p><textarea id="bansup" maxlength="300" rows="3" placeholder="Write a message to the developer (max 300 characters)" style="width:100%;box-sizing:border-box;border-radius:12px;padding:10px;background:rgba(255,255,255,.08);color:inherit;border:1px solid rgba(255,255,255,.2);font:inherit"></textarea><p class="sub" id="bansupmsg" style="font-size:12px;min-height:16px"></p><div class="azrow c"><button class="azbtn" id="bansend">📩 Send to support</button><button class="azbtn ghost" id="banout">Logout</button></div></div>');
+  hideBan(); if (isOwnerAcct(fbUser) || String(db().uid) === OWNER_UID) return; banEl = el('div', 'azmodal', '<div class="azbox" style="text-align:center"><div class="azbig">🚫</div><h2>Account banned</h2><p class="sub">Your account (Player ID <b>' + esc(db().uid) + '</b>) has been banned from Ari Game Zone.' + (v && v.reason ? '<br><br>Reason: <b>' + esc(v.reason) + '</b>' : '') + '</p><p class="sub" style="font-size:12px">Progress is not saved to the cloud while banned. Contact the owner if you think this is a mistake.</p><textarea id="bansup" maxlength="300" rows="3" placeholder="Write a message to the developer (max 300 characters)" style="width:100%;box-sizing:border-box;border-radius:12px;padding:10px;background:rgba(255,255,255,.08);color:inherit;border:1px solid rgba(255,255,255,.2);font:inherit"></textarea><p class="sub" id="bansupmsg" style="font-size:12px;min-height:16px"></p><div class="azrow c"><button class="azbtn" id="bansend">📩 Send message to developer</button></div></div>');
   banEl.style.zIndex = 2147483000; document.body.appendChild(banEl);
-  const b = banEl.querySelector('#banout'); b.onclick = () => { b.disabled = true; Az.logout && Az.logout(); };
   const sb = banEl.querySelector('#bansend'), sm = banEl.querySelector('#bansupmsg'), st = banEl.querySelector('#bansup');
   sb.onclick = () => {
     const t = st.value.trim(); if (!t) { sm.textContent = 'Write a message first.'; return; }
@@ -1397,10 +1396,12 @@ function reloadSoon() { setTimeout(() => location.reload(), 60); }
 Az.guests = listGuests;
 Az.guestId = guestId;
 Az.switchGuest = function (id) {            // become another saved guest (logs out of Gmail first, if needed)
+  if (banInfo) { Az.toast && Az.toast('🚫 Account banned. Contact the developer to request an unban.'); return; }
   if (!LS.get(GPFX + id)) return;
   LS.set('az_guest_id', id); signOutAll().then(reloadSoon);
 };
 Az.newGuest = function () {                  // brand-new guest; all the old ones stay saved
+  if (banInfo) { Az.toast && Az.toast('🚫 Account banned. Contact the developer to request an unban.'); return; }
   rotateGuest(); signOutAll().then(reloadSoon);
 };
 Az.deleteGuest = function (id) {
@@ -1431,6 +1432,7 @@ function linkInto(u, lg, existed) {
 }
 
 Az.logout = function () {
+  if (banInfo) { Az.toast && Az.toast('🚫 Logout is disabled while this account is banned. Contact the developer.'); return Promise.resolve(false); }
   // push the last changes to THIS account first, then sign out (afterLogout() puts you back on your last guest)
   return flushPush().then(() => loadFb()).then(() => firebase.auth().signOut()).catch(() => {});
 };

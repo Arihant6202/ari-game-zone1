@@ -114,7 +114,7 @@ a{color:inherit}
 </head>
 <body data-game="leveldevil">
 <main class="azgame" id="ldmain">
-  <div class="azhud"><span class="azpill" id="hLv">Level 1 / 20</span><span class="azpill" id="hDeath">💀 0</span><span class="azpill" id="hName">—</span></div>
+  <div class="azhud"><span class="azpill" id="hLv">Level 1 / 100</span><span class="azpill" id="hDeath">💀 0</span><span class="azpill" id="hName">—</span></div>
   <div class="azstage" id="stage"><canvas id="cv" width="800" height="450" style="width:min(100%,800px)"></canvas></div>
   <div class="azmsg" id="msg">Door tak pahucho. Bharosa mat karna! 😈</div>
   <div class="ldpad" id="pad">
@@ -167,7 +167,7 @@ body.ld-rot .rbtns .azbtn-i{width:44px;height:44px;font-size:18px}
 }
 @supports (height:100dvh){@media (orientation:portrait){body.ld-rot #ldmain,body.ld-rot .azmodal{left:100dvw;width:100dvh;height:100dvw}body.ld-rot .azbox{max-height:88dvw}}}
 </style>
-<script src="az.js?v=1.06.00"></script>
+<script src="az.js?v=1.07.00"></script>
 <script>
 (function(){
 'use strict';
@@ -211,7 +211,31 @@ const LEVELS=[
  /*20*/()=>L("Devil's castle",'Now the real devil! 👹',{so:[g(0,140),mv(150,F,250,F,90,1.7),g(340,480),cr(480,F,100,3),g(580,800),pl(560,325,60),pl(640,260,60),pl(720,195,80)],sp:[pop(410,30,28,75)],saw:[saw(600,372,720,372,18,2.6)],door:{x:745,y:149,w:30,h:46},fake:[{x:735,y:344}]}),
 ];
 
-/* ============================ simulation (pure, so it can be tested) ============================ */
+// Levels 21–100: harder remix stages built from the original 20 layouts.
+for (let n = 21; n <= 100; n++) {
+  const baseIndex = (n - 21) % 20;
+  const cycle = Math.floor((n - 21) / 20) + 1;
+  LEVELS.push(() => {
+    const base = LEVELS[baseIndex]();
+    const so = base.so.map(x => Object.assign({}, x));
+    const hazards = base.sp.map(x => Object.assign({}, x));
+    const saws = base.saw.map(x => Object.assign({}, x));
+    const fake = (base.fake || []).map(x => Object.assign({}, x));
+    const spots = [190, 315, 440, 565, 675];
+    const x = spots[(n + cycle) % spots.length];
+    if (n % 4 === 0) hazards.push(pop(x, 28, 28, 72 + cycle * 5));
+    else if (n % 4 === 1) hazards.push(drop(x, 180 + (n % 3) * 18, 34, 42, 75 + cycle * 5));
+    else if (n % 4 === 2) saws.push(saw(250, 350, 610, 350, 14 + cycle, 2.0 + cycle * 0.18));
+    else so.push(hid(x, 285, 24, 100));
+    if (n % 5 === 0) hazards.push(dash(830, 364, 54, 25, 520 + cycle * 20, 5.2 + cycle * 0.35));
+    return L('Devil Trial ' + n, 'The devil has learned new tricks… 😈', {
+      s: base.s.slice(), so, sp: hazards, saw: saws, fake,
+      door: Object.assign({}, base.door)
+    });
+  });
+}
+
+  /* ============================ simulation (pure, so it can be tested) ============================ */
 function build(n){
   const d=LEVELS[n-1]();
   const S={n,t:0,dead:0,won:false,why:'',
