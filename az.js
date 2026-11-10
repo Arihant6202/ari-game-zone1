@@ -7,6 +7,8 @@ const OWNER_ID = '97835276';   // reserved: only the verified owner Gmail may ev
 // Global reward multiplier. Lower = slower coin earning = items feel more valuable (was 1.0 before).
 const COIN_RATE = 0.5;
 const DAILY_BONUS = 50;
+// Global progress reset: bump this string to wipe progress of EVERY account (coins, XP, levels, items, mail) the next time it opens.
+const RESET_EPOCH = 'reset-2026-11-10';
 /* ---- safe localStorage helpers + account keys ----
    Every account has its OWN local record:
      guest   -> az2:guest:<guestId>   (many guests can live on one device; logout NEVER deletes them)
@@ -30,7 +32,7 @@ function listGuests() {
       let r = null; try { r = JSON.parse(localStorage.getItem(k)); } catch (e) {}
       if (!r || typeof r !== 'object') continue;
       const id = k.slice(GPFX.length), uid = String(r.uid || '');
-      out.push({ id, uid, name: (typeof r.name === 'string' && r.name) || ('Player-' + uid.slice(-4)), coins: +r.coins || 0, xp: +r.xp || 0, rev: +r.rev || 0, ts: +r.ts || 0, cur: id === cur });
+      out.push({ id, uid, name: (typeof r.name === 'string' && r.name) || ('Player-' + uid.slice(-4)), coins: r.resetEpoch === RESET_EPOCH ? (+r.coins || 0) : 150, xp: r.resetEpoch === RESET_EPOCH ? (+r.xp || 0) : 0, rev: +r.rev || 0, ts: +r.ts || 0, cur: id === cur });
     }
   } catch (e) {}
   return out.filter(g => g.cur || g.rev > 0).sort((a, b) => (b.cur - a.cur) || (b.ts - a.ts) || (b.rev - a.rev));
@@ -49,7 +51,7 @@ function genUid() {
 }
 // One-time Gold Coin gifts, keyed by Player ID. Applied once per ID (d.bonus[uid] flag), then synced to the cloud.
 const BONUS = { '49019468': 199999, '56067071': 299999 };
-let bonusJustApplied = 0;
+let bonusJustApplied = 0, resetJustApplied = false;
 const bonusPending = raw => !!(raw && BONUS[String(raw.uid || '')] && !(raw.bonus && raw.bonus[String(raw.uid)]));
 function announceBonus() {
   const n = bonusJustApplied; bonusJustApplied = 0; if (!n) return;
@@ -58,6 +60,14 @@ function announceBonus() {
 // Firebase Realtime DB drops empty objects ({}), so cloud data must be re-filled before use.
 function normalize(d) {
   if (!d || typeof d !== 'object') d = {};
+  if (d.resetEpoch !== RESET_EPOCH) {              // one-time full progress reset (keeps Player ID, name, theme/sound, gift flags)
+    const keep = { uid: d.uid, name: d.name, nameSet: d.nameSet, nameAsked: d.nameAsked, photo: d.photo, theme: d.theme, sound: d.sound, bonus: d.bonus, starter49019468: d.starter49019468 === undefined ? true : d.starter49019468, rev: d.rev, ts: d.ts };
+    const had = !!(d.uid);
+    d = keep;
+    if (had) { d.rev = (+d.rev || 0) + 1; d.ts = Date.now(); }
+    d.coins = 150; d.xp = 0; d.lv = {}; d.best = {}; d.own = {}; d.eq = {}; d.levelRewards = {}; d.mail = []; d.daily = ''; d.verMail = '';
+    d.resetEpoch = RESET_EPOCH; resetJustApplied = true;
+  }
   const obj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
   d.coins = (typeof d.coins === 'number' && isFinite(d.coins) && d.coins >= 0) ? d.coins : (d.coins == null ? 150 : 0);
   d.starter49019468 = !!d.starter49019468;
@@ -84,7 +94,7 @@ function db() {
   try { raw = JSON.parse(LS.get(ACTIVE_KEY) || 'null'); had = !!raw; } catch (e) { raw = null; }
   const pend = bonusPending(raw);
   D = normalize(raw);
-  if (!had || pend) LS.set(ACTIVE_KEY, JSON.stringify(D));   // brand-new account (NEW uid) or a gift was just applied: store it
+  if (!had || pend || resetJustApplied) { resetJustApplied = false; LS.set(ACTIVE_KEY, JSON.stringify(D)); }   // brand-new account (NEW uid) or a gift was just applied: store it
   announceBonus();
   return D;
 }
@@ -839,7 +849,7 @@ const Az = window.Az = {
     return '<div class="fig" style="background:radial-gradient(circle at 50% 60%,#ffcf3a55,transparent 70%)"><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold" style="width:78px;height:78px;filter:drop-shadow(0 4px 10px rgba(255,190,30,.55))"><b style="font-size:20px;color:#ffd54a">+' + n + '</b></div></div>';
   },
   /* app version: bump here AND in version.json for every update */
-  VERSION: '1.03.00',
+  VERSION: '1.04.00',
   /* spin with animation + popup showing the figure of what was won */
   spinPlay(onDone) {
     const cost = Az.spinCost();
@@ -1312,7 +1322,7 @@ function afterLogin(u) {
     const existed = !!cloud;                                          // did this Gmail already have an account (an ID)?
     if (cloud) {
       const needsStarter49019468 = String(cloud.uid || '') === '49019468' && !cloud.starter49019468;
-      const needsBonus = bonusPending(cloud);
+      const needsBonus = bonusPending(cloud) || cloud.resetEpoch !== RESET_EPOCH;
       cloud = normalize(cloud);
       if (hadLocal && localD.rev > cloud.rev) { cloudUid = u.uid; doPush(); }   // this device is ahead (cloud write was lost)
       else { D = cloud; LS.set(ACTIVE_KEY, JSON.stringify(D)); cloudUid = u.uid; if (needsStarter49019468 || needsBonus) doPush(); }
@@ -1632,7 +1642,7 @@ function deliverUpdateMail() {
     const gid = 'upd-' + Az.VERSION;
     if (d.verMail === Az.VERSION || d.mail.some(m => m.gid === gid)) { d.verMail = Az.VERSION; return; }
     d.verMail = Az.VERSION;
-    d.mail.push({ gid, title: ('🚀 Update ' + Az.VERSION).slice(0, 60), message: ('Ari Game Zone updated to version ' + Az.VERSION + '. Boxing now plays in landscape with in-game buttons, plus many new items for every game (guns, outfits, cars and more).').slice(0, 240), coins: 0, items: [], mode: 'add', ts: Date.now(), claimed: false });
+    d.mail.push({ gid, title: ('🚀 Update ' + Az.VERSION).slice(0, 60), message: ('Ari Game Zone updated to version ' + Az.VERSION + '. All progress was reset to 0 (your Player ID is kept). Arena Strike solo now has 3 hearts and gets harder with every level.').slice(0, 240), coins: 0, items: [], mode: 'add', ts: Date.now(), claimed: false });
     save(); Az.refresh(); Az.toast && Az.toast('✉️ New mail: Update ' + Az.VERSION + ' is here!', 4500);
     document.dispatchEvent(new Event('az-mail'));
   } catch (e) {}

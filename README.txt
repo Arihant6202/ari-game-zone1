@@ -134,3 +134,9 @@ TESTED: headless Chromium - every page loads with zero JS errors; every game sta
 --- VERSION 1.03.00 UPDATE NOTES ---
 - Boxing Arena: full-screen landscape stage. On a portrait phone the game rotates itself 90 degrees. Move / block / jab / power buttons sit inside the game (left and right bottom corners; 2-player mode shows one set per player).
 - Another batch of new shop items in every slot (6 guns, 8 outfits, and 2-4 for each other game incl. boxing gloves). No level-reward items changed.
+
+
+--- VERSION 1.04.00 UPDATE NOTES ---
+- GLOBAL PROGRESS RESET: every account (guest and Google) is reset to 0 the next time it opens the site: coins 150, XP 0, all levels back to 1, items/characters/mail cleared. Player ID, name, theme/sound and one-time gift flags are kept (so gifts do not re-apply). Controlled by RESET_EPOCH in az.js; change the string to reset everyone again. Cloud copies are reset when the player next logs in (Firebase data of players who never return stays old until they open the site).
+- ARENA STRIKE SOLO: 3 hearts (HUD "Lives"). Each death costs a heart and respawns after 3s; losing the 3rd heart = Team Defeated screen (Retry / Home). Online duel/co-op are unchanged (respawn + kill target).
+- DIFFICULTY: enemy count grows from 3 (Lv1) to 13 (Lv100) while allies grow only 2 to 6; bot HP, damage, speed, reaction time and accuracy scale harder with level; kill target and match time grow too.
