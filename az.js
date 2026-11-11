@@ -7,8 +7,7 @@ const OWNER_ID = '97835276';   // reserved: only the verified owner Gmail may ev
 // Global reward multiplier. Lower = slower coin earning = items feel more valuable (was 1.0 before).
 const COIN_RATE = 0.5;
 const DAILY_BONUS = 50;
-// Global progress reset: bump this string to wipe progress of EVERY account (coins, XP, levels, items, mail) the next time it opens.
-const RESET_EPOCH = 'reset-2026-11-11';
+// Progress protection: never use a global reset epoch. Existing player data must survive deployments.
 /* ---- safe localStorage helpers + account keys ----
    Every account has its OWN local record:
      guest   -> az2:guest:<guestId>   (many guests can live on one device; logout NEVER deletes them)
@@ -32,7 +31,7 @@ function listGuests() {
       let r = null; try { r = JSON.parse(localStorage.getItem(k)); } catch (e) {}
       if (!r || typeof r !== 'object') continue;
       const id = k.slice(GPFX.length), uid = String(r.uid || '');
-      out.push({ id, uid, name: (typeof r.name === 'string' && r.name) || ('Player-' + uid.slice(-4)), coins: r.resetEpoch === RESET_EPOCH ? (+r.coins || 0) : 150, xp: r.resetEpoch === RESET_EPOCH ? (+r.xp || 0) : 0, rev: +r.rev || 0, ts: +r.ts || 0, cur: id === cur });
+      out.push({ id, uid, name: (typeof r.name === 'string' && r.name) || ('Player-' + uid.slice(-4)), coins: (typeof r.coins === 'number' && isFinite(r.coins)) ? r.coins : 150, xp: (typeof r.xp === 'number' && isFinite(r.xp)) ? r.xp : 0, rev: +r.rev || 0, ts: +r.ts || 0, cur: id === cur });
     }
   } catch (e) {}
   return out.filter(g => g.cur || g.rev > 0).sort((a, b) => (b.cur - a.cur) || (b.ts - a.ts) || (b.rev - a.rev));
@@ -60,14 +59,8 @@ function announceBonus() {
 // Firebase Realtime DB drops empty objects ({}), so cloud data must be re-filled before use.
 function normalize(d) {
   if (!d || typeof d !== 'object') d = {};
-  if (d.resetEpoch !== RESET_EPOCH) {              // one-time full progress reset (keeps Player ID, name, theme/sound, gift flags)
-    const keep = { uid: d.uid, name: d.name, nameSet: d.nameSet, nameAsked: d.nameAsked, photo: d.photo, theme: d.theme, sound: d.sound, bonus: d.bonus, starter49019468: d.starter49019468 === undefined ? true : d.starter49019468, rev: d.rev, ts: d.ts };
-    const had = !!(d.uid);
-    d = keep;
-    if (had) { d.rev = (+d.rev || 0) + 1; d.ts = Date.now(); }
-    d.coins = 150; d.xp = 0; d.lv = {}; d.best = {}; d.own = {}; d.eq = {}; d.levelRewards = {}; d.mail = []; d.daily = ''; d.verMail = '';
-    d.resetEpoch = RESET_EPOCH; resetJustApplied = true;
-  }
+  // Deliberately do not reset existing player records during app updates.
+  // Older records may contain resetEpoch; it is ignored for compatibility.
   const obj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
   d.coins = (typeof d.coins === 'number' && isFinite(d.coins) && d.coins >= 0) ? d.coins : (d.coins == null ? 150 : 0);
   d.starter49019468 = !!d.starter49019468;
@@ -1367,7 +1360,7 @@ function afterLogin(u) {
     const existed = !!cloud;                                          // did this Gmail already have an account (an ID)?
     if (cloud) {
       const needsStarter49019468 = String(cloud.uid || '') === '49019468' && !cloud.starter49019468;
-      const needsBonus = bonusPending(cloud) || cloud.resetEpoch !== RESET_EPOCH;
+      const needsBonus = bonusPending(cloud);
       cloud = normalize(cloud);
       if (hadLocal && localD.rev > cloud.rev) { cloudUid = u.uid; doPush(); }   // this device is ahead (cloud write was lost)
       else { D = cloud; LS.set(ACTIVE_KEY, JSON.stringify(D)); cloudUid = u.uid; if (needsStarter49019468 || needsBonus) doPush(); }
