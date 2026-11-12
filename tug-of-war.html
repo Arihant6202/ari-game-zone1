@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="description" content="Play Tug of War at Ari Game Zone. Tap fast to pull the rope: solo vs CPU, 2 players on one device, or online 1v1.">
+<script src="firebase-config.js"></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="theme-color" content="#080a12"><link rel="manifest" href="manifest.webmanifest?v=21">
+<link rel="icon" href="./icon-64.png?v=21" type="image/png" sizes="64x64">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=21">
+<title>Tug of War – Free Online Tapping Game | Ari Game Zone</title>
+<link rel="stylesheet" href="az.css?v=1.04.00"><link rel="stylesheet" href="v17.css?v=1.04.00">
+<style>
+#pg{max-width:720px;margin:auto;padding:14px 12px 100px;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.tw-head{text-align:center;margin:6px 0 14px}.tw-head h1{font-size:clamp(26px,6vw,40px);margin:6px 0;background:linear-gradient(90deg,#fff,#7cf3ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tw-card{background:linear-gradient(145deg,rgba(25,29,48,.96),rgba(10,13,24,.98));border:1px solid rgba(124,243,255,.25);border-radius:24px;padding:18px;box-shadow:0 20px 60px #0005}
+.tw-score{display:flex;justify-content:center;align-items:center;gap:28px;margin-bottom:10px}.tw-score div{text-align:center}.tw-score b{display:block;font-size:38px;color:#ffd166}.tw-score small{color:var(--muted);font-weight:700}
+.tw-field{position:relative;height:120px;margin:10px 0;border-radius:18px;background:linear-gradient(90deg,rgba(59,130,246,.35),rgba(255,255,255,.05) 50%,rgba(229,72,77,.35));overflow:hidden}
+.tw-line{position:absolute;top:0;bottom:0;width:2px;background:#fff6}.tw-line.l{left:12%;background:#3b82f6}.tw-line.r{right:12%;background:#e5484d}.tw-line.c{left:50%}
+.tw-rope{position:absolute;left:4%;right:4%;top:58px;height:7px;border-radius:5px;background:repeating-linear-gradient(90deg,#d6a766 0 9px,#b3813f 9px 14px)}
+.tw-mk{position:absolute;top:44px;width:34px;height:34px;margin-left:-17px;border-radius:50%;background:#ffd166;color:#111;display:grid;place-items:center;font-size:20px;box-shadow:0 0 16px #ffd166;transition:left .08s linear}
+.tw-pl{position:absolute;top:30px;font-size:46px}.tw-pl.a{left:1%}.tw-pl.b{right:1%;transform:scaleX(-1)}
+.tw-status{text-align:center;min-height:46px;font-size:22px;font-weight:800;color:#ffd166;padding:6px}
+.tw-btns{display:flex;gap:10px;margin-top:10px}.tw-btn{flex:1;height:130px;border:0;border-radius:22px;font-size:24px;font-weight:900;color:#fff;cursor:pointer;touch-action:manipulation;transition:transform .05s}.tw-btn:active{transform:scale(.95)}
+.tw-btn.a{background:linear-gradient(145deg,#3b82f6,#1d4ed8)}.tw-btn.b{background:linear-gradient(145deg,#ef4444,#b91c1c)}.tw-btn small{display:block;font-size:12px;font-weight:600;opacity:.8}
+.tw-note{text-align:center;color:var(--muted);font-size:12px;margin:10px 0 0}
+</style>
+</head>
+<body data-page="games"><div class="azbg"><i></i><i></i><i></i></div><div id="pg">
+<div class="tw-head"><div style="font-size:36px">🪢</div><h1>TUG OF WAR</h1><div id="modeTag" class="online-pill">Choose your game mode</div></div>
+<section class="tw-card">
+<div class="tw-score"><div><b id="s1">0</b><small id="l1">YOU</small></div><div style="font-size:22px">VS</div><div><b id="s2">0</b><small id="l2">CPU</small></div></div>
+<div class="tw-field"><i class="tw-line l"></i><i class="tw-line c"></i><i class="tw-line r"></i><div class="tw-rope"></div><div class="tw-pl a">🧑</div><div class="tw-pl b">🧑</div><div class="tw-mk" id="mk">🚩</div></div>
+<div class="tw-status" id="st">Get ready…</div>
+<div class="tw-btns"><button class="tw-btn a" id="b1">TAP TO PULL!<small id="k1">Space / A</small></button><button class="tw-btn b" id="b2" hidden>TAP TO PULL!<small>Enter / L</small></button></div>
+<p class="tw-note">Tap as fast as you can! Drag the flag to your line. First to win 2 rounds wins the match.</p>
+</section></div>
+<script src="az.js?v=1.08.00"></script><script src="nav.js"></script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id),STR=2.2,WIN=100,NEED=2;
+let mode='single',net=null,host=true,diff='medium',p=0,sc=[0,0],ph='cd',over=false,aiT=0,sendT=0,cd=null;
+const guest=()=>mode==='online'&&!host;
+const send=o=>{if(net)net.send(Object.assign({__tw:1},o));};
+function render(msg){
+  const d=guest()?-p:p,me=guest()?1:0;
+  $('mk').style.left=Math.max(4,Math.min(96,50+d*.46))+'%';
+  $('s1').textContent=sc[me];$('s2').textContent=sc[1-me];
+  if(msg!=null)$('st').textContent=msg;
+}
+function snap(msg){send({t:'st',p,sc,ph,msg});}
+function startRound(){
+  p=0;ph='cd';let n=3;
+  const tick=()=>{if(over)return;if(n>0){const m='Get ready… '+n;render(m);snap(m);n--;cd=setTimeout(tick,650);}else{ph='go';render('PULL!!! 💪');snap('PULL!!! 💪');}};
+  tick();
+}
+function roundEnd(w){
+  sc[w]++;ph='between';const me=guest()?1:0;
+  const msg=mode==='local'?('Player '+(w+1)+' wins the round!'):(w===0?(mode==='single'?'You win the round! 🎉':'Round won! 🎉'):(mode==='single'?'CPU wins the round':'Round lost'));
+  Az.sfx(w===0?'win':'lose');render(msg);snap(msg);
+  if(sc[w]>=NEED){over=true;clearInterval(aiT);send({t:'end',w,sc});finishMatch(w);}
+  else cd=setTimeout(startRound,1500);
+}
+function pull(side){
+  if(over||ph!=='go')return;
+  p+=side===0?-STR:STR;Az.sfx('click');
+  if(p<=-WIN)roundEnd(0);else if(p>=WIN)roundEnd(1);
+  else{render();if(mode==='online'&&Date.now()-sendT>60){sendT=Date.now();snap();}}
+}
+function finishMatch(w){
+  clearInterval(aiT);const me=guest()?1:0,won=mode==='local'?true:w===me;
+  const names=mode==='local'?['Player 1','Player 2']:null;
+  Az.finish({game:'tugofwar',level:1,diff:mode==='online'?'medium':diff,won,progress:false,score:sc[me],
+    base:mode==='online'?(won?50:16):mode==='local'?20:(won?32:10),
+    title:mode==='local'?'🏆 '+names[w]+' wins!':won?'🏆 You won the tug of war!':'😔 You lost the tug of war',
+    sub:'Rounds: '+sc[me]+' – '+sc[1-me],retry:()=>{if(mode==='online')location.reload();else begin();}});
+}
+function begin(){
+  clearTimeout(cd);clearInterval(aiT);over=false;sc=[0,0];p=0;ph='cd';render('Get ready…');
+  if(guest())return;
+  if(mode==='single'){const rate={easy:4.2,medium:6,hard:8.2}[diff]||6;aiT=setInterval(()=>{if(ph==='go'&&Math.random()<rate/12.5*(.7+Math.random()*.6))pull(1);},80);}
+  startRound();
+}
+function tap(side){ if(guest()){if(ph==='go'){Az.sfx('click');send({t:'tap'});p+=STR;render();}return;} pull(side); }
+function init(o){
+  mode=o.mode;net=o.net||null;host=o.host!==false;diff=o.diff||'medium';
+  $('modeTag').textContent=mode==='online'?'🌐 Online 1v1':mode==='local'?'👥 2 Players · Same Device':'🤖 Solo vs CPU';
+  if(mode==='local'){$('b2').hidden=false;$('l1').textContent='PLAYER 1';$('l2').textContent='PLAYER 2';}
+  else if(mode==='online'){$('l2').textContent=(net&&net.peer&&net.peer.name||'OPPONENT').slice(0,12).toUpperCase();}
+  if(net){
+    net.on(d=>{if(!d||!d.__tw)return;
+      if(host){if(d.t==='tap')pull(1);}
+      else if(d.t==='st'){p=+d.p||0;sc=d.sc||sc;ph=d.ph;render(d.msg);}
+      else if(d.t==='end'&&!over){over=true;sc=d.sc;render();finishMatch(d.w);}
+    });
+    net.onclose(()=>{if(!over){over=true;clearInterval(aiT);Az.finish({game:'tugofwar',level:1,diff:'medium',won:true,base:12,progress:false,title:'Opponent left',sub:'Your friend left the match.',retry:()=>location.reload()});}});
+  }
+  begin();
+}
+const bind=(id,side)=>$(id).addEventListener('pointerdown',e=>{e.preventDefault();tap(side);});
+bind('b1',0);bind('b2',1);
+addEventListener('keydown',e=>{if(e.repeat)return;const k=e.key.toLowerCase();if(k===' '||k==='a'){e.preventDefault();tap(0);}else if(mode==='local'&&(k==='enter'||k==='l')){e.preventDefault();tap(1);}});
+Az.start({game:'tugofwar',noLevels:true,onStart:init});
+})();
+</script></body></html>

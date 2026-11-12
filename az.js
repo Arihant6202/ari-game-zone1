@@ -5,7 +5,7 @@ const BASE = SRC.replace(/az\.js.*$/, '');
 const KEY = 'az2';
 const OWNER_ID = '97835276';   // reserved: only the verified owner Gmail may ever hold this Player ID
 // Global reward multiplier. Lower = slower coin earning = items feel more valuable (was 1.0 before).
-const COIN_RATE = 0.5;
+const COIN_RATE = 1.5;
 const DAILY_BONUS = 50;
 // Progress protection: never use a global reset epoch. Existing player data must survive deployments.
 /* ---- safe localStorage helpers + account keys ----
@@ -108,14 +108,15 @@ const GAMES = [
   { id: 'snake', file: 'snake-evolution.html', name: 'Snake Evolution', emoji: '🐍', cat: 'Arcade', max: 100, modes: ['single'], shop: ['snake'], desc: 'Eat, grow and avoid walls. Obstacles and speed grow each level.' },
   { id: 'brick', file: 'brick-breaker.html', name: 'Brick Breaker', emoji: '🧱', cat: 'Arcade', max: 100, modes: ['single'], shop: ['ball'], desc: 'Break all bricks, catch power-ups. 100 different layouts.' },
   { id: 'mole', file: 'whack-a-mole.html', name: 'Whack-a-Mole', emoji: '🐹', cat: 'Fun', max: 100, modes: ['single'], shop: ['hammer'], desc: 'Tap the moles fast, avoid bombs and grab golden moles.' },
-  { id: 'leveldevil', file: 'level-devil.html', name: 'Level Devil', emoji: '😈', cat: 'Platformer', max: 20, modes: ['single', 'online'], shop: ['hero'], desc: 'A tricky platform challenge with hidden surprises and 20 stages. Race a friend online to the door!' },
+  { id: 'leveldevil', file: 'level-devil.html', name: 'Level Devil', emoji: '😈', cat: 'Platformer', max: 100, modes: ['single', 'online'], shop: ['hero'], desc: 'A tricky platform challenge with hidden surprises and 100 stages. Race a friend online to the door!' },
   { id: 'uno', file: 'uno.html', name: 'UNO', emoji: '🃏', cat: 'Cards', max: 1, modes: ['single', 'local', 'online'], shop: ['cardback'], desc: 'Classic colour-and-number card game: vs computer bots, pass-and-play, or online 1v1 with a friend.' },
   { id: 'runner', file: 'runner.html', name: 'Neon Runner', emoji: '🏃', cat: 'Arcade', max: 1, modes: ['single', 'online'], shop: ['runner', 'trail'], desc: 'Endless runner v2: jump, slide, double-jump, grab coins & shields. Race a friend online!' },
-  { id: 'badminton', file: 'badminton.html', name: 'Badminton Rally', emoji: '🏸', cat: 'Sports', max: 100, modes: ['single', 'online'], shop: ['racket', 'shuttle'], desc: 'Move, clear, drop and smash against a smart AI.' },
+  { id: 'badminton', file: 'badminton.html', name: 'Badminton Rally', emoji: '🏸', cat: 'Sports', max: 100, modes: ['single', 'online'], shop: ['racket', 'shuttle'], desc: 'Move, clear, drop and smash against a smart AI, or play a real online 1v1 match against a friend.' },
   { id: 'memory', file: 'memory-match.html', name: 'Memory Match', emoji: '🧠', cat: 'Puzzle', max: 100, modes: ['single'], shop: [], desc: 'Flip cards and find matching pairs with the fewest moves.' },
   { id: 'quickmath', file: 'quick-math.html', name: 'Quick Math', emoji: '➗', cat: 'Puzzle', max: 100, modes: ['single'], shop: [], desc: 'Solve rapid-fire arithmetic before the timer runs out.' },
   { id: 'colordash', file: 'color-dash.html', name: 'Color Dash', emoji: '🎨', cat: 'Arcade', max: 100, modes: ['single'], shop: [], desc: 'Match the target color as the pace gets faster.' },
   { id: 'rps', file: 'stone-paper-scissor.html', name: 'Stone Paper Scissor', emoji: '✊', cat: 'Online', max: 1, modes: ['single', 'local', 'online'], shop: [], desc: 'Classic Rock Paper Scissors: challenge the computer, play on one device, or battle a friend online.' },
+  { id: 'tugofwar', file: 'tug-of-war.html', name: 'Tug of War', emoji: '🪢', cat: 'Fun', max: 1, modes: ['single', 'local', 'online'], shop: [], desc: 'Tap fast to pull the rope! Solo vs CPU, 2 players on one phone, or online 1v1.' },
   { id: 'taprush', file: 'tap-rush.html', name: 'Tap Rush', emoji: '⚡', cat: 'Fun', max: 100, modes: ['single'], shop: [], desc: 'Hit the targets quickly and build a high score.' },
 ];
 
@@ -1564,7 +1565,7 @@ Az.start = function (cfg) {
 Az.finish = function (r) {
   const g = Az.game(r.game), lvl = r.level || 1, dm = Az.diffMul(r.diff || 'medium');
   const pk = Az.perk(), ch = Az.char();
-  const coins = Math.round(COIN_RATE * (r.base || 0) * dm * (1 + lvl * .04) * (r.won ? 1 : .25) * (1 + pk.coin));
+  const coins = Math.round(COIN_RATE * (r.base || 0) * dm * (1 + lvl * .04) * (r.won ? 1 : .25) * (1 + pk.coin)) + (r.won ? 20 : 8);
   const xp = Math.round((coins * .6 + (r.won ? 15 : 3)) * (1 + pk.xp));
   Az.addCoins(coins); Az.addXp(xp);
   let note = '', newBest = false;

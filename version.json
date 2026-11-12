@@ -1,7 +1,10 @@
 {
   "version": "1.07.00",
   "notes": [
-    "Level Devil expanded from 20 to 100 stages with escalating remix challenges",
+    "New game: Tug of War (solo vs CPU, 2 players on one device, online 1v1)",
+    "Badminton online is now a real live 1v1 match (first to 7) instead of two separate CPU matches",
+    "Bigger coin rewards after every match (3x rate + flat win/loss bonus)",
+    "Level Devil expanded to 100 stages with 8 new designed worlds (levels 21-100); level counter and Next level now work up to 100",
     "Banned account screen no longer offers Logout; only Send message to developer remains",
     "In-app logout and guest switching/creation are blocked while the ban is active",
     "Existing Firebase UID-based ban and unban controls remain in Developer Mode"

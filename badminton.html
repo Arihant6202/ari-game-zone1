@@ -41,6 +41,8 @@ let P = { x: 215, y: 470, sw: 0, cd: 0 }, A = { x: 205, y: 150, sw: 0 };
 let shot = null, S = { x: 215, y: 470, z: 60 }, trail = [], parts = [], texts = [], raf = 0, last = 0, t = 0, shake = 0;
 let drag = null; const keys = {};
 let net = null, opPts = 0, opName = 'Opponent';
+let isHost = true, rA = { x: 205, y: 150 }, rArm = { type: 'clear', aimX: null, t: 0 };
+const M = v => LF + RT - v, My = v => 2 * NET - v, opp = () => net ? String(net.peer && net.peer.name || 'Opponent').slice(0, 10) : 'CPU', bsend = o => { if (net) net.send(Object.assign({ __game: 'bd' }, o)); };
 let lastSend = 0, lastAim = 0;
 
 /* ---------- difficulty (by level) ---------- */
@@ -50,12 +52,12 @@ const aiMissP = type => clamp(.2 - L * .0018, .04, .2) + (type === 'smash' ? .12
 
 /* ---------- reset / flow ---------- */
 function setHint(s) { $('hint').textContent = s; }
-function setScore() { $('rally').textContent = 'You ' + pts + ' – ' + aiPts + ' CPU'; }
+function setScore() { $('rally').textContent = 'You ' + pts + ' – ' + aiPts + ' ' + opp(); }
 function reset(level) {
   cancelAnimationFrame(raf);
   L = level; place = Az.place(L); racket = Az.eq('racket'); shuttle = Az.eq('shuttle');
   courtCol = COURTS[Math.floor((L - 1) / 4) % COURTS.length];
-  target = clamp(5 + Math.floor(L / 8), 5, 15);
+  target = net ? 7 : clamp(5 + Math.floor(L / 8), 5, 15);
   pts = 0; aiPts = 0; rally = 0; longest = 0; over = false; started = true; server = 'p';
   trail = []; parts = []; texts = []; shot = null; t = 0; last = 0; shake = 0;
   $('goal').textContent = 'First to ' + target; setScore();
@@ -66,8 +68,9 @@ function reset(level) {
 function beginServe() {
   phase = 'serve'; phaseT = 0; shot = null; rally = 0; trail = [];
   P.x = 215; P.y = 470; A.x = 205; A.y = 150; P.sw = A.sw = 0; P.cd = 0;
+  if (net && isHost) { rA = { x: 205, y: 150 }; bsend({ t: 'serve', sv: server }); }
   if (server === 'p') { S = { x: P.x, y: P.y, z: 60 }; setHint('Your serve'); $('msg').textContent = 'Your serve — press HIT (long) or DROP (short).'; }
-  else { S = { x: A.x, y: A.y, z: 60 }; setHint('CPU serves'); $('msg').textContent = 'CPU is serving — get ready!'; }
+  else { S = { x: A.x, y: A.y, z: 60 }; setHint(opp() + ' serves'); $('msg').textContent = opp() + ' is serving — get ready!'; }
 }
 
 /* ---------- shots ---------- */
@@ -83,11 +86,13 @@ function makeShot(by, type, fx, fy, fz, aimX, err) {
   x1 = aimX + rnd(-err, err);
   const Hh = type === 'clear' ? 140 : type === 'drop' ? 90 : 45;
   const out = x1 < LF + 16 || x1 > RT - 16 || y1 < TOP || y1 > BOT || (by === 'p' ? y1 > NET - 4 : y1 < NET + 4);
-  shot = { by, type, x0: fx, y0: fy, z0: clamp(fz, 20, 150), x1, y1, D, Hh, age: 0, out, fault: false, aiMiss: by === 'p' && Math.random() < aiMissP(type) };
+  shot = { by, type, x0: fx, y0: fy, z0: clamp(fz, 20, 150), x1, y1, D, Hh, age: 0, out, fault: false, aiMiss: !net && by === 'p' && Math.random() < aiMissP(type) };
   trail = [];
+  if (net && isHost) bsend({ t: 'shot', s: { by, type, x0: fx, y0: fy, z0: shot.z0, x1: shot.x1, y1: shot.y1, D, Hh, out, fault: false } });
 }
 function netFault(by, fx, fy) {
   shot = { by, type: 'fault', x0: fx, y0: fy, z0: 40, x1: fx, y1: by === 'p' ? NET + 8 : NET - 8, D: .32, Hh: 20, age: 0, out: false, fault: true, aiMiss: true };
+  if (net && isHost) bsend({ t: 'shot', s: { by, type: 'fault', x0: fx, y0: fy, z0: 40, x1: fx, y1: shot.y1, D: .32, Hh: 20, out: false, fault: true } });
 }
 function pos() {
   const s = clamp(shot.age / shot.D, 0, 1);
@@ -107,6 +112,7 @@ let armed = { type: 'clear', t: 0 };
 function doSwing() { P.sw = .26; }
 function playerHit(type) {
   if (over || !started) return;
+  if (net && !isHost) { armed = { type, t: .9 }; P.sw = .2; bsend({ t: 'hit', type, aimX: playerAim() }); return; }
   if (phase === 'serve') {
     if (server !== 'p') return;
     if (type === 'smash') type = 'clear';
@@ -157,19 +163,19 @@ function winPoint(w, why) {
   if (w === 'p') { pts++; Az.sfx('coin'); setHint('Point you! ' + why); $('msg').textContent = '🎉 Point for you — ' + why + (rally > 4 ? ' (rally of ' + rally + ')' : ''); }
   else { aiPts++; Az.sfx('lose'); setHint('CPU point — ' + why); $('msg').textContent = 'CPU scores — ' + why + ' Stay sharp!'; }
   setScore();
-  if (net && w === 'p') net.send({ __game: 'badminton-score', score: pts, name: Az.name() });
+  if (net && isHost) bsend({ t: 'pt', w, p: pts, a: aiPts });
 }
 
 /* ---------- finish ---------- */
 function finish(won) {
   if (over) return; over = true; cancelAnimationFrame(raf);
-  if (net) net.send({ __game: 'badminton-finish', score: pts, name: Az.name() });
+  if (net) bsend({ t: 'end', p: pts, a: aiPts });
   draw();
   Az.finish({
-    game: 'badminton', level: L, diff: 'medium', won, base: won ? 24 : 8, score: pts,
+    game: 'badminton', level: L, diff: 'medium', won, base: net ? (won ? 48 : 16) : (won ? 24 : 8), score: pts, progress: net ? false : undefined,
     title: won ? 'Match won! 🏆' : 'Match lost',
-    sub: 'You ' + pts + ' – ' + aiPts + ' CPU · longest rally ' + longest + (net ? ' · ' + opName + ': ' + opPts + ' pts' : ''),
-    next: n => reset(n), retry: reset
+    sub: 'You ' + pts + ' – ' + aiPts + ' ' + opp() + ' · longest rally ' + longest,
+    next: n => reset(n), retry: net ? () => location.reload() : reset
   });
 }
 
@@ -187,6 +193,7 @@ function movePlayer(dt) {
   P.x = clamp(P.x, LF + 6, RT - 6); P.y = clamp(P.y, NET + 24, BOT - 6);
 }
 function moveAI(dt) {
+  if (net) { const k = Math.min(1, dt * 16); A.x += (rA.x - A.x) * k; A.y += (rA.y - A.y) * k; A.x = clamp(A.x, LF + 6, RT - 6); A.y = clamp(A.y, TOP + 6, NET - 24); return; }
   let tx = 205, ty = 175, sp = aiSpeed() * .7;
   if (shot && shot.by === 'p' && !shot.out && !shot.fault) { tx = clamp(shot.x1, LF + 8, RT - 8); ty = clamp(shot.y1, TOP + 6, NET - 22); sp = aiSpeed(); if (shot.age < Math.max(.05, .3 - L * .0025)) sp = 0; }
   const dx = tx - A.x, dy = ty - A.y, d = Math.hypot(dx, dy);
@@ -194,16 +201,16 @@ function moveAI(dt) {
 }
 function update(dt) {
   t += dt; P.cd = Math.max(0, P.cd - dt); P.sw = Math.max(0, P.sw - dt); A.sw = Math.max(0, A.sw - dt);
-  movePlayer(dt); moveAI(dt); armed.t = Math.max(0, armed.t - dt); contactHit();
+  movePlayer(dt); moveAI(dt); armed.t = Math.max(0, armed.t - dt); rArm.t = Math.max(0, rArm.t - dt); contactHit();
   if (phase === 'serve') {
     phaseT += dt;
     if (server === 'p') S = { x: P.x, y: P.y, z: 60 + Math.sin(t * 5) * 4 };
-    else { S = { x: A.x, y: A.y, z: 60 }; if (phaseT > 1) { A.sw = .26; Az.sfx('hit'); makeShot('a', Math.random() < .7 ? 'clear' : 'drop', A.x, A.y, 60, rnd(90, 330), 10); phase = 'rally'; setHint('Rally!'); $('msg').textContent = 'Move your player into the green ring — it hits automatically!'; } }
+    else { S = { x: A.x, y: A.y, z: 60 }; if (!net && phaseT > 1 || net && phaseT > 8) { A.sw = .26; Az.sfx('hit'); makeShot('a', Math.random() < .7 ? 'clear' : 'drop', A.x, A.y, 60, rnd(90, 330), 10); phase = 'rally'; setHint('Rally!'); $('msg').textContent = 'Move your player into the green ring — it hits automatically!'; } }
   } else if (phase === 'rally' && shot) {
     shot.age += dt;
     const q = pos(); S = { x: q.x, y: q.y, z: q.z };
     trail.push({ x: q.x, y: q.y - q.z * .55, life: .35 }); if (trail.length > 22) trail.shift();
-    if (shot.by === 'p') aiTryHit();
+    if (shot.by === 'p') { net ? remoteTry() : aiTryHit(); }
     if (shot && shot.age >= shot.D) land();
   } else if (phase === 'point') {
     phaseT += dt;
@@ -213,12 +220,34 @@ function update(dt) {
   parts.forEach(p => { p.life -= dt; if (p.ring) p.r += 70 * dt; else { p.x += p.vx * dt; p.y += p.vy * dt; } }); parts = parts.filter(p => p.life > 0);
   texts.forEach(q => { q.life -= dt; q.y -= 30 * dt; }); texts = texts.filter(q => q.life > 0);
   shake = Math.max(0, shake - dt * 24);
-  if (net && performance.now() - lastSend > 400) { lastSend = performance.now(); net.send({ __game: 'badminton-live', score: pts, name: Az.name() }); }
+  if (net && isHost && performance.now() - lastSend > 33) { lastSend = performance.now(); bsend({ t: 'pos', px: P.x, py: P.y, ps: P.sw }); }
+}
+function remoteTry() {
+  const q = pos(); if (shot.out || shot.fault) return;
+  const d = Math.hypot(q.x - A.x, q.y - A.y); if (d > 46 || q.z > 150 || q.s < .2) return;
+  let type = rArm.t > 0 ? rArm.type : 'clear'; if (type === 'smash' && q.z < 70) type = 'clear';
+  const aim = rArm.t > 0 && rArm.aimX != null ? rArm.aimX : (P.x < MID ? rnd(240, 345) : rnd(80, 175));
+  rArm.t = 0; A.sw = .26; Az.sfx(type === 'smash' ? 'boom' : 'hit'); burst(q.x, q.y - q.z * .55, '#ff9aae', 8);
+  makeShot('a', type, A.x, A.y, q.z, aim, 6 + d * .5); rally++;
+}
+function guestUpdate(dt) {
+  t += dt; P.sw = Math.max(0, P.sw - dt); A.sw = Math.max(0, A.sw - dt); armed.t = Math.max(0, armed.t - dt); movePlayer(dt);
+  if (performance.now() - lastSend > 33) { lastSend = performance.now(); bsend({ t: 'in', x: P.x, y: P.y }); }
+  if (phase === 'serve') { phaseT += dt; S = server === 'p' ? { x: P.x, y: P.y, z: 60 + Math.sin(t * 5) * 4 } : { x: A.x, y: A.y, z: 60 }; }
+  else if (phase === 'rally' && shot) { shot.age += dt; const q = pos(); S = { x: q.x, y: q.y, z: q.z }; trail.push({ x: q.x, y: q.y - q.z * .55, life: .35 }); if (trail.length > 22) trail.shift(); }
+  trail.forEach(p => p.life -= dt); trail = trail.filter(p => p.life > 0);
+  parts.forEach(p => { p.life -= dt; if (p.ring) p.r += 70 * dt; else { p.x += p.vx * dt; p.y += p.vy * dt; } }); parts = parts.filter(p => p.life > 0);
+  shake = Math.max(0, shake - dt * 24);
+}
+function gEnd(hp, gp) {
+  if (over) return; over = true; cancelAnimationFrame(raf); draw();
+  Az.finish({ game: 'badminton', level: 1, diff: 'medium', won: gp > hp, progress: false, base: gp > hp ? 48 : 16, score: gp, title: gp > hp ? 'Match won! 🏆' : 'Match lost',
+    sub: 'You ' + gp + ' – ' + hp + ' ' + opp(), next: () => location.reload(), retry: () => location.reload() });
 }
 function loop(ts) {
   raf = requestAnimationFrame(loop);
   const dt = Math.min(.035, (ts - (last || ts)) / 1000); last = ts;
-  if (!over) update(dt);
+  if (!over) (net && !isHost ? guestUpdate : update)(dt);
   if (!over) draw();
 }
 
@@ -300,8 +329,8 @@ function draw() {
   x.textAlign = 'left'; x.font = 'bold 12px system-ui'; x.fillStyle = '#fff'; x.fillText(place.emoji + ' ' + place.name, 18, 24); x.fillStyle = '#ffe08a'; x.fillText('Level ' + L + ' · to ' + target, 18, 40);
   x.textAlign = 'center'; x.font = 'bold 26px Orbitron,system-ui'; x.lineWidth = 4; x.strokeStyle = 'rgba(0,0,0,.65)';
   const sc = pts + ' – ' + aiPts; x.strokeText(sc, 330, 40); x.fillStyle = '#fff'; x.fillText(sc, 330, 40);
-  x.font = 'bold 11px system-ui'; x.fillStyle = '#9be7ff'; x.fillText('YOU – CPU', 330, 54);
-  if (phase === 'point') { x.font = 'bold 30px Orbitron,system-ui'; x.lineWidth = 5; const m = server === 'p' ? 'POINT!' : 'CPU POINT'; x.strokeStyle = 'rgba(0,0,0,.7)'; x.strokeText(m, MID, 300); x.fillStyle = server === 'p' ? '#7cfc8a' : '#ff9aae'; x.fillText(m, MID, 300); }
+  x.font = 'bold 11px system-ui'; x.fillStyle = '#9be7ff'; x.fillText('YOU – ' + opp().toUpperCase(), 330, 54);
+  if (phase === 'point') { x.font = 'bold 30px Orbitron,system-ui'; x.lineWidth = 5; const m = server === 'p' ? 'POINT!' : opp().toUpperCase() + ' POINT'; x.strokeStyle = 'rgba(0,0,0,.7)'; x.strokeText(m, MID, 300); x.fillStyle = server === 'p' ? '#7cfc8a' : '#ff9aae'; x.fillText(m, MID, 300); }
   if (phase === 'serve' && server === 'p') { x.font = 'bold 15px system-ui'; x.lineWidth = 3; x.strokeStyle = 'rgba(0,0,0,.7)'; x.strokeText('Tap HIT to serve', P.x, P.y + 40); x.fillStyle = '#fff'; x.fillText('Tap HIT to serve', P.x, P.y + 40); }
   x.restore();
 }
@@ -337,15 +366,26 @@ addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 Az.start({ game: 'badminton', onStart: o => {
   net = o.net || null;
   if (net) {
-    $('versus').textContent = '🌐 ONLINE RALLY CHALLENGE · both play a match, compare points'; $('opponent').textContent = 'Opponent: ' + (net.peer && net.peer.name || 'Connected');
+    isHost = o.host !== false;
+    $('versus').textContent = '🌐 ONLINE 1v1 · first to 7 points'; $('opponent').textContent = 'Opponent: ' + (net.peer && net.peer.name || 'Connected');
     net.on(d => {
-      if (!d || !d.__game) return;
-      if (d.__game === 'badminton-score' || d.__game === 'badminton-live') { opPts = +d.score || 0; opName = d.name || (net.peer && net.peer.name) || 'Opponent'; $('opponent').textContent = opName + ': ' + opPts + ' points'; }
-      if (d.__game === 'badminton-finish') { $('opponent').textContent = (d.name || opName) + ' finished with ' + (+d.score || 0) + ' points'; opPts = +d.score || 0; }
+      if (!d || d.__game !== 'bd') return;
+      if (isHost) {
+        if (d.t === 'in') rA = { x: M(+d.x || 0), y: My(+d.y || 0) };
+        else if (d.t === 'hit') {
+          rArm = { type: ['clear', 'drop', 'smash'].includes(d.type) ? d.type : 'clear', aimX: M(+d.aimX || MID), t: .9 };
+          if (phase === 'serve' && server === 'a' && !over) { A.sw = .26; Az.sfx('hit'); makeShot('a', rArm.type === 'smash' ? 'clear' : rArm.type, A.x, A.y, 60, rArm.aimX, 8); phase = 'rally'; rArm.t = 0; }
+        }
+      } else if (d.t === 'pos') { A.x = M(+d.px || 0); A.y = My(+d.py || 0); A.sw = d.ps || 0; }
+      else if (d.t === 'serve') { server = d.sv === 'p' ? 'a' : 'p'; beginServe(); }
+      else if (d.t === 'shot') { const q = d.s; shot = { by: q.by === 'p' ? 'a' : 'p', type: q.type, x0: M(q.x0), y0: My(q.y0), z0: q.z0, x1: M(q.x1), y1: My(q.y1), D: q.D, Hh: q.Hh, age: 0, out: q.out, fault: q.fault }; phase = 'rally'; trail = []; Az.sfx('hit'); setHint('Rally!'); }
+      else if (d.t === 'pt') { phase = 'point'; phaseT = 0; pts = d.a; aiPts = d.p; setScore(); const mine = d.w === 'a'; server = mine ? 'p' : 'a'; Az.sfx(mine ? 'coin' : 'lose'); setHint(mine ? 'Point you!' : opp() + ' scores'); }
+      else if (d.t === 'end') gEnd(d.p, d.a);
     });
-    net.onclose(() => { $('opponent').textContent = 'Opponent disconnected'; });
+    net.onclose(() => { $('opponent').textContent = 'Opponent disconnected'; if (!over) { over = true; cancelAnimationFrame(raf); Az.finish({ game: 'badminton', level: 1, diff: 'medium', won: true, progress: false, base: 12, title: 'Opponent left', sub: 'Your friend left the match.', retry: () => location.reload() }); } });
   } else { $('versus').textContent = '🏸 SOLO MATCH vs CPU'; $('opponent').textContent = 'Beat the CPU to ' + (clamp(5 + Math.floor((o.level || 1) / 8), 5, 15)) + ' points'; }
   reset(o.level);
+  if (net && !isHost) { server = 'a'; beginServe(); }
 } });
 window.__bad = { get S() { return { L, pts, aiPts, phase, server, target, shot: shot && { by: shot.by, type: shot.type, out: shot.out, age: shot.age, D: shot.D } }; }, hit: playerHit, step: dt => { if (!over) { update(dt); draw(); } }, P, A, reset, get shotNow() { return shot; } };
 })();
