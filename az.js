@@ -1046,6 +1046,11 @@ const code4 = () => { const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; 
    - Logout           -> a brand-new guest id (fresh coins, fresh progress, fresh player ID).            */
 let linkG = null, fbUser = null, fbDb = null, pushT = null, fbP = null, loadSeq = 0, cloudUid = null, nameTimer = null, grantRef = null;
 const OWNER_UID = OWNER_ID, MAXC = 999999999, seenGrants = {};
+/* PERMANENT BAN UNLOCK LIST.
+   A permanent ban can NOT be lifted from Developer Mode. To lift one, add that 8-digit Player ID here
+   in the next version, e.g.  const PERM_UNBAN_IDS = ['12345678'];  and ship the new version.
+   When the owner opens Developer Mode on that version, the listed permanent bans are removed. */
+const PERM_UNBAN_IDS = [];
 Az.OWNER_UID = OWNER_UID; Az.ownerOK = false;
 const FBV = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-';
 const gdPath = uid => 'users/' + uid + '/gameData';
@@ -1253,17 +1258,34 @@ Az.devBroadcastMail = function (coins, title, message, items) {
 };
 Az.devItemCatalog = () => Object.keys(SHOP).filter(k => USED[k]).map(k => ({ slot: k, title: SHOP[k].title, emoji: SHOP[k].emoji || '🎁', items: SHOP[k].items.filter(i => i.price !== 0 || i.lvl || i.spin).map(i => ({ id: i.id, name: i.name, rarity: rarityOf(i) })) })).filter(g => g.items.length);
 /* ---- Ban / unban (stored at banned/<firebaseUid>; Firebase rules then block that account's cloud saves; the game shows a ban screen) ---- */
-Az.devBan = function (gid, reason) {
+Az.devBan = function (gid, reason, perm) {
+  perm = !!perm;
   return Promise.resolve().then(() => { needOwner(); gid = String(gid || '').replace(/\D/g, ''); if (gid === OWNER_UID) throw new Error('The owner ID cannot be banned.'); return lookupUid(gid); })
-    .then(t => { if (t.uid === fbUser.uid) throw new Error('You cannot ban your own account.'); return fbDb.ref('banned/' + t.uid).set({ id: t.gid, reason: String(reason || '').slice(0, 140), ts: firebase.database.ServerValue.TIMESTAMP }).then(() => t.gid); });
+    .then(t => { if (t.uid === fbUser.uid) throw new Error('You cannot ban your own account.');
+      return fbDb.ref('banned/' + t.uid).once('value').then(sn => {
+        const old = sn.val();
+        if (old && old.perm === true && PERM_UNBAN_IDS.indexOf(String(old.id)) < 0) throw new Error('Player ' + t.gid + ' is already PERMANENTLY banned.');
+        const rec = { id: t.gid, reason: String(reason || '').slice(0, 140), ts: firebase.database.ServerValue.TIMESTAMP };
+        if (perm) rec.perm = true;
+        return fbDb.ref('banned/' + t.uid).set(rec).then(() => t.gid);
+      }); });
 };
 Az.devUnban = function (gid) {
   return Promise.resolve().then(() => { needOwner(); gid = String(gid || '').replace(/\D/g, ''); if (!/^\d{8}$/.test(gid)) throw new Error('Player ID must be 8 digits.'); return fbDb.ref('banned').once('value'); })
-    .then(s => { const v = s.val() || {}, uid = Object.keys(v).find(k => v[k] && String(v[k].id) === gid); if (!uid) throw new Error('Player ' + gid + ' is not banned.'); return fbDb.ref('banned/' + uid).remove().then(() => gid); });
+    .then(s => { const v = s.val() || {}, uid = Object.keys(v).find(k => v[k] && String(v[k].id) === gid); if (!uid) throw new Error('Player ' + gid + ' is not banned.');
+      if (v[uid].perm === true && PERM_UNBAN_IDS.indexOf(gid) < 0) throw new Error('🔒 Player ' + gid + ' is PERMANENTLY banned. It can only be lifted by adding this ID to PERM_UNBAN_IDS in az.js in the next version.');
+      return fbDb.ref('banned/' + uid).remove().then(() => gid); });
+};
+/* Called when the owner opens Developer Mode: lifts every permanent ban whose ID was put in PERM_UNBAN_IDS by this version. */
+Az.devApplyPermUnban = function () {
+  return Promise.resolve().then(() => { needOwner(); if (!PERM_UNBAN_IDS.length) return []; return fbDb.ref('banned').once('value'); })
+    .then(s => { if (!s || !s.val) return []; const v = s.val() || {}, ops = [];
+      Object.keys(v).forEach(uid => { const b = v[uid]; if (b && b.perm === true && PERM_UNBAN_IDS.indexOf(String(b.id)) >= 0) ops.push(fbDb.ref('banned/' + uid).remove().then(() => String(b.id))); });
+      return Promise.all(ops); });
 };
 Az.devListBans = function () {
   return Promise.resolve().then(() => { needOwner(); return fbDb.ref('banned').once('value'); })
-    .then(s => { const v = s.val() || {}; return Object.keys(v).map(k => ({ uid: k, id: String(v[k] && v[k].id || '?'), reason: String(v[k] && v[k].reason || ''), ts: +(v[k] && v[k].ts) || 0 })).sort((a, b) => b.ts - a.ts); });
+    .then(s => { const v = s.val() || {}; return Object.keys(v).map(k => { const b = v[k] || {}, id = String(b.id || '?'); return { uid: k, id, reason: String(b.reason || ''), ts: +b.ts || 0, perm: b.perm === true, unlockable: b.perm === true && PERM_UNBAN_IDS.indexOf(id) >= 0 }; }).sort((a, b) => b.ts - a.ts); });
 };
 Az.sendSupport = function (text) {
   return Promise.resolve().then(() => {
@@ -1298,7 +1320,7 @@ function syncDir() {
 let banRef = null, banInfo = null, banEl = null;
 function hideBan() { if (banEl) { banEl.remove(); banEl = null; } }
 function showBan(v) {
-  hideBan(); if (isOwnerAcct(fbUser) || String(db().uid) === OWNER_UID) return; banEl = el('div', 'azmodal', '<div class="azbox" style="text-align:center"><div class="azbig">🚫</div><h2>Account banned</h2><p class="sub">Your account (Player ID <b>' + esc(db().uid) + '</b>) has been banned from Ari Game Zone.' + (v && v.reason ? '<br><br>Reason: <b>' + esc(v.reason) + '</b>' : '') + '</p><p class="sub" style="font-size:12px">Progress is not saved to the cloud while banned. Contact the owner if you think this is a mistake.</p><textarea id="bansup" maxlength="300" rows="3" placeholder="Write a message to the developer (max 300 characters)" style="width:100%;box-sizing:border-box;border-radius:12px;padding:10px;background:rgba(255,255,255,.08);color:inherit;border:1px solid rgba(255,255,255,.2);font:inherit"></textarea><p class="sub" id="bansupmsg" style="font-size:12px;min-height:16px"></p><div class="azrow c"><button class="azbtn" id="bansend">📩 Send message to developer</button></div></div>');
+  hideBan(); if (isOwnerAcct(fbUser) || String(db().uid) === OWNER_UID) return; banEl = el('div', 'azmodal', '<div class="azbox" style="text-align:center"><div class="azbig">🚫</div><h2>Account banned</h2><p class="sub">Your account (Player ID <b>' + esc(db().uid) + '</b>) has been '+(v && v.perm === true ? '<b>permanently</b> ' : '')+'banned from Ari Game Zone.' + (v && v.reason ? '<br><br>Reason: <b>' + esc(v.reason) + '</b>' : '') + '</p><p class="sub" style="font-size:12px">Progress is not saved to the cloud while banned. '+(v && v.perm === true ? 'This is a permanent ban.' : 'Contact the owner if you think this is a mistake.')+'</p><textarea id="bansup" maxlength="300" rows="3" placeholder="Write a message to the developer (max 300 characters)" style="width:100%;box-sizing:border-box;border-radius:12px;padding:10px;background:rgba(255,255,255,.08);color:inherit;border:1px solid rgba(255,255,255,.2);font:inherit"></textarea><p class="sub" id="bansupmsg" style="font-size:12px;min-height:16px"></p><div class="azrow c"><button class="azbtn" id="bansend">📩 Send message to developer</button></div></div>');
   banEl.style.zIndex = 2147483000; document.body.appendChild(banEl);
   const sb = banEl.querySelector('#bansend'), sm = banEl.querySelector('#bansupmsg'), st = banEl.querySelector('#bansup');
   sb.onclick = () => {

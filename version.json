@@ -1,12 +1,9 @@
 {
-  "version": "1.07.00",
+  "version": "1.09.00",
   "notes": [
-    "New game: Tug of War (solo vs CPU, 2 players on one device, online 1v1)",
-    "Badminton online is now a real live 1v1 match (first to 7) instead of two separate CPU matches",
-    "Bigger coin rewards after every match (3x rate + flat win/loss bonus)",
-    "Level Devil expanded to 100 stages with 8 new designed worlds (levels 21-100); level counter and Next level now work up to 100",
-    "Banned account screen no longer offers Logout; only Send message to developer remains",
-    "In-app logout and guest switching/creation are blocked while the ban is active",
-    "Existing Firebase UID-based ban and unban controls remain in Developer Mode"
+    "Permanent Ban added: once the developer permanently bans a Player ID it cannot be unbanned from Developer Mode. It is lifted only when the ID is added to PERM_UNBAN_IDS in az.js in a later version",
+    "Temporary Ban keeps the normal Unban button; the banned list now shows PERMANENT / temporary for each ID",
+    "Level Devil: levels 23, 26 and 29 fixed (the ceiling trap fell onto the spike row and was almost impossible); all 100 levels re-checked with a bot",
+    "Firebase rules updated: a permanent ban cannot be downgraded to a temporary one. Publish database.rules.json again"
   ]
 }

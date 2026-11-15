@@ -167,7 +167,7 @@ body.ld-rot .rbtns .azbtn-i{width:44px;height:44px;font-size:18px}
 }
 @supports (height:100dvh){@media (orientation:portrait){body.ld-rot #ldmain,body.ld-rot .azmodal{left:100dvw;width:100dvh;height:100dvw}body.ld-rot .azbox{max-height:88dvw}}}
 </style>
-<script src="az.js?v=1.08.00"></script>
+<script src="az.js?v=1.09.00"></script>
 <script>
 (function(){
 'use strict';
@@ -217,7 +217,7 @@ const WORLDS=[
  ['Spike Field','Spikes everywhere! Watch your step 😈',(n,i)=>{
    const c=Math.min(5,3+(i>>1)),sp_=[];
    for(let k=0;k<c;k++)sp_.push(pop(210+k*100+((rn(n,k)*14)|0),28,28+(i>>2)*4,66+i*3));
-   if(i%3===2)sp_.push(drop(262,230,40,44,60));
+   if(i%3===2)sp_.push(drop(140,230,40,44,36));   // fair ceiling trap (v43): falls early, clear of the pop-spike row
    return{so:[g(0,800)],sp:sp_};}],
  ['Pit Hopper','Don\'t look down... 🕳️',(n,i)=>{
    const sx=118+i*2,w=76-i*2,so=[g(0,120)];

@@ -93,11 +93,12 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
 
     <div class="box">
       <h2>🚫 Ban / Unban a Player ID</h2>
-      <p class="sub">A banned account sees a ban screen and its cloud saves are blocked by Firebase. The player must have logged in with Google at least once (guests cannot be banned). The owner ID cannot be banned.</p>
+      <p class="sub">A banned account sees a ban screen and its cloud saves are blocked by Firebase. The player must have logged in with Google at least once (guests cannot be banned). The owner ID cannot be banned.<br><b>🚫 Temporary ban</b> can be removed any time with Unban.<br><b>⛔ Permanent ban</b> can NOT be unbanned here. It is lifted only when you add that Player ID to <code>PERM_UNBAN_IDS</code> in az.js in the next version.</p>
       <div class="azrow c"><input class="azinput" id="bid" inputmode="numeric" maxlength="8" placeholder="Player ID (8 digit)"></div>
       <div class="azrow c"><input class="azinput" id="bReason" maxlength="140" placeholder="Reason (optional, player will see it)" style="width:100%;max-width:320px;letter-spacing:0;text-transform:none"></div>
       <div class="azrow c">
-        <button class="azbtn sm" id="banBtn">🚫 Ban</button>
+        <button class="azbtn sm" id="banBtn">🚫 Temp Ban</button>
+        <button class="azbtn sm" id="permBanBtn" style="background:#b3122b">⛔ Permanent Ban</button>
         <button class="azbtn sm ghost" id="unbanBtn">✅ Unban</button>
         <button class="azbtn sm ghost" id="banRefresh">🔄 Banned list</button>
       </div>
@@ -112,7 +113,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     <div id="log"></div>
   </div>
 </main>
-<script src="az.js?v=1.08.00"></script>
+<script src="az.js?v=1.09.00"></script>
 <script>
 (function(){
   const $=id=>document.getElementById(id);
@@ -179,11 +180,16 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
   function drawBans(){
     $('banList').innerHTML='<p class="sub" style="text-align:center">Loading…</p>';
     Az.devListBans().then(list=>{
-      $('banList').innerHTML=list.length?list.map(b=>'<div class="azitem" style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap"><div><b>🆔 '+esc(b.id)+'</b><br><small style="color:var(--muted)">'+esc(b.reason||'No reason')+(b.ts?' · '+esc(when(b.ts)):'')+'</small></div><button class="azbtn sm ghost" data-unban="'+esc(b.id)+'">✅ Unban</button></div>').join(''):'<p class="sub" style="text-align:center">No banned players.</p>';
+      $('banList').innerHTML=list.length?list.map(b=>'<div class="azitem" style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap"><div><b>🆔 '+esc(b.id)+'</b> '+(b.perm?'<span style="color:#ff6b81;font-weight:700">⛔ PERMANENT</span>':'<span style="color:var(--muted)">temporary</span>')+'<br><small style="color:var(--muted)">'+esc(b.reason||'No reason')+(b.ts?' · '+esc(when(b.ts)):'')+'</small></div>'+((b.perm&&!b.unlockable)?'<small style="color:var(--muted)">🔒 Locked until next version</small>':'<button class="azbtn sm ghost" data-unban="'+esc(b.id)+'">✅ Unban</button>')+'</div>').join(''):'<p class="sub" style="text-align:center">No banned players.</p>';
     }).catch(e=>{$('banList').innerHTML='';log('❌ '+(e&&e.message||'Could not load the list'),1);});
   }
   $('banRefresh').onclick=drawBans;
-  $('banBtn').onclick=()=>{const gid=$('bid').value.replace(/\D/g,'');if(gid.length!==8)return log('Enter the 8-digit Player ID.',1);if(!confirm('Ban player '+gid+'?'))return;log('Banning…');Az.devBan(gid,$('bReason').value.trim()).then(g=>{log('🚫 Player '+g+' is banned.');drawBans();}).catch(e=>log('❌ '+(e&&e.message||'Could not ban'),1));};
+  function doBan(perm){const gid=$('bid').value.replace(/\D/g,'');if(gid.length!==8)return log('Enter the 8-digit Player ID.',1);
+    if(perm){if(!confirm('⛔ PERMANENT ban for player '+gid+'?\n\nThis can NOT be undone from Developer Mode. It is lifted only when you add this ID to PERM_UNBAN_IDS in az.js in the next version.'))return;}
+    else if(!confirm('Temporarily ban player '+gid+'? (you can unban any time)'))return;
+    log('Banning…');Az.devBan(gid,$('bReason').value.trim(),perm).then(g=>{log((perm?'⛔ Player '+g+' is PERMANENTLY banned.':'🚫 Player '+g+' is banned (temporary).'));drawBans();}).catch(e=>log('❌ '+(e&&e.message||'Could not ban'),1));}
+  $('banBtn').onclick=()=>doBan(false);
+  $('permBanBtn').onclick=()=>doBan(true);
   $('unbanBtn').onclick=()=>{const gid=$('bid').value.replace(/\D/g,'');if(gid.length!==8)return log('Enter the 8-digit Player ID.',1);log('Unbanning…');Az.devUnban(gid).then(g=>{log('✅ Player '+g+' is unbanned.');drawBans();}).catch(e=>log('❌ '+(e&&e.message||'Could not unban'),1));};
   $('banList').onclick=e=>{const b=e.target.closest('[data-unban]');if(!b)return;$('bid').value=b.dataset.unban;$('unbanBtn').click();};
   /* ---- support messages from banned players ---- */
@@ -201,7 +207,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     else if(d){const p=d.dataset.sdel.split('|');Az.devDeleteSupport(p[0],p[1]).then(drawSupport).catch(x=>log('❌ '+(x&&x.message||'Error'),1));}
   };
   document.addEventListener('az-ready',()=>{paint();Az.whenAuth().then(paint);});
-  document.addEventListener('az-owner',()=>{if(Az.ownerOK&&!window.__bansLoaded){window.__bansLoaded=1;drawBans();drawSupport();}});
+  document.addEventListener('az-owner',()=>{if(Az.ownerOK&&!window.__bansLoaded){window.__bansLoaded=1;Az.devApplyPermUnban().then(ids=>{if(ids&&ids.length)log('✅ Permanent ban lifted by this version for: '+ids.join(', '));}).catch(()=>{}).then(()=>{drawBans();drawSupport();});}});
   document.addEventListener('az-account',paint);document.addEventListener('az-owner',paint);
   setInterval(()=>{if(Az.isOwner()){$('mycoins').textContent=Az.coins();
     $('selfLevel').textContent=Az.plvl(); $('selfXp').textContent=Az.xp();}},1500);

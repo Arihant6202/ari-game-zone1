@@ -140,3 +140,9 @@ TESTED: headless Chromium - every page loads with zero JS errors; every game sta
 - GLOBAL PROGRESS RESET: every account (guest and Google) is reset to 0 the next time it opens the site: coins 150, XP 0, all levels back to 1, items/characters/mail cleared. Player ID, name, theme/sound and one-time gift flags are kept (so gifts do not re-apply). Controlled by RESET_EPOCH in az.js; change the string to reset everyone again. Cloud copies are reset when the player next logs in (Firebase data of players who never return stays old until they open the site).
 - ARENA STRIKE SOLO: 3 hearts (HUD "Lives"). Each death costs a heart and respawns after 3s; losing the 3rd heart = Team Defeated screen (Retry / Home). Online duel/co-op are unchanged (respawn + kill target).
 - DIFFICULTY: enemy count grows from 3 (Lv1) to 13 (Lv100) while allies grow only 2 to 6; bot HP, damage, speed, reaction time and accuracy scale harder with level; kill target and match time grow too.
+
+
+v43 (1.09.00)
+- PERMANENT BAN: Developer Mode > Ban / Unban now has 'Temp Ban' and 'Permanent Ban'. A permanent ban cannot be removed from Developer Mode. To lift it, put the 8-digit Player ID in PERM_UNBAN_IDS (top of the owner section in az.js) in the next version and deploy it; when the owner opens Developer Mode on that version, the ban is lifted.
+- Level Devil levels 23, 26, 29 fixed (ceiling trap moved to x=140 so it no longer lands on the pop-spike row).
+- IMPORTANT: publish the new database.rules.json in Firebase Console (it adds the 'perm' flag rule).
