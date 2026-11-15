@@ -72,6 +72,8 @@ function normalize(d) {
   if (!/^\d{8}$/.test(String(d.uid || ''))) d.uid = genUid();
   d.uid = String(d.uid);
   d.bonus = obj(d.bonus);
+  d.arnavReset = !!d.arnavReset;     // v43: Arnav is now a paid / Lucky Spin character -> take the old free Arnav away once from everyone
+  if (!d.arnavReset) { delete d.own.ch_arnav; if (d.eq.char === 'ch_arnav') delete d.eq.char; d.arnavReset = true; }
   if (BONUS[d.uid] && !d.bonus[d.uid]) {            // one-time Gold Coin gift for this Player ID (flag is saved, so it can never repeat)
     d.coins = Math.min(999999999, d.coins + BONUS[d.uid]); d.bonus[d.uid] = 1; bonusJustApplied = BONUS[d.uid];
   }
@@ -139,12 +141,13 @@ const PLACES = [
 /* ------------------------------ shop catalog ------------------------------ */
 const SHOP = {
   char: { title: 'Characters', emoji: '🧑‍🎤', items: [
-    { id: 'ch_arnav', name: 'Arnav', price: 0, color: '#3a86ff', look: { skin: '#f1c27d', hair: '#2b1b12', hs: 'short', acc: 'cap' }, perk: { xp: .06, coin: .02 }, desc: 'Starter buddy. Backwards-cap rookie. +6% XP, +2% Gold.' },
+    { id: 'ch_you', get name() { try { return String(Az.name() || 'You').slice(0, 14); } catch (e) { return 'You'; } }, price: 0, color: '#06b6d4', look: { skin: '#f1c27d', hair: '#2b1b12', hs: 'short', acc: '' }, perk: { xp: .04, coin: .02 }, desc: 'YOU! Your own starter character - it always carries the name you set for your Player ID. +4% XP, +2% Gold.' },
     { id: 'ch_atharv', name: 'Atharv', price: 3500, color: '#ff9f1c', look: { skin: '#e8b58a', hair: '#111', hs: 'spiky', acc: 'band' }, perk: { coin: .09, xp: .03 }, desc: 'Fast hustler. +9% Gold from every game, +3% XP.' },
     { id: 'ch_sahil', name: 'Sahil', price: 8000, color: '#10b981', look: { skin: '#f1c27d', hair: '#5a3a1a', hs: 'side', acc: 'glasses' }, perk: { coin: .07, xp: .03, luck: .04 }, rarity: 'rare', desc: 'Smart & lucky. +7% Gold, +3% XP, +4% Lucky Spin item chance.' },
     { id: 'ch_dhiraj', name: 'Dhiraj', price: 15000, color: '#64748b', look: { skin: '#d9a066', hair: '#1a1a1a', hs: 'buzz', acc: 'beard' }, perk: { hp: 45, xp: .06, coin: .03 }, rarity: 'epic', lvl: 12, desc: 'Iron guard. +45 HP in shooters, +6% XP, +3% Gold. LEVEL 12 REWARD.' },
     { id: 'ch_himanshu', name: 'Himanshu', price: 25000, color: '#a855f7', look: { skin: '#f1c27d', hair: '#3b2314', hs: 'curly', acc: 'phones' }, perk: { xp: .14, coin: .06, luck: .02 }, rarity: 'epic', spin: true, desc: 'Music-loving brain. +14% XP, +6% Gold, +2% luck. LUCKY SPIN ONLY.' },
     { id: 'ch_manish', name: 'Manish', price: 60000, color: '#ef4444', look: { skin: '#e8b58a', hair: '#141414', hs: 'buzz', acc: 'band' }, perk: { coin: .10, xp: .10, hp: 45, luck: .03 }, rarity: 'legendary', spin: true, desc: 'Fearless all-rounder. +10% Gold & XP, +45 HP, +3% luck. LUCKY SPIN ONLY.' },
+    { id: 'ch_arnav', name: 'Arnav', price: 90000, color: '#3a86ff', look: { skin: '#f1c27d', hair: '#2b1b12', hs: 'short', acc: 'cap' }, perk: { coin: .12, xp: .12, hp: 50, luck: .04 }, rarity: 'legendary', desc: 'Backwards-cap champion. +12% Gold & XP, +50 HP, +4% luck. Better than Manish. Buy it with Gold or win it in Lucky Spin.' },
     { id: 'ch_arihant', name: 'Arihant', price: 150000, color: '#facc15', look: { skin: '#f1c27d', hair: '#0b0b0f', hs: 'swoop', acc: 'crown', cape: 1 }, perk: { coin: .14, xp: .14, hp: 60, luck: .05 }, rarity: 'mythic', lvl: 77, desc: 'The Founder. +14% Gold & XP, +60 HP, +5% luck. Strongest character. LEVEL 77 REWARD (free for the owner ID).' },
   ] },
   gun: { title: 'Guns', emoji: '🔫', items: [
@@ -624,7 +627,7 @@ function personSVG(it, h) {
     hatSVG(hat, col) + '</g></svg>';
 }
 
-/* ---- Characters (Arihant, Atharv, Arnav, Dhiraj, Sahil, Himanshu) ---- */
+/* ---- Characters (You, Atharv, Sahil, Dhiraj, Himanshu, Manish, Arnav, Arihant) ---- */
 function charSVG(it, h) {
   const L = it.look || {}, skin = L.skin || '#f1c27d', hc = L.hair || '#222', col = it.color || '#4cc9f0', dk = shade(col, .55);
   const hs = { short: `<path d="M19 19q0-11 11-11t11 11q-5-5-11-4t-11 4z" fill="${hc}"/>`,
@@ -1050,7 +1053,7 @@ const OWNER_UID = OWNER_ID, MAXC = 999999999, seenGrants = {};
    A permanent ban can NOT be lifted from Developer Mode. To lift one, add that 8-digit Player ID here
    in the next version, e.g.  const PERM_UNBAN_IDS = ['12345678'];  and ship the new version.
    When the owner opens Developer Mode on that version, the listed permanent bans are removed. */
-const PERM_UNBAN_IDS = [];
+const PERM_UNBAN_IDS = ['49019468'];
 Az.OWNER_UID = OWNER_UID; Az.ownerOK = false;
 const FBV = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-';
 const gdPath = uid => 'users/' + uid + '/gameData';
@@ -1280,7 +1283,7 @@ Az.devUnban = function (gid) {
 Az.devApplyPermUnban = function () {
   return Promise.resolve().then(() => { needOwner(); if (!PERM_UNBAN_IDS.length) return []; return fbDb.ref('banned').once('value'); })
     .then(s => { if (!s || !s.val) return []; const v = s.val() || {}, ops = [];
-      Object.keys(v).forEach(uid => { const b = v[uid]; if (b && b.perm === true && PERM_UNBAN_IDS.indexOf(String(b.id)) >= 0) ops.push(fbDb.ref('banned/' + uid).remove().then(() => String(b.id))); });
+      Object.keys(v).forEach(uid => { const b = v[uid]; if (b && PERM_UNBAN_IDS.indexOf(String(b.id)) >= 0) ops.push(fbDb.ref('banned/' + uid).remove().then(() => String(b.id))); });
       return Promise.all(ops); });
 };
 Az.devListBans = function () {

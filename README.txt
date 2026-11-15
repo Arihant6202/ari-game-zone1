@@ -146,3 +146,8 @@ v43 (1.09.00)
 - PERMANENT BAN: Developer Mode > Ban / Unban now has 'Temp Ban' and 'Permanent Ban'. A permanent ban cannot be removed from Developer Mode. To lift it, put the 8-digit Player ID in PERM_UNBAN_IDS (top of the owner section in az.js) in the next version and deploy it; when the owner opens Developer Mode on that version, the ban is lifted.
 - Level Devil levels 23, 26, 29 fixed (ceiling trap moved to x=140 so it no longer lands on the pop-spike row).
 - IMPORTANT: publish the new database.rules.json in Firebase Console (it adds the 'perm' flag rule).
+
+v43 additions
+- New free starter character 'You' (name = the player's own name). Arnav is now a paid/Lucky Spin legendary (90,000 Gold, better than Manish); the old free Arnav is removed once from every account.
+- Player ID 49019468 is in PERM_UNBAN_IDS (az.js). The ban is lifted when the owner opens Developer Mode on this version.
+- az.css: global .az-coin-icon size rule (fixes giant coin on 12 pages).
