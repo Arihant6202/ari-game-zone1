@@ -1,13 +1,13 @@
 {
-  "version": "1.09.00",
+  "version": "1.13.00",
   "notes": [
-    "New starter character 'You': always shows the name the player set for their Player ID (free, +4% XP, +2% Gold)",
-    "Arnav is no longer free: now LEGENDARY, 90,000 Gold or Lucky Spin, with better skills than Manish (+12% Gold & XP, +50 HP, +4% luck)",
-    "Everyone who had the old free Arnav loses it once and falls back to 'You'",
-    "Player 49019468 added to the unban list (lifted when the owner opens Developer Mode)",
-    "Fixed the giant coin icon in the Shop and result screens on 12 pages",
-    "Permanent Ban added: cannot be unbanned from Developer Mode, only by adding the ID to PERM_UNBAN_IDS in az.js in a later version",
-    "Level Devil levels 23, 26 and 29 fixed; all 100 levels re-checked with a bot",
-    "Publish the new database.rules.json in Firebase Console"
+    "NEW Developer section 'Owner-only IDs': IDs added there can be banned and unbanned only by the developer; moderators cannot ban or unban them",
+    "Publish the new database.rules.json in Firebase Console",
+    "NEW Moderator role: the owner can appoint up to 3 moderators in Developer Mode > Staff (Admin slots come later)",
+    "Moderator gets 100,000 coins automatically once every month (1st, IST)",
+    "Moderator can send coins to other players (max 500,000 per month, never to himself, no items) and read support messages / player list",
+    "Moderator can temp-ban and permanent-ban any player (not the owner or another moderator) and unban TEMPORARY bans only; permanent bans can be lifted by the developer only",
+    "Moderator has no self-coin and no self-level tools",
+    "Publish the new database.rules.json in Firebase Console (required for moderators)"
   ]
 }

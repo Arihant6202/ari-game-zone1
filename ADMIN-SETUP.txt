@@ -27,3 +27,17 @@ ARI GAME ZONE — FIREBASE / DEVELOPER SETUP
 5) Deploy
 - Upload the complete ZIP contents to the same GitHub Pages repository root.
 - If Firebase rules are changed, publish them in Firebase Console as well; uploading the JSON file to GitHub alone does not publish database rules.
+
+6) Moderators (version 1.12)
+- Developer Mode > Staff: enter a Player ID (the player must have logged in with Google once) and press "Make Moderator". Maximum 3 moderators. Remove them with the Remove button.
+- Moderator powers (enforced by database.rules.json, so publish it in Firebase Console):
+  * +100,000 coins automatically once per calendar month (1st, India time), added when the moderator opens the game.
+  * Can send coins / messages to any other player, at most 500,000 coins per calendar month in total. Never to himself, never items, no "send to all".
+  * Can temporary-ban and permanent-ban players (not the owner, not other moderators, not himself).
+  * Can unban TEMPORARY bans only. Only the developer can unban a permanent ban.
+  * Can read the player list and ban support messages.
+  * Has no self-coin tool and no self-level tool.
+- Admin slots (10) are planned for a later version.
+
+7) Owner-only IDs (version 1.13)
+- Developer Mode > Owner-only IDs: add a Player ID there and only the owner can ban or unban it. Moderators cannot ban or unban those IDs (enforced by database.rules.json, publish it in Firebase Console).

@@ -2,7 +2,7 @@
   "name": "Ari Game Zone",
   "id": "./index.html",
   "short_name": "Ari Games",
-  "description": "Ari Game Zone - play 20 mini-games, earn Gold and unlock skins.",
+  "description": "Ari Game Zone - play 22 mini-games, earn Gold and unlock skins.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

@@ -4,7 +4,7 @@
 <script src="firebase-config.js"></script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0a0614">
-<title>Ari Game Zone — Developer Mode</title>
+<title>Ari Game Zone — Developer / Moderator Panel</title>
 <style>
 main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-index:1}
 .box{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin:14px 0}
@@ -15,16 +15,17 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
 .ok{color:var(--a3)}.no{color:var(--bad)}
 #log{font-size:13px;color:var(--muted);min-height:20px;text-align:center;white-space:pre-line}
 .azinput{width:100%;max-width:260px}
+[hidden]{display:none!important}
 .coinbig,.azpill.coin,#azcoins,#hC,#hCoin,#mycoins{color:#ffbf24!important}.az-coin-icon{width:1.22em;height:1.22em;object-fit:contain;vertical-align:-.22em;display:inline-block;filter:drop-shadow(0 1px 2px rgba(255,190,30,.35))}</style>
 </head>
 <body>
 <main>
   <p><a class="azbtn ghost sm" href="index.html">← Back to Game Zone</a></p>
-  <h1 style="text-align:center">👑 Developer Mode</h1>
+  <h1 style="text-align:center" id="ttl">👑 Developer Mode</h1>
   <p style="text-align:center"><a class="azbtn sm" href="players.html">📋 All Player IDs list</a></p>
   <div id="deny" class="box" hidden>
     <h2>🔒 Access denied</h2>
-    <p class="sub">This page is only for owner Player ID <b>97835276</b>. This account's ID: <b id="myid">—</b></p>
+    <p class="sub">This page is only for the owner (Player ID <b>97835276</b>) and moderators appointed by the owner. This account's ID: <b id="myid">—</b></p>
     <p class="sub">If you are the owner: log in with Google and publish <b>database.rules.json</b> in Firebase (steps are in ADMIN-SETUP.txt). After that this account becomes ID 97835276 automatically.</p>
     <div class="azrow c"><button class="azbtn" id="dologin">👤 Login</button></div>
   </div>
@@ -39,7 +40,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
       <p class="sub" id="stHelp" style="text-align:center"></p>
     </div>
 
-    <div class="box">
+    <div class="box ownerOnly">
       <h2><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="A gold coin"> Your coins</h2>
       <div class="big"><img class="az-coin-icon" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="A gold coin"> <span id="mycoins">0</span></div>
       <p class="sub" style="text-align:center">Only your own account's coins (0 to 999,999,999).</p>
@@ -60,7 +61,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
 
     
 
-    <div class="box">
+    <div class="box ownerOnly">
       <h2>⭐ Developer Player Level</h2>
       <p class="sub">Set your own account's overall player level. Level rewards are applied when the level is increased.</p>
       <div class="stat"><span class="azpill">Current level: <b id="selfLevel">1</b></span><span class="azpill">XP: <b id="selfXp">0</b></span></div>
@@ -68,10 +69,34 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
       <div class="azrow c"><button class="azbtn sm" id="selfLevelSet">⭐ Set Player Level</button></div>
     </div>
 
+    <div class="box ownerOnly" id="protBox">
+      <h2>🔐 Owner-only IDs</h2>
+      <p class="sub">Player IDs added here can be banned and unbanned <b>only by you</b>. Moderators cannot ban or unban them (even a temporary ban). The player must have logged in with Google once.</p>
+      <div class="azrow c"><input class="azinput" id="protId" inputmode="numeric" maxlength="8" placeholder="Player ID (8 digit)"></div>
+      <div class="azrow c"><button class="azbtn sm" id="protAdd">🔐 Add owner-only ID</button><button class="azbtn sm ghost" id="protRefresh">🔄 Refresh</button></div>
+      <div id="protList"></div>
+    </div>
+
+    <div class="box ownerOnly" id="staffBox">
+      <h2>🛡️ Staff: Moderators &amp; Admins</h2>
+      <p class="sub"><b>Moderator</b> (max <b>3</b>): gets 100,000 coins on the 1st of every month, can send coins to any player (max 500,000 per month in total, never to himself, no items), can ban (temporary / permanent) and unban only temporary bans. No self-coin and no self-level tools. Permanent bans can be lifted by the developer only.</p>
+      <div class="stat"><span class="azpill">🛡️ Moderators: <b id="modCnt">0</b>/3</span><span class="azpill" style="opacity:.6">⭐ Admins: 0/10 · coming soon</span></div>
+      <div class="azrow c"><input class="azinput" id="modId" inputmode="numeric" maxlength="8" placeholder="Player ID (8 digit)"></div>
+      <div class="azrow c"><button class="azbtn sm" id="modAdd">🛡️ Make Moderator</button><button class="azbtn sm ghost" id="modRefresh">🔄 Refresh</button></div>
+      <div id="modList"></div>
+    </div>
+
+    <div class="box modOnly" id="quotaBox" hidden>
+      <h2>🛡️ Moderator limits</h2>
+      <p class="sub">Monthly reward: <b>100,000</b> coins are added automatically once every month (1st, IST) when you open the game. You can send coins to other players only; you cannot give yourself coins or levels.</p>
+      <div class="stat"><span class="azpill">📤 Sent this month: <b id="qUsed">…</b></span><span class="azpill">✅ Left: <b id="qLeft">…</b> / 500,000</span></div>
+      <p class="sub" id="qReset" style="text-align:center"></p>
+    </div>
+
     <div class="box">
-      <h2>✉️ Send Mail (message + coins + items)</h2>
+      <h2 id="mailH">✉️ Send Mail (message + coins + items)</h2>
       <p class="sub">Write a mail and send it to <b>one player</b> (by Player ID) or to <b>every existing player</b> at once. Coins and items are claimed by the player from their Mail inbox. If a player deletes the mail, the reward is claimed automatically.</p>
-      <div class="azrow c">
+      <div class="azrow c ownerOnly">
         <button class="azchip on" id="toOne">👤 One player (ID)</button>
         <button class="azchip" id="toAll">👥 All existing players</button>
       </div>
@@ -79,13 +104,13 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
       <div class="azrow c"><input class="azinput" id="gTitle" maxlength="60" placeholder="Mail title" style="width:100%;max-width:320px;letter-spacing:0;text-transform:none"></div>
       <div class="azrow c"><textarea class="azinput" id="gMessage" maxlength="240" rows="3" placeholder="Write your message here (max 240 characters)" style="width:100%;max-width:320px;letter-spacing:0;text-transform:none;resize:vertical"></textarea></div>
       <div class="azrow c"><input class="azinput" id="gAmt" type="number" inputmode="numeric" min="0" placeholder="Gold Coins (0 = none)"></div>
-      <div class="azlbl" style="text-align:center">🎁 Items to gift (optional)</div>
-      <div class="azrow c">
+      <div class="azlbl ownerOnly" style="text-align:center">🎁 Items to gift (optional)</div>
+      <div class="azrow c ownerOnly">
         <select class="azinput" id="itSlot" style="max-width:150px;letter-spacing:0;text-transform:none"></select>
         <select class="azinput" id="itItem" style="max-width:190px;letter-spacing:0;text-transform:none"></select>
         <button class="azbtn sm ghost" id="itAdd">➕ Add item</button>
       </div>
-      <div class="stat" id="itChips"></div>
+      <div class="stat ownerOnly" id="itChips"></div>
       <div class="azrow c">
         <button class="azbtn" id="gSend">✉️ Send Mail</button>
       </div>
@@ -93,7 +118,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
 
     <div class="box">
       <h2>🚫 Ban / Unban a Player ID</h2>
-      <p class="sub">A banned account sees a ban screen and its cloud saves are blocked by Firebase. The player must have logged in with Google at least once (guests cannot be banned). The owner ID cannot be banned.<br><b>🚫 Temporary ban</b> can be removed any time with Unban.<br><b>⛔ Permanent ban</b> can NOT be unbanned here. It is lifted only when you add that Player ID to <code>PERM_UNBAN_IDS</code> in az.js in the next version.</p>
+      <p class="sub">A banned account sees a ban screen and its cloud saves are blocked by Firebase. The player must have logged in with Google at least once (guests cannot be banned). The owner ID cannot be banned.<br><b>🚫 Temporary ban</b> can be removed any time with Unban.<br><b>⛔ Permanent ban</b> can also be removed any time by the developer with Unban. <span class="modOnly" hidden>As a moderator you can create both kinds of ban, but you can unban only temporary bans.</span></p>
       <div class="azrow c"><input class="azinput" id="bid" inputmode="numeric" maxlength="8" placeholder="Player ID (8 digit)"></div>
       <div class="azrow c"><input class="azinput" id="bReason" maxlength="140" placeholder="Reason (optional, player will see it)" style="width:100%;max-width:320px;letter-spacing:0;text-transform:none"></div>
       <div class="azrow c">
@@ -113,16 +138,20 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     <div id="log"></div>
   </div>
 </main>
-<script src="az.js?v=1.09.00"></script>
+<script src="az.js?v=1.13.00"></script>
 <script>
 (function(){
   const $=id=>document.getElementById(id);
   const log=(t,bad)=>{const l=$('log');l.textContent=t;l.style.color=bad?'var(--bad)':'var(--a3)';};
   function paint(){
-    const owner=Az.isOwner();
-    $('deny').hidden=owner;$('panel').hidden=!owner;
+    const owner=Az.isOwner(), staff=Az.isStaff(), mod=staff&&!owner;
+    $('deny').hidden=staff;$('panel').hidden=!staff;
     $('myid').textContent=Az.uid();
-    if(!owner)return;
+    if(!staff)return;
+    document.querySelectorAll('.ownerOnly').forEach(e=>e.hidden=!owner);
+    document.querySelectorAll('.modOnly').forEach(e=>e.hidden=!mod);
+    $('ttl').textContent=owner?'👑 Developer Mode':'🛡️ Moderator Panel';
+    $('mailH').textContent=owner?'✉️ Send Mail (message + coins + items)':'✉️ Send coins / message to a player';
     $('pid').textContent=Az.uid();
     $('mycoins').textContent=Az.coins();
     $('selfLevel').textContent=Az.plvl(); $('selfXp').textContent=Az.xp();
@@ -130,8 +159,10 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     const acc=Az.account();
     $('stLogin').textContent=acc?'☁️ Logged in':'☁️ Not logged in';
     $('stLogin').className='azpill '+(acc?'ok':'no');
-    $('stOwner').textContent=Az.ownerOK?'🔑 Owner verified':'🔑 Not verified';
-    $('stOwner').className='azpill '+(Az.ownerOK?'ok':'no');
+    const verified=owner?Az.ownerOK:Az.modOK;
+    $('stOwner').textContent=owner?(Az.ownerOK?'🔑 Owner verified':'🔑 Not verified'):'🛡️ Moderator verified';
+    $('stOwner').className='azpill '+(verified?'ok':'no');
+    if(mod){$('stHelp').textContent='Moderator tools: send coins (monthly limit), ban players, unban temporary bans, read support messages.';return;}
     $('stHelp').textContent=Az.ownerOK?'All ready: you can send mail, coins and items, and ban / unban players.':(acc?'To send coins to other players, publish the new database.rules.json in Firebase Rules and log in with kumararihant625@gmail.com.':'To send coins to other players, log in with Google first. You can still change your own coins.');
   }
   const num=id=>{const v=Math.round(+$(id).value);return isFinite(v)&&$(id).value!==''?v:null;};
@@ -172,7 +203,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
       const gid=$('gid').value.replace(/\D/g,'');
       if(gid.length!==8)return log('Enter the 8-digit Player ID.',1);
       btn.disabled=true;log('Sending mail…');
-      Az.devGiveMail(gid,n,title,msg,picked.slice()).then(g=>log('✅ Mail sent to player '+g+' ('+what+').')).catch(e=>log('❌ '+(e&&e.message||'Error: check database rules'),1)).then(()=>btn.disabled=false);
+      Az.devGiveMail(gid,n,title,msg,picked.slice()).then(g=>{log('✅ Mail sent to player '+g+' ('+what+').');drawQuota();}).catch(e=>log('❌ '+(e&&e.message||'Error: check database rules'),1)).then(()=>btn.disabled=false);
     }
   };
   /* ---- ban / unban ---- */
@@ -180,18 +211,47 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
   function drawBans(){
     $('banList').innerHTML='<p class="sub" style="text-align:center">Loading…</p>';
     Az.devListBans().then(list=>{
-      $('banList').innerHTML=list.length?list.map(b=>'<div class="azitem" style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap"><div><b>🆔 '+esc(b.id)+'</b> '+(b.perm?'<span style="color:#ff6b81;font-weight:700">⛔ PERMANENT</span>':'<span style="color:var(--muted)">temporary</span>')+'<br><small style="color:var(--muted)">'+esc(b.reason||'No reason')+(b.ts?' · '+esc(when(b.ts)):'')+'</small></div>'+((b.perm&&!b.unlockable)?'<small style="color:var(--muted)">🔒 Locked until next version</small>':'<button class="azbtn sm ghost" data-unban="'+esc(b.id)+'">✅ Unban</button>')+'</div>').join(''):'<p class="sub" style="text-align:center">No banned players.</p>';
+      $('banList').innerHTML=list.length?list.map(b=>'<div class="azitem" style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap"><div><b>🆔 '+esc(b.id)+'</b> '+(b.perm?'<span style="color:#ff6b81;font-weight:700">⛔ PERMANENT</span>':'<span style="color:var(--muted)">temporary</span>')+'<br><small style="color:var(--muted)">'+esc(b.reason||'No reason')+(b.ts?' · '+esc(when(b.ts)):'')+'</small></div>'+(!b.unlockable?'<small style="color:var(--muted)">🔒 Only the developer can unban'+(b.locked?' (owner-only ID)':'')+'</small>':'<button class="azbtn sm ghost" data-unban="'+esc(b.id)+'">✅ Unban</button>')+'</div>').join(''):'<p class="sub" style="text-align:center">No banned players.</p>';
     }).catch(e=>{$('banList').innerHTML='';log('❌ '+(e&&e.message||'Could not load the list'),1);});
   }
   $('banRefresh').onclick=drawBans;
   function doBan(perm){const gid=$('bid').value.replace(/\D/g,'');if(gid.length!==8)return log('Enter the 8-digit Player ID.',1);
-    if(perm){if(!confirm('⛔ PERMANENT ban for player '+gid+'?\n\nThis can NOT be undone from Developer Mode. It is lifted only when you add this ID to PERM_UNBAN_IDS in az.js in the next version.'))return;}
+    if(perm){if(!confirm('⛔ PERMANENT ban for player '+gid+'?\n\n'+(Az.isOwner()?'The developer can still unban this player later from Developer Mode.':'Only the developer can unban a permanent ban. You cannot undo it.')))return;}
     else if(!confirm('Temporarily ban player '+gid+'? (you can unban any time)'))return;
     log('Banning…');Az.devBan(gid,$('bReason').value.trim(),perm).then(g=>{log((perm?'⛔ Player '+g+' is PERMANENTLY banned.':'🚫 Player '+g+' is banned (temporary).'));drawBans();}).catch(e=>log('❌ '+(e&&e.message||'Could not ban'),1));}
   $('banBtn').onclick=()=>doBan(false);
   $('permBanBtn').onclick=()=>doBan(true);
   $('unbanBtn').onclick=()=>{const gid=$('bid').value.replace(/\D/g,'');if(gid.length!==8)return log('Enter the 8-digit Player ID.',1);log('Unbanning…');Az.devUnban(gid).then(g=>{log('✅ Player '+g+' is unbanned.');drawBans();}).catch(e=>log('❌ '+(e&&e.message||'Could not unban'),1));};
   $('banList').onclick=e=>{const b=e.target.closest('[data-unban]');if(!b)return;$('bid').value=b.dataset.unban;$('unbanBtn').click();};
+  /* ---- moderator quota ---- */
+  const fmt=n=>Number(n).toLocaleString();
+  function drawQuota(){
+    if(!Az.isMod())return;
+    Az.modQuota().then(q=>{$('qUsed').textContent=fmt(q.used);$('qLeft').textContent=fmt(q.left);$('qReset').textContent='Limit resets on '+new Date(q.resets).toLocaleDateString()+' (1st of the month).';}).catch(e=>{$('qUsed').textContent='—';$('qLeft').textContent='—';});
+  }
+  /* ---- owner-only IDs (owner) ---- */
+  function drawProt(){
+    if(!Az.isOwner())return;
+    $('protList').innerHTML='<p class="sub" style="text-align:center">Loading…</p>';
+    Az.devListProtected().then(l=>{
+      $('protList').innerHTML=l.length?l.map(m=>'<div class="azitem" style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;text-align:left"><div><b>🔐 🆔 '+esc(m.id)+'</b>'+(m.name?' · '+esc(m.name):'')+'<br><small style="color:var(--muted)">'+(m.ts?esc(when(m.ts)):'')+'</small></div><button class="azbtn sm ghost" data-rmprot="'+esc(m.id)+'">Remove</button></div>').join(''):'<p class="sub" style="text-align:center">No owner-only IDs.</p>';
+    }).catch(e=>{$('protList').innerHTML='';log('❌ '+(e&&e.message||'Could not load. Publish the new database.rules.json.'),1);});
+  }
+  $('protRefresh').onclick=drawProt;
+  $('protAdd').onclick=()=>{const gid=$('protId').value.replace(/\D/g,'');if(gid.length!==8)return log('Enter the 8-digit Player ID.',1);Az.devAddProtected(gid).then(g=>{log('🔐 Player '+g+' is now owner-only: only you can ban / unban it.');$('protId').value='';drawProt();}).catch(e=>log('❌ '+(e&&e.message||'Could not add'),1));};
+  $('protList').onclick=e=>{const b=e.target.closest('[data-rmprot]');if(!b)return;if(!confirm('Remove owner-only protection from '+b.dataset.rmprot+'?'))return;Az.devRemoveProtected(b.dataset.rmprot).then(g=>{log('Removed owner-only for '+g+'.');drawProt();}).catch(x=>log('❌ '+(x&&x.message||'Error'),1));};
+  /* ---- staff (owner) ---- */
+  function drawStaff(){
+    if(!Az.isOwner())return;
+    $('modList').innerHTML='<p class="sub" style="text-align:center">Loading…</p>';
+    Az.devListStaff().then(l=>{
+      $('modCnt').textContent=l.length;
+      $('modList').innerHTML=l.length?l.map(m=>'<div class="azitem" style="display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;text-align:left"><div><b>🛡️ 🆔 '+esc(m.id)+'</b>'+(m.name?' · '+esc(m.name):'')+'<br><small style="color:var(--muted)">Sent this month: '+fmt(m.used)+' / '+fmt(m.limit)+(m.ts?' · since '+esc(when(m.ts)):'')+'</small></div><button class="azbtn sm ghost" data-rmmod="'+esc(m.id)+'">Remove</button></div>').join(''):'<p class="sub" style="text-align:center">No moderators yet.</p>';
+    }).catch(e=>{$('modList').innerHTML='';log('❌ '+(e&&e.message||'Could not load staff. Publish the new database.rules.json.'),1);});
+  }
+  $('modRefresh').onclick=drawStaff;
+  $('modAdd').onclick=()=>{const gid=$('modId').value.replace(/\D/g,'');if(gid.length!==8)return log('Enter the 8-digit Player ID.',1);if(!confirm('Make player '+gid+' a MODERATOR?'))return;log('Adding…');Az.devAddMod(gid).then(g=>{log('🛡️ Player '+g+' is now a Moderator.');$('modId').value='';drawStaff();}).catch(e=>log('❌ '+(e&&e.message||'Could not add'),1));};
+  $('modList').onclick=e=>{const b=e.target.closest('[data-rmmod]');if(!b)return;if(!confirm('Remove moderator '+b.dataset.rmmod+'?'))return;Az.devRemoveMod(b.dataset.rmmod).then(g=>{log('Removed moderator '+g+'.');drawStaff();}).catch(x=>log('❌ '+(x&&x.message||'Error'),1));};
   /* ---- support messages from banned players ---- */
   function drawSupport(){
     $('supList').innerHTML='<p class="sub" style="text-align:center">Loading…</p>';
@@ -207,7 +267,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     else if(d){const p=d.dataset.sdel.split('|');Az.devDeleteSupport(p[0],p[1]).then(drawSupport).catch(x=>log('❌ '+(x&&x.message||'Error'),1));}
   };
   document.addEventListener('az-ready',()=>{paint();Az.whenAuth().then(paint);});
-  document.addEventListener('az-owner',()=>{if(Az.ownerOK&&!window.__bansLoaded){window.__bansLoaded=1;Az.devApplyPermUnban().then(ids=>{if(ids&&ids.length)log('✅ Permanent ban lifted by this version for: '+ids.join(', '));}).catch(()=>{}).then(()=>{drawBans();drawSupport();});}});
+  document.addEventListener('az-owner',()=>{if((Az.ownerOK||Az.modOK)&&!window.__bansLoaded){window.__bansLoaded=1;const go=()=>{drawBans();drawSupport();drawStaff();drawProt();drawQuota();};if(Az.isOwner())Az.devApplyPermUnban().then(ids=>{if(ids&&ids.length)log('✅ Permanent ban lifted by this version for: '+ids.join(', '));}).catch(()=>{}).then(go);else go();}});
   document.addEventListener('az-account',paint);document.addEventListener('az-owner',paint);
   setInterval(()=>{if(Az.isOwner()){$('mycoins').textContent=Az.coins();
     $('selfLevel').textContent=Az.plvl(); $('selfXp').textContent=Az.xp();}},1500);
