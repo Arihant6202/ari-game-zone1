@@ -31,7 +31,7 @@
       "$target": {
         ".read": "auth != null && (auth.uid === $target || (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true))",
         "$grantId": {
-          ".write": "auth != null && ((auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true) || (auth.uid === $target && !newData.exists()) || (root.child('moderators').child(auth.uid).exists() && $target !== auth.uid && newData.exists() && !data.exists() && newData.child('by').val() === auth.uid && !newData.child('items').exists() && !newData.child('mode').exists() && newData.child('coins').val() <= 500000 && (newData.child('coins').val() === 0 || ((root.child('modSent').child(auth.uid).exists() && root.child('modSent').child(auth.uid).child('end').val() > now && newData.parent().parent().parent().child('modSent').child(auth.uid).child('start').val() === root.child('modSent').child(auth.uid).child('start').val() && newData.parent().parent().parent().child('modSent').child(auth.uid).child('end').val() === root.child('modSent').child(auth.uid).child('end').val() && newData.parent().parent().parent().child('modSent').child(auth.uid).child('total').val() === root.child('modSent').child(auth.uid).child('total').val() + newData.child('coins').val()) || ((!root.child('modSent').child(auth.uid).exists() || root.child('modSent').child(auth.uid).child('end').val() <= now) && newData.parent().parent().parent().child('modSent').child(auth.uid).child('total').val() === newData.child('coins').val())))))",
+          ".write": "auth != null && ((auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true) || (auth.uid === $target && !newData.exists()) || (root.child('moderators').child(auth.uid).exists() && $target !== auth.uid && newData.exists() && !data.exists() && newData.child('by').val() === auth.uid && !newData.child('items').exists() && !newData.child('mode').exists() && newData.child('coins').val() <= 500000 && (newData.child('coins').val() === 0 || (newData.parent().parent().parent().child('modSent').child(auth.uid).child('start').val() === root.child('modSent').child(auth.uid).child('start').val() && newData.parent().parent().parent().child('modSent').child(auth.uid).child('total').val() === root.child('modSent').child(auth.uid).child('total').val() + newData.child('coins').val()) || (newData.parent().parent().parent().child('modSent').child(auth.uid).child('start').val() !== root.child('modSent').child(auth.uid).child('start').val() && newData.parent().parent().parent().child('modSent').child(auth.uid).child('total').val() === newData.child('coins').val()))))",
           ".validate": "!newData.exists() || (newData.hasChildren(['coins', 'ts']) && newData.child('coins').isNumber() && newData.child('coins').val() >= 0 && newData.child('coins').val() <= 1000000000 && (!newData.child('title').exists() || (newData.child('title').isString() && newData.child('title').val().length <= 60)) && (!newData.child('message').exists() || (newData.child('message').isString() && newData.child('message').val().length <= 240)) && (!newData.child('items').exists() || (newData.child('items').isString() && newData.child('items').val().length <= 300)))"
         }
       }
@@ -57,7 +57,6 @@
     },
     "moderators": {
       ".read": "auth != null && (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true)",
-      ".validate": "newData.numChildren() <= 3",
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null && (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true)",
@@ -71,16 +70,25 @@
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true))",
         ".write": "auth != null && ((auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true) || (auth.uid === $uid && root.child('moderators').child(auth.uid).exists() && newData.exists()))",
-        ".validate": "newData.isString() && newData.val().matches(/^20[0-9]{2}-[0-9]{2}$/) && (!data.exists() || newData.val() > data.val())"
+        ".validate": "newData.isString() && newData.val().matches(/^20[0-9]{2}-[0-9]{2}$/) && (!data.exists() || newData.val() !== data.val())"
       }
     },
     "modSent": {
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || (auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true))",
         ".write": "auth != null && ((auth.token.email === 'kumararihant625@gmail.com' && auth.token.email_verified === true) || (auth.uid === $uid && root.child('moderators').child(auth.uid).exists() && newData.exists()))",
-        ".validate": "newData.hasChildren(['start','end','total']) && newData.child('start').isNumber() && newData.child('end').isNumber() && newData.child('total').isNumber() && newData.child('total').val() >= 0 && newData.child('total').val() <= 500000 && newData.child('end').val() - newData.child('start').val() >= 2419200000 && newData.child('end').val() - newData.child('start').val() <= 2678400000 && newData.child('start').val() <= now && newData.child('end').val() > now && (!data.exists() || (data.child('end').val() > now ? (newData.child('start').val() === data.child('start').val() && newData.child('end').val() === data.child('end').val() && newData.child('total').val() >= data.child('total').val()) : newData.child('start').val() >= data.child('end').val()))",
-        "$k": {
-          ".validate": "$k === 'start' || $k === 'end' || $k === 'total'"
+        ".validate": "newData.hasChildren(['start','end','total']) && (!data.exists() || (data.child('end').val() > now && newData.child('start').val() === data.child('start').val() && newData.child('end').val() === data.child('end').val() && newData.child('total').val() >= data.child('total').val()) || (data.child('end').val() <= now && newData.child('start').val() >= data.child('end').val()))",
+        "start": {
+          ".validate": "newData.isNumber() && newData.val() <= now"
+        },
+        "end": {
+          ".validate": "newData.isNumber() && newData.val() > now && newData.val() - newData.parent().child('start').val() >= 2419200000 && newData.val() - newData.parent().child('start').val() <= 2678400000"
+        },
+        "total": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 500000"
+        },
+        "$other": {
+          ".validate": false
         }
       }
     },
