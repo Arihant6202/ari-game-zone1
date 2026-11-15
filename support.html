@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head><link rel="manifest" href="manifest.webmanifest?v=20"><link rel="icon" href="./icon-64.png?v=20" type="image/png" sizes="64x64"><link rel="apple-touch-icon" href="apple-touch-icon.png?v=20"><link rel="shortcut icon" href="favicon.ico?v=20"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Ari Games">
+<script src="firebase-config.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0a0614">
+<title>Ari Game Zone — Ban messages</title>
+<style>
+main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-index:1}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin:14px 0}
+.box h2{margin:0 0 6px;font-size:17px}
+.box p.sub{margin:0 0 10px;color:var(--muted);font-size:13px}
+.big{font-family:Orbitron,system-ui,sans-serif;font-size:30px;color:var(--a4);text-align:center;margin:6px 0}
+.stat{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:6px 0}
+.ok{color:var(--a3)}.no{color:var(--bad)}
+#log{font-size:13px;color:var(--muted);min-height:20px;text-align:center;white-space:pre-line}
+.azinput{width:100%;max-width:260px}
+.coinbig,.azpill.coin,#azcoins,#hC,#hCoin,#mycoins{color:#ffbf24!important}.az-coin-icon{width:1.22em;height:1.22em;object-fit:contain;vertical-align:-.22em;display:inline-block;filter:drop-shadow(0 1px 2px rgba(255,190,30,.35))}</style>
+</head>
+<body>
+<main>
+  <p><a class="azbtn ghost sm" href="owner-admin.html">← Back to Panel</a></p>
+  <h1 style="text-align:center">📩 Ban support messages</h1>
+  <div id="deny" class="box" hidden>
+    <h2>🔒 Access denied</h2>
+    <p class="sub">This page is only for the developer, moderators and admins.</p>
+    <div class="azrow c"><button class="azbtn" id="dologin">👤 Login</button></div>
+  </div>
+  <div id="panel" hidden>
+    <div class="box">
+      <h2>📩 Ban support messages</h2>
+      <p class="sub">Messages that banned players send from their ban screen. You can unban (temporary bans only, unless you are the developer), reply by mail, or delete a message.</p>
+      <div class="azrow c"><button class="azbtn sm" id="supRefresh">🔄 Refresh messages</button><a class="azbtn sm ghost" href="players.html">📋 All Player IDs</a></div>
+    </div>
+    <div id="supList"></div>
+    <div id="log"></div>
+  </div>
+</main>
+<script src="az.js?v=1.14.00"></script>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const when=t=>t?new Date(t).toLocaleString():'';
+  const fmt=n=>Number(n).toLocaleString();
+  const log=(t,bad)=>{const l=$('log');l.textContent=t;l.style.color=bad?'var(--bad)':'var(--a3)';};
+  const allowed=()=>Az.isStaff();
+  const row='display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;text-align:left';
+  $('dologin').onclick=()=>Az.login();
+  function draw(){
+    $('supList').innerHTML='<p class="sub" style="text-align:center">Loading…</p>';
+    Az.devListSupport().then(list=>{
+      $('supList').innerHTML=list.length?list.map(m=>'<div class="azitem" style="text-align:left"><b>🆔 '+esc(m.id)+'</b>'+(m.name?' · '+esc(m.name):'')+'<br><small style="color:var(--muted)">'+esc(when(m.ts))+(m.ban?' · ban reason: '+esc(m.ban):'')+'</small><p style="margin:6px 0;white-space:pre-wrap">'+esc(m.msg)+'</p><div class="azrow"><button class="azbtn sm" data-sunban="'+esc(m.id)+'">✅ Unban</button><button class="azbtn sm ghost" data-sreply="'+esc(m.id)+'">✉️ Reply</button><button class="azbtn sm ghost" data-sdel="'+esc(m.uid)+'|'+esc(m.key)+'">🗑 Delete</button></div></div>').join(''):'<p class="sub" style="text-align:center">No support messages.</p>';
+    }).catch(e=>{$('supList').innerHTML='';log('❌ '+(e&&e.message||'Could not load messages'),1);});
+  }
+  $('supRefresh').onclick=draw;
+  $('supList').onclick=e=>{
+    const u=e.target.closest('[data-sunban]'),r=e.target.closest('[data-sreply]'),d=e.target.closest('[data-sdel]');
+    if(u){if(!confirm('Unban player '+u.dataset.sunban+'?'))return;Az.devUnban(u.dataset.sunban).then(g=>log('✅ Player '+g+' is unbanned.')).catch(x=>log('❌ '+(x&&x.message||'Could not unban'),1));}
+    else if(r){const t=prompt('Reply to player '+r.dataset.sreply+' (sent as mail, no coins):');if(t&&t.trim())Az.devGiveMail(r.dataset.sreply,0,'Support reply',t.trim(),[]).then(()=>log('✅ Reply sent.')).catch(x=>log('❌ '+(x&&x.message||'Error'),1));}
+    else if(d){const p=d.dataset.sdel.split('|');Az.devDeleteSupport(p[0],p[1]).then(draw).catch(x=>log('❌ '+(x&&x.message||'Error'),1));}
+  };
+  function paint(){const o=allowed();$('deny').hidden=o;$('panel').hidden=!o;}
+  document.addEventListener('az-ready',()=>{paint();Az.whenAuth().then(paint);});
+  document.addEventListener('az-account',paint);
+  document.addEventListener('az-owner',()=>{paint();if((Az.ownerOK||Az.modOK||Az.adminOK)&&!window.__ld){window.__ld=1;draw();}});
+})();
+</script>
+</body>
+</html>

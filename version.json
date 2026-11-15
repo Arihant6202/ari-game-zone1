@@ -1,13 +1,12 @@
 {
-  "version": "1.13.00",
+  "version": "1.14.00",
   "notes": [
-    "NEW Developer section 'Owner-only IDs': IDs added there can be banned and unbanned only by the developer; moderators cannot ban or unban them",
-    "Publish the new database.rules.json in Firebase Console",
-    "NEW Moderator role: the owner can appoint up to 3 moderators in Developer Mode > Staff (Admin slots come later)",
-    "Moderator gets 100,000 coins automatically once every month (1st, IST)",
-    "Moderator can send coins to other players (max 500,000 per month, never to himself, no items) and read support messages / player list",
-    "Moderator can temp-ban and permanent-ban any player (not the owner or another moderator) and unban TEMPORARY bans only; permanent bans can be lifted by the developer only",
-    "Moderator has no self-coin and no self-level tools",
-    "Publish the new database.rules.json in Firebase Console (required for moderators)"
+    "NEW Admin role (max 10): added by the developer or a moderator; gets 100,000 coins on the 1st of every month",
+    "Moderator monthly reward is now 200,000 coins; moderator can send max 50,000 coins to one Player ID and 500,000 in total per month",
+    "Admin can send max 25,000 coins to one Player ID and 250,000 in total per month, can only temp-ban / unban temporary bans, and can do nothing with developer, moderator or admin IDs",
+    "Moderator and admin can send a message (no coins) to all existing players",
+    "Moderator can ban admins and add / remove admins (admins selected by the developer cannot be removed by a moderator)",
+    "Owner-only IDs, Staff data and Ban messages now have their own pages",
+    "Publish the new database.rules.json in Firebase Console"
   ]
 }

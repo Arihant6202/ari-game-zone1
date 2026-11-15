@@ -41,3 +41,11 @@ ARI GAME ZONE — FIREBASE / DEVELOPER SETUP
 
 7) Owner-only IDs (version 1.13)
 - Developer Mode > Owner-only IDs: add a Player ID there and only the owner can ban or unban it. Moderators cannot ban or unban those IDs (enforced by database.rules.json, publish it in Firebase Console).
+
+8) Version 1.14 - Admins, new limits, separate pages
+- Separate pages (all linked from owner-admin.html): owner-ids.html (developer only), staff.html (developer: moderators + admins; moderator: admins), support.html (ban messages, all staff), players.html.
+- Moderator (max 3, added only by the developer): +200,000 coins on the 1st of every month (already received coins are untouched). Sends max 50,000 coins to ONE Player ID and 500,000 in total per month. Can message ALL existing players (never coins). Can ban (temp / permanent) players AND admins, unban temporary bans only. Can add admins and remove admins, except admins selected by the developer.
+- Admin (max 10): +100,000 coins on the 1st of every month. Sends max 25,000 coins to ONE Player ID and 250,000 in total per month. Can message ALL existing players (never coins). Temp-ban and unban temporary bans only - NEVER a permanent ban. Can do nothing with the ID of the developer, a moderator or another admin (coins, mail, ban, unban - enforced by database.rules.json). A banned admin loses all admin powers.
+- Admins added by the developer are locked (devSet): only the developer can remove them.
+- Messages to ALL players skip the developer / moderator / admin IDs when an admin sends them (the rules refuse those IDs).
+- PUBLISH database.rules.json in Firebase Console > Realtime Database > Rules (new nodes: admins, adminPaid, adminSent; modSent now stores per-ID totals in modSent/<uid>/to).

@@ -151,3 +151,9 @@ v43 additions
 - New free starter character 'You' (name = the player's own name). Arnav is now a paid/Lucky Spin legendary (90,000 Gold, better than Manish); the old free Arnav is removed once from every account.
 - Player ID 49019468 is in PERM_UNBAN_IDS (az.js). The ban is lifted when the owner opens Developer Mode on this version.
 - az.css: global .az-coin-icon size rule (fixes giant coin on 12 pages).
+
+
+v47 -> 1.14.00
+- Admin role (10 slots), new moderator/admin limits (monthly reward, per-ID and monthly coin limits), message-to-all for moderator/admin, moderator can ban/add/remove admins (developer-selected admins are locked), admin can never permanent-ban and can do nothing with developer/moderator/admin IDs.
+- New pages: owner-ids.html, staff.html, support.html. owner-admin.html now holds only coins/level (developer), mail, ban/unban and limits.
+- database.rules.json rewritten (generated and desk-checked; test in Firebase Rules Playground before relying on it).

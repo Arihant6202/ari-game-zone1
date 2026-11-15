@@ -19,11 +19,11 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
 </head>
 <body>
 <main>
-  <p><a class="azbtn ghost sm" href="owner-admin.html">← Back to Developer / Moderator Panel</a></p>
+  <p><a class="azbtn ghost sm" href="owner-admin.html">← Back to Panel</a></p>
   <h1 style="text-align:center">📋 All Player IDs</h1>
   <div id="deny" class="box" hidden>
     <h2>🔒 Access denied</h2>
-    <p class="sub">This page is only for the owner and moderators. Log in with your Google account.</p>
+    <p class="sub">This page is only for the owner, moderators and admins. Log in with your Google account.</p>
     <div class="azrow c"><button class="azbtn" id="dologin">👤 Login</button></div>
   </div>
   <div id="panel" hidden>
@@ -37,7 +37,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     <div id="log"></div>
   </div>
 </main>
-<script src="az.js?v=1.13.00"></script>
+<script src="az.js?v=1.14.00"></script>
 <script>
 (function(){
   const $=id=>document.getElementById(id);
@@ -51,7 +51,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     $('list').innerHTML=l.length?l.map((p,i)=>'<div class="azitem" style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;text-align:left"><div><b>🆔 '+esc(p.id)+'</b>'+(p.banned?' <span class="no">🚫 banned</span>':'')+'<br><span>👤 '+(p.name?esc(p.name):'—')+'</span>'+(p.ts?'<br><small style="color:var(--muted)">last seen '+esc(when(p.ts))+'</small>':'')+'</div><button class="azbtn sm ghost" data-copy="'+esc(p.id)+'">Copy ID</button></div>').join(''):'<p class="sub" style="text-align:center">No players found.</p>';
   }
   function load(){
-    if(!Az.isStaff()||!(Az.ownerOK||Az.modOK))return;
+    if(!Az.isStaff()||!(Az.ownerOK||Az.modOK||Az.adminOK))return;
     $('list').innerHTML='<p class="sub" style="text-align:center">Loading…</p>';
     Az.devListPlayers().then(l=>{all=l;draw();}).catch(e=>{$('list').innerHTML='';$('log').textContent='❌ '+(e&&e.message||'Could not load the list. Publish the new database.rules.json in Firebase.');$('log').style.color='var(--bad)';});
   }
@@ -61,7 +61,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
   $('list').onclick=e=>{const b=e.target.closest('[data-copy]');if(!b)return;try{navigator.clipboard.writeText(b.dataset.copy);b.textContent='Copied ✓';}catch(x){}};
   document.addEventListener('az-ready',()=>{paint();Az.whenAuth().then(paint);});
   document.addEventListener('az-account',paint);
-  document.addEventListener('az-owner',()=>{paint();if((Az.ownerOK||Az.modOK)&&!window.__pl){window.__pl=1;load();}});
+  document.addEventListener('az-owner',()=>{paint();if((Az.ownerOK||Az.modOK||Az.adminOK)&&!window.__pl){window.__pl=1;load();}});
 })();
 </script>
 </body>

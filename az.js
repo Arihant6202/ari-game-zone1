@@ -965,7 +965,7 @@ Az.profile = function (first) {
     const r2 = document.createElement('div'); r2.className = 'azrow c'; r2.append(bt, rm); row.append(av, r2, fi); m.querySelector('#pfuid').parentNode.before(row); }
   const inp = m.querySelector('#pfname'); inp.value = db().nameSet ? db().name : (fbUser && fbUser.displayName ? Az.cleanName(fbUser.displayName) : '');
   if (fbUser) { const ac = document.createElement('p'); ac.className = 'sub'; ac.style.textAlign = 'center'; ac.textContent = '☁️ ' + (fbUser.email || fbUser.phoneNumber || 'Logged in'); m.querySelector('#pfuid').parentNode.after(ac); }
-  if (Az.isOwner() || Az.modOK) { const dv = document.createElement('div'); dv.className = 'azrow c'; const db2 = document.createElement('button'); db2.className = 'azbtn sm'; db2.textContent = Az.isOwner() ? '👑 Developer Mode' : '🛡️ Moderator Panel'; db2.onclick = () => { location.href = BASE + 'owner-admin.html'; }; dv.appendChild(db2); m.querySelector('#pferr').after(dv); }
+  if (Az.isStaff()) { const dv = document.createElement('div'); dv.className = 'azrow c'; const db2 = document.createElement('button'); db2.className = 'azbtn sm'; db2.textContent = Az.roleLabel(); db2.onclick = () => { location.href = BASE + 'owner-admin.html'; }; dv.appendChild(db2); m.querySelector('#pferr').after(dv); }
   setTimeout(() => { try { inp.focus(); } catch (e) {} }, 50);
   const doSave = () => { if (Az.setName(inp.value)) { m.close(); Az.toast('✅ Name saved: ' + Az.name()); } else m.querySelector('#pferr').textContent = 'Name must be at least 2 characters.'; };
   m.addEventListener('click', e => {
@@ -1054,13 +1054,21 @@ const OWNER_UID = OWNER_ID, MAXC = 999999999, seenGrants = {};
    in the next version, e.g.  const PERM_UNBAN_IDS = ['12345678'];  and ship the new version.
    When the owner opens Developer Mode on that version, the listed permanent bans are removed. */
 const PERM_UNBAN_IDS = [];
-Az.OWNER_UID = OWNER_UID; Az.ownerOK = false; Az.modOK = false;
+Az.OWNER_UID = OWNER_UID; Az.ownerOK = false; Az.modOK = false; Az.adminOK = false;
 /* ---- MODERATOR role (appointed by the owner in Developer Mode, max 3; enforced by Firebase rules) ----
    - gets MOD_MONTHLY Gold automatically once per calendar month (IST)
-   - may send Gold to other players, but only MOD_LIMIT per calendar month in total (never to himself, never items)
-   - may ban (temporary or permanent) and unban TEMPORARY bans only; permanent bans can be lifted by the developer only
-   - has NO self-coin and NO self-level tools */
-const MOD_MONTHLY = 100000, MOD_LIMIT = 500000, IST_MS = 19800000;
+   - may send Gold to other players: max MOD_PER_ID to ONE player ID and MOD_LIMIT in total per calendar month (never to himself, never items)
+   - may send a message (no coins) to ALL existing players
+   - may ban (temporary or permanent) players and ADMINS, and unban TEMPORARY bans only; permanent bans can be lifted by the developer only
+   - may add / remove ADMINS (max 10) - but cannot remove an admin that the developer selected
+   - has NO self-coin and NO self-level tools
+   ADMIN role (appointed by the developer or a moderator, max 10):
+   - gets ADM_MONTHLY Gold once per calendar month; may send max ADM_PER_ID to one player ID and ADM_LIMIT in total per month
+   - may send a message (no coins) to all existing players
+   - may temp-ban / unban TEMPORARY bans only - NEVER a permanent ban
+   - can do NOTHING with the ID of a moderator, another admin or the developer (enforced by the Firebase rules) */
+const MOD_MONTHLY = 200000, MOD_LIMIT = 500000, MOD_PER_ID = 50000, IST_MS = 19800000;
+const ADM_MONTHLY = 100000, ADM_LIMIT = 250000, ADM_PER_ID = 25000, MAX_ADMINS = 10;
 let srvOff = 0;
 const monthWin = t => { const d = new Date(t + IST_MS), y = d.getUTCFullYear(), m = d.getUTCMonth(); return { start: Date.UTC(y, m, 1) - IST_MS, end: Date.UTC(y, m + 1, 1) - IST_MS, key: y + '-' + String(m + 1).padStart(2, '0') }; };
 const serverNow = () => Date.now() + srvOff;
@@ -1189,28 +1197,42 @@ function postLogin(u, seq) {
       try { Az.ownerBtn && Az.ownerBtn(); document.dispatchEvent(new Event('az-owner')); } catch (e) {}
     });
 }
-async function modMonthly(u, alive) {                 // once per calendar month: +MOD_MONTHLY Gold (the server record stops double claims)
-  const w = monthWin(serverNow()), ref = fbDb.ref('modPaid/' + u.uid);
+async function payMonthly(u, alive, node, amount, label) {   // once per calendar month: +amount Gold (the server record stops double claims)
+  const w = monthWin(serverNow()), ref = fbDb.ref(node + '/' + u.uid);
   const v = (await ref.once('value')).val(); if (v === w.key || !alive()) return;
   await ref.set(w.key);                               // fails (rules) if this month was already paid, e.g. from another device
   if (!alive()) return;
-  db().coins = Math.min(MAXC, db().coins + MOD_MONTHLY); save(); Az.refresh();
-  Az.toast && Az.toast('🛡️ Monthly Moderator reward: +' + MOD_MONTHLY.toLocaleString() + ' coins', 5000);
+  db().coins = Math.min(MAXC, db().coins + amount); save(); Az.refresh();
+  Az.toast && Az.toast(label + ': +' + amount.toLocaleString() + ' coins', 5000);
   try { Az.sfx('coin'); } catch (e) {}
 }
+const modMonthly = (u, alive) => payMonthly(u, alive, 'modPaid', MOD_MONTHLY, '🛡️ Monthly Moderator reward');
+const admMonthly = (u, alive) => payMonthly(u, alive, 'adminPaid', ADM_MONTHLY, '⭐ Monthly Admin reward');
 async function modCheck(u, alive) {
-  Az.modOK = false;
+  Az.modOK = false; Az.adminOK = false;
   try { const o = (await fbDb.ref('.info/serverTimeOffset').once('value')).val(); if (typeof o === 'number') srvOff = o; } catch (e) {}
   const v = (await fbDb.ref('moderators/' + u.uid).once('value')).val();
-  if (!alive() || !v || typeof v !== 'object') return;
-  Az.modOK = true;
-  try { await modMonthly(u, alive); } catch (e) {}
+  if (!alive()) return;
+  if (v && typeof v === 'object') { Az.modOK = true; try { await modMonthly(u, alive); } catch (e) {} return; }
+  const a = (await fbDb.ref('admins/' + u.uid).once('value')).val();
+  if (!alive() || !a || typeof a !== 'object') return;
+  const bn = await fbDb.ref('banned/' + u.uid).once('value').then(x => x.exists(), () => false);   // a banned admin has no powers
+  if (!alive() || bn) return;
+  Az.adminOK = true; Az.adminInfo = a;
+  try { await admMonthly(u, alive); } catch (e) {}
 }
-document.addEventListener('visibilitychange', () => { try { if (!document.hidden && Az.modOK && fbUser && fbDb) { const u = fbUser; modMonthly(u, () => fbUser && fbUser.uid === u.uid).catch(() => {}); } } catch (e) {} });
+document.addEventListener('visibilitychange', () => { try { if (!document.hidden && fbUser && fbDb) { const u = fbUser, ok = () => fbUser && fbUser.uid === u.uid; if (Az.modOK) modMonthly(u, ok).catch(() => {}); else if (Az.adminOK) admMonthly(u, ok).catch(() => {}); } } catch (e) {} });
 Az.isOwner = () => String(db().uid) === OWNER_UID;
 Az.isMod = () => !!Az.modOK && !Az.isOwner();
-Az.isStaff = () => Az.isOwner() || !!Az.modOK;
-Az.MOD_LIMIT = MOD_LIMIT; Az.MOD_MONTHLY = MOD_MONTHLY;
+Az.isAdmin = () => !!Az.adminOK && !Az.modOK && !Az.isOwner();
+Az.isStaff = () => Az.isOwner() || !!Az.modOK || !!Az.adminOK;
+Az.role = () => Az.isOwner() ? 'owner' : Az.modOK ? 'mod' : Az.adminOK ? 'admin' : '';
+Az.roleLabel = () => ({ owner: '👑 Developer Mode', mod: '🛡️ Moderator Panel', admin: '⭐ Admin Panel' })[Az.role()] || '';
+Az.MOD_LIMIT = MOD_LIMIT; Az.MOD_MONTHLY = MOD_MONTHLY; Az.MOD_PER_ID = MOD_PER_ID;
+Az.ADM_LIMIT = ADM_LIMIT; Az.ADM_MONTHLY = ADM_MONTHLY; Az.ADM_PER_ID = ADM_PER_ID; Az.MAX_ADMINS = MAX_ADMINS;
+/* limits of the CURRENT staff role */
+const myLim = () => Az.modOK ? { node: 'modSent', limit: MOD_LIMIT, perId: MOD_PER_ID } : { node: 'adminSent', limit: ADM_LIMIT, perId: ADM_PER_ID };
+const isDenied = e => !!e && /PERMISSION_DENIED|permission/i.test(String(e.code || '') + String(e.message || ''));
 Az.devSetCoins = function (n) { if (!Az.isOwner()) return false; n = Math.round(+n); if (!isFinite(n)) return false; db().coins = Math.max(0, Math.min(MAXC, n)); save(); Az.refresh(); return true; };
 Az.devAddCoins = function (n) { n = Math.round(+n); return isFinite(n) && Az.devSetCoins(db().coins + n); };
 Az.devSetPlayerLevel = function (level) {
@@ -1235,34 +1257,41 @@ function grantBody(coins, title, message, items) {
   return b;
 }
 const needOwner = () => { if (!Az.isOwner()) throw new Error('This is only for the owner account.'); if (!fbUser || !fbDb) throw new Error('Log in with Google first.'); if (!Az.ownerOK) throw new Error('Owner not verified. Publish database.rules.json in Firebase and log in with the owner Gmail.'); };
-const needStaff = () => { if (Az.isOwner()) return needOwner(); if (!Az.modOK || !fbUser || !fbDb) throw new Error('Moderator access required. Log in with the moderator account.'); };
+const needStaff = () => { if (Az.isOwner()) return needOwner(); if (!(Az.modOK || Az.adminOK) || !fbUser || !fbDb) throw new Error('Moderator / Admin access required. Log in with the staff account.'); };
+const needMod = () => { if (Az.isOwner()) return needOwner(); if (!Az.modOK || !fbUser || !fbDb) throw new Error('Only the developer or a moderator can do this.'); };
 const lookupUid = gid => { gid = String(gid || '').replace(/\D/g, ''); if (!/^\d{8}$/.test(gid)) return Promise.reject(new Error('Player ID must be 8 digits.')); return fbDb.ref('uidIndex/' + gid).once('value').then(s => { const t = s.val(); if (!t || typeof t !== 'string') throw new Error('Player ' + gid + ' not found. They must log in with Google once.'); return { gid, uid: t }; }); };
-/* how much of this month's coin-send limit a moderator still has */
+/* how much of this month's coin-send limit the current moderator / admin still has (total + per Player ID) */
 Az.modQuota = function () {
-  return Promise.resolve().then(() => { needStaff(); return fbDb.ref('modSent/' + fbUser.uid).once('value'); }).then(sn => {
-    const r = sn.val(), now = serverNow(), w = monthWin(now), act = r && +r.end > now;
-    const used = act ? Math.max(0, +r.total || 0) : 0;
-    return { limit: MOD_LIMIT, used, left: Math.max(0, MOD_LIMIT - used), resets: act ? +r.end : w.end };
+  let L;
+  return Promise.resolve().then(() => { needStaff(); L = myLim(); return Promise.all([fbDb.ref(L.node + '/' + fbUser.uid).once('value'), fbDb.ref('uidIndex').once('value').catch(() => null)]); }).then(r => {
+    const rec = r[0].val(), idx = (r[1] && r[1].val()) || {}, now = serverNow(), w = monthWin(now), act = rec && +rec.end > now;
+    const used = act ? Math.max(0, +rec.total || 0) : 0, rev = {}; Object.keys(idx).forEach(g => { rev[idx[g]] = g; });
+    const per = act && rec.to ? Object.keys(rec.to).map(u => ({ id: rev[u] || '?', sent: +rec.to[u] || 0, left: Math.max(0, L.perId - (+rec.to[u] || 0)) })).sort((a, b) => b.sent - a.sent) : [];
+    return { limit: L.limit, perId: L.perId, used, left: Math.max(0, L.limit - used), resets: act ? +rec.end : w.end, per };
   });
 };
-function modGive(gid, coins, title, message, items) {
+function staffGive(gid, coins, title, message, items) {
   coins = Math.round(+coins || 0);
-  if (cleanGrantItems(items).length) throw new Error('Moderators cannot send items.');
-  const body = grantBody(coins, title || 'Message from Ari Game Zone', message, []); body.by = fbUser.uid;
+  if (cleanGrantItems(items).length) throw new Error('Moderators / admins cannot send items.');
+  const L = myLim(), body = grantBody(coins, title || 'Message from Ari Game Zone', message, []); body.by = fbUser.uid;
   return lookupUid(gid).then(t => {
-    if (t.uid === fbUser.uid || t.gid === String(db().uid)) throw new Error('A moderator cannot send coins to himself.');
-    const base = fbDb.ref('adminGrants/' + t.uid), key = base.push().key, upd = {}; upd['adminGrants/' + t.uid + '/' + key] = body;
+    if (t.uid === fbUser.uid || t.gid === String(db().uid)) throw new Error('You cannot send coins / mail to yourself.');
+    const key = fbDb.ref('adminGrants/' + t.uid).push().key, upd = {}; upd['adminGrants/' + t.uid + '/' + key] = body;
     if (!coins) return fbDb.ref().update(upd).then(() => t.gid);
-    return fbDb.ref('modSent/' + fbUser.uid).once('value').then(sn => {
-      const r = sn.val(), now = serverNow(), act = r && +r.end > now, w = monthWin(now), used = act ? (+r.total || 0) : 0;
-      if (used + coins > MOD_LIMIT) throw new Error('Monthly limit: you can still send only ' + Math.max(0, MOD_LIMIT - used).toLocaleString() + ' coins this month (limit ' + MOD_LIMIT.toLocaleString() + ').');
-      upd['modSent/' + fbUser.uid] = act ? { start: +r.start, end: +r.end, total: used + coins } : { start: w.start, end: w.end, total: coins };
+    if (coins > L.perId) throw new Error('One Player ID can get at most ' + L.perId.toLocaleString() + ' coins per month from you.');
+    return fbDb.ref(L.node + '/' + fbUser.uid).once('value').then(sn => {
+      const r = sn.val(), now = serverNow(), act = r && +r.end > now, w = monthWin(now), used = act ? (+r.total || 0) : 0, to = act && r.to ? Object.assign({}, r.to) : {};
+      const usedId = +to[t.uid] || 0;
+      if (usedId + coins > L.perId) throw new Error('Per-ID limit: you can still send only ' + Math.max(0, L.perId - usedId).toLocaleString() + ' coins to player ' + t.gid + ' this month (limit ' + L.perId.toLocaleString() + ' per ID).');
+      if (used + coins > L.limit) throw new Error('Monthly limit: you can still send only ' + Math.max(0, L.limit - used).toLocaleString() + ' coins this month (limit ' + L.limit.toLocaleString() + ').');
+      to[t.uid] = usedId + coins;
+      upd[L.node + '/' + fbUser.uid] = { start: act ? +r.start : w.start, end: act ? +r.end : w.end, total: used + coins, to };
       return fbDb.ref().update(upd).then(() => t.gid);
     });
-  }).catch(e => { if (e && /PERMISSION_DENIED|permission/i.test(String(e.code || '') + String(e.message || ''))) throw new Error('Not allowed: the monthly limit may be reached, or the new Firebase rules are not published yet.'); throw e; });
+  }).catch(e => { if (isDenied(e)) throw new Error(Az.adminOK && !Az.modOK ? 'Not allowed: an admin cannot do anything with the ID of the developer, a moderator or another admin; or a monthly limit is reached; or the new Firebase rules are not published yet.' : 'Not allowed: the monthly / per-ID limit may be reached, or the new Firebase rules are not published yet.'); throw e; });
 }
 Az.devGiveMail = function (gid, coins, title, message, items) {
-  if (!Az.isOwner()) return Promise.resolve().then(() => { needStaff(); return modGive(gid, coins, title, message, items); });
+  if (!Az.isOwner()) return Promise.resolve().then(() => { needStaff(); return staffGive(gid, coins, title, message, items); });
   return Promise.resolve().then(() => { needOwner(); const body = grantBody(coins, title || 'Gift from Ari Game Zone', message, items); return lookupUid(gid).then(t => fbDb.ref('adminGrants/' + t.uid).push(body).then(() => t.gid)); });
 };
 /* Mail to every registered Player ID. Deliver each grant to that account's Firebase UID,
@@ -1317,11 +1346,33 @@ Az.devBroadcastMail = function (coins, title, message, items) {
     };
   });
 };
+/* Moderator / Admin: a MESSAGE (never coins) to every existing player. Admins skip moderators / admins / developer (the rules refuse those). */
+Az.staffBroadcastMessage = function (title, message) {
+  return Promise.resolve().then(async () => {
+    needStaff();
+    message = String(message || '').trim(); if (!message) throw new Error('Write a message first.');
+    const body = grantBody(0, title || 'Message from Ari Game Zone', message, []); body.by = fbUser.uid;
+    const index = (await fbDb.ref('uidIndex').once('value')).val() || {}, uids = new Set();
+    Object.keys(index).forEach(g => { const u = index[g]; if (/^\d{8}$/.test(g) && typeof u === 'string' && u && u !== fbUser.uid && !/[.#$\/\[\]]/.test(u)) uids.add(u); });
+    const list = [...uids]; if (!list.length) throw new Error('No registered players found.');
+    let sent = 0, skipped = 0, failed = 0;
+    for (let i = 0; i < list.length; i += 5) {
+      await Promise.all(list.slice(i, i + 5).map(async uid => {
+        const ref = fbDb.ref('adminGrants/' + uid).push();
+        for (let a = 1; a <= 3; a++) {
+          try { await ref.set(body); sent++; return; }
+          catch (e) { if (isDenied(e)) { skipped++; return; } if (a < 3) await new Promise(r => setTimeout(r, a * 700)); else failed++; }
+        }
+      }));
+    }
+    return { sent, skipped, failed, total: list.length };
+  });
+};
 Az.devItemCatalog = () => Object.keys(SHOP).filter(k => USED[k]).map(k => ({ slot: k, title: SHOP[k].title, emoji: SHOP[k].emoji || '🎁', items: SHOP[k].items.filter(i => i.price !== 0 || i.lvl || i.spin).map(i => ({ id: i.id, name: i.name, rarity: rarityOf(i) })) })).filter(g => g.items.length);
 /* ---- Ban / unban (stored at banned/<firebaseUid>; Firebase rules then block that account's cloud saves; the game shows a ban screen) ---- */
 Az.devBan = function (gid, reason, perm) {
   perm = !!perm;
-  return Promise.resolve().then(() => { needStaff(); gid = String(gid || '').replace(/\D/g, ''); if (gid === OWNER_UID) throw new Error('The owner ID cannot be banned.'); return lookupUid(gid); })
+  return Promise.resolve().then(() => { needStaff(); if (perm && !Az.isOwner() && !Az.modOK) throw new Error('⛔ An admin can NEVER give a permanent ban. Use a temporary ban.'); gid = String(gid || '').replace(/\D/g, ''); if (gid === OWNER_UID) throw new Error('The owner ID cannot be banned.'); return lookupUid(gid); })
     .then(t => { if (t.uid === fbUser.uid) throw new Error('You cannot ban your own account.');
       return (Az.isOwner() ? Promise.resolve(false) : isProtected(t.uid)).then(prot => fbDb.ref('banned/' + t.uid).once('value').then(sn => {
         const old = sn.val();
@@ -1329,14 +1380,14 @@ Az.devBan = function (gid, reason, perm) {
         if (!Az.isOwner() && old && old.perm === true) throw new Error('Player ' + t.gid + ' is already PERMANENTLY banned. Only the developer can change that.');
         const rec = { id: t.gid, reason: String(reason || '').slice(0, 140), ts: firebase.database.ServerValue.TIMESTAMP };
         if (perm) rec.perm = true;
-        return fbDb.ref('banned/' + t.uid).set(rec).then(() => t.gid, e => { if (!Az.isOwner() && e && /PERMISSION_DENIED|permission/i.test(String(e.code || '') + String(e.message || ''))) throw new Error('Not allowed: this ID may be a moderator, or the new Firebase rules are not published yet.'); throw e; });
+        return fbDb.ref('banned/' + t.uid).set(rec).then(() => t.gid, e => { if (!Az.isOwner() && e && /PERMISSION_DENIED|permission/i.test(String(e.code || '') + String(e.message || ''))) throw new Error(Az.adminOK && !Az.modOK ? '🔒 Not allowed: an admin cannot ban the developer, a moderator or another admin (or the new Firebase rules are not published yet).' : 'Not allowed: this ID may be a moderator or the developer, or the new Firebase rules are not published yet.'); throw e; });
       })); });
 };
 Az.devUnban = function (gid) {
   return Promise.resolve().then(() => { needStaff(); gid = String(gid || '').replace(/\D/g, ''); if (!/^\d{8}$/.test(gid)) throw new Error('Player ID must be 8 digits.'); return fbDb.ref('banned').once('value'); })
     .then(s => { const v = s.val() || {}, uid = Object.keys(v).find(k => v[k] && String(v[k].id) === gid); if (!uid) throw new Error('Player ' + gid + ' is not banned.');
       if (!Az.isOwner() && v[uid].perm === true) throw new Error('🔒 Player ' + gid + ' is PERMANENTLY banned. Only the developer can unban a permanent ban.');
-      return (Az.isOwner() ? Promise.resolve(false) : isProtected(uid)).then(prot => { if (prot) throw new Error('🔐 Player ' + gid + ' is an owner-only ID. Only the developer can ban or unban this ID.'); return fbDb.ref('banned/' + uid).remove().then(() => gid); }); });
+      return (Az.isOwner() ? Promise.resolve(false) : isProtected(uid)).then(prot => { if (prot) throw new Error('🔐 Player ' + gid + ' is an owner-only ID. Only the developer can ban or unban this ID.'); return fbDb.ref('banned/' + uid).remove().then(() => gid, e => { if (!Az.isOwner() && isDenied(e)) throw new Error('Not allowed: you cannot unban this ID (a moderator / admin / developer ID, or a permanent ban).'); throw e; }); }); });
 };
 /* Called when the owner opens Developer Mode: lifts every permanent ban whose ID was put in PERM_UNBAN_IDS by this version. */
 Az.devApplyPermUnban = function () {
@@ -1378,14 +1429,27 @@ Az.devAddProtected = function (gid) {
 Az.devRemoveProtected = function (gid) {
   return Promise.resolve().then(() => { needOwner(); return lookupUid(gid); }).then(t => fbDb.ref('ownerOnly/' + t.uid).remove().then(() => t.gid));
 };
-/* ---- Staff (owner only): up to 3 moderators. Admin slots (10) come in a later version. ---- */
+/* ---- Staff: up to 3 moderators (developer only) and up to 10 admins (developer or moderator). ---- */
 Az.MAX_MODS = 3;
-Az.devListStaff = function () {
-  return Promise.resolve().then(() => { needOwner(); return Promise.all([fbDb.ref('moderators').once('value'), fbDb.ref('modSent').once('value').catch(() => null), fbDb.ref('playerDir').once('value').catch(() => null)]); })
+const dirName = (dir, id) => dir[id] && dir[id].name ? String(dir[id].name) : '';
+const sentRows = (rec, rev, perId) => { const now = serverNow(); if (!rec || !(+rec.end > now)) return { used: 0, per: [] };
+  return { used: +rec.total || 0, per: rec.to ? Object.keys(rec.to).map(u => ({ id: rev[u] || '?', sent: +rec.to[u] || 0, left: Math.max(0, perId - (+rec.to[u] || 0)) })).sort((x, y) => y.sent - x.sent) : [] }; };
+const revIndex = idx => { const rev = {}; Object.keys(idx || {}).forEach(g => { rev[idx[g]] = g; }); return rev; };
+Az.devListMods = function () {
+  return Promise.resolve().then(() => { needOwner(); return Promise.all([fbDb.ref('moderators').once('value'), fbDb.ref('modSent').once('value').catch(() => null), fbDb.ref('playerDir').once('value').catch(() => null), fbDb.ref('uidIndex').once('value').catch(() => null)]); })
     .then(r => {
-      const m = r[0].val() || {}, sent = (r[1] && r[1].val()) || {}, dir = (r[2] && r[2].val()) || {}, now = serverNow();
-      return Object.keys(m).map(uid => { const x = m[uid] || {}, id = String(x.id || '?'), sr = sent[uid], used = sr && +sr.end > now ? (+sr.total || 0) : 0;
-        return { uid, id, ts: +x.ts || 0, name: dir[id] && dir[id].name ? String(dir[id].name) : '', used, limit: MOD_LIMIT }; }).sort((a, b) => a.ts - b.ts);
+      const m = r[0].val() || {}, sent = (r[1] && r[1].val()) || {}, dir = (r[2] && r[2].val()) || {}, rev = revIndex(r[3] && r[3].val());
+      return Object.keys(m).map(uid => { const x = m[uid] || {}, id = String(x.id || '?'), sr = sentRows(sent[uid], rev, MOD_PER_ID);
+        return { uid, id, ts: +x.ts || 0, name: dirName(dir, id), used: sr.used, limit: MOD_LIMIT, perId: MOD_PER_ID, per: sr.per }; }).sort((a, b) => a.ts - b.ts);
+    });
+};
+Az.devListStaff = Az.devListMods;
+Az.devListAdmins = function () {
+  return Promise.resolve().then(() => { needMod(); return Promise.all([fbDb.ref('admins').once('value'), fbDb.ref('adminSent').once('value').catch(() => null), fbDb.ref('playerDir').once('value').catch(() => null), fbDb.ref('uidIndex').once('value').catch(() => null), fbDb.ref('banned').once('value').catch(() => null)]); })
+    .then(r => {
+      const m = r[0].val() || {}, sent = (r[1] && r[1].val()) || {}, dir = (r[2] && r[2].val()) || {}, rev = revIndex(r[3] && r[3].val()), ban = (r[4] && r[4].val()) || {};
+      return Object.keys(m).map(uid => { const x = m[uid] || {}, id = String(x.id || '?'), sr = sentRows(sent[uid], rev, ADM_PER_ID);
+        return { uid, id, ts: +x.ts || 0, name: dirName(dir, id), devSet: x.devSet === true, banned: !!ban[uid], used: sr.used, limit: ADM_LIMIT, perId: ADM_PER_ID, per: sr.per }; }).sort((a, b) => a.ts - b.ts);
     });
 };
 Az.devAddMod = function (gid) {
@@ -1394,12 +1458,34 @@ Az.devAddMod = function (gid) {
       const v = sn.val() || {};
       if (v[t.uid]) throw new Error('Player ' + t.gid + ' is already a moderator.');
       if (Object.keys(v).length >= Az.MAX_MODS) throw new Error('Maximum ' + Az.MAX_MODS + ' moderators. Remove one first.');
-      return fbDb.ref('moderators/' + t.uid).set({ id: t.gid, ts: firebase.database.ServerValue.TIMESTAMP }).then(() => t.gid);
+      const upd = {}; upd['moderators/' + t.uid] = { id: t.gid, ts: firebase.database.ServerValue.TIMESTAMP }; upd['admins/' + t.uid] = null;   // a player who was an admin is promoted
+      return fbDb.ref().update(upd).then(() => t.gid);
     }));
 };
 Az.devRemoveMod = function (gid) {
   return Promise.resolve().then(() => { needOwner(); gid = String(gid || '').replace(/\D/g, ''); return fbDb.ref('moderators').once('value'); })
     .then(sn => { const v = sn.val() || {}, uid = Object.keys(v).find(k => v[k] && String(v[k].id) === gid); if (!uid) throw new Error('Player ' + gid + ' is not a moderator.'); return fbDb.ref('moderators/' + uid).remove().then(() => gid); });
+};
+/* Admins: the developer's picks are locked (devSet) - a moderator can add admins and remove only the admins that are NOT locked. */
+Az.devAddAdmin = function (gid) {
+  return Promise.resolve().then(() => { needMod(); gid = String(gid || '').replace(/\D/g, ''); if (gid === OWNER_UID) throw new Error('The owner cannot be an admin.'); return lookupUid(gid); })
+    .then(t => { if (t.uid === fbUser.uid) throw new Error('You cannot add yourself.');
+      return Promise.all([fbDb.ref('admins').once('value'), fbDb.ref('moderators/' + t.uid).once('value').then(x => x.exists(), () => false)]).then(r => {
+        const v = r[0].val() || {};
+        if (v[t.uid]) throw new Error('Player ' + t.gid + ' is already an admin.');
+        if (r[1]) throw new Error('Player ' + t.gid + ' is a moderator already.');
+        if (Object.keys(v).length >= MAX_ADMINS) throw new Error('Maximum ' + MAX_ADMINS + ' admins. Remove one first.');
+        const rec = { id: t.gid, ts: firebase.database.ServerValue.TIMESTAMP };
+        if (Az.isOwner()) rec.devSet = true; else rec.by = fbUser.uid;
+        return fbDb.ref('admins/' + t.uid).set(rec).then(() => t.gid);
+      }); })
+    .catch(e => { if (isDenied(e)) throw new Error('Not allowed: new Firebase rules not published yet, or this ID cannot be an admin.'); throw e; });
+};
+Az.devRemoveAdmin = function (gid) {
+  return Promise.resolve().then(() => { needMod(); gid = String(gid || '').replace(/\D/g, ''); return fbDb.ref('admins').once('value'); })
+    .then(sn => { const v = sn.val() || {}, uid = Object.keys(v).find(k => v[k] && String(v[k].id) === gid); if (!uid) throw new Error('Player ' + gid + ' is not an admin.');
+      if (!Az.isOwner() && v[uid].devSet === true) throw new Error('🔒 Player ' + gid + ' was selected by the developer. Only the developer can remove this admin.');
+      return fbDb.ref('admins/' + uid).remove().then(() => gid, e => { if (isDenied(e)) throw new Error('🔒 Not allowed: this admin was selected by the developer.'); throw e; }); });
 };
 /* every Player ID ever created (uidIndex) + the player's name (playerDir, written by the player at login / rename) + ban status */
 Az.devListPlayers = function () {
@@ -1434,20 +1520,20 @@ function stopBanWatch() { if (banRef) { try { banRef.off(); } catch (e) {} banRe
 function startBanWatch(u) {
   stopBanWatch(); if (!fbDb || isOwnerAcct(u)) return;
   const ref = banRef = fbDb.ref('banned/' + u.uid);
-  ref.on('value', snap => { if (!fbUser || fbUser.uid !== u.uid) return; const v = snap.val(); if (v) { banInfo = (typeof v === 'object') ? v : {}; if (!banEl || !document.body.contains(banEl)) showBan(banInfo); } else { banInfo = null; hideBan(); } }, () => {});
+  ref.on('value', snap => { if (!fbUser || fbUser.uid !== u.uid) return; const v = snap.val(); if (v) { banInfo = (typeof v === 'object') ? v : {}; if (Az.adminOK) { Az.adminOK = false; try { Az.ownerBtn && Az.ownerBtn(); } catch (e) {} } if (!banEl || !document.body.contains(banEl)) showBan(banInfo); } else { banInfo = null; hideBan(); } }, () => {});
 }
 Az.isBanned = () => !!banInfo;
 
 Az.ownerBtn = function () {       // home-page button: visible ONLY on the owner ID
   const cb = document.getElementById('admincoins'); if (!cb) return;
-  if (!Az.isOwner() && !Az.modOK) { cb.style.display = 'none'; cb.onclick = null; return; }
-  cb.style.display = ''; cb.textContent = Az.isOwner() ? '👑 Developer Mode' : '🛡️ Moderator Panel'; cb.onclick = () => { location.href = BASE + 'owner-admin.html'; };
+  if (!Az.isStaff()) { cb.style.display = 'none'; cb.onclick = null; return; }
+  cb.style.display = ''; cb.textContent = Az.roleLabel(); cb.onclick = () => { location.href = BASE + 'owner-admin.html'; };
 };
 Az.whenAuth = () => { if (!LS.get('az_login')) return Promise.resolve(null); return loadFb().then(() => null).catch(() => null); };
 
 function afterLogout() {
   // 'az_login' is the cross-tab "a session is still open" flag: whoever sees it first does the cleanup once.
-  fbUser = null; cloudUid = null; loadSeq++; clearTimeout(pushT); pushT = null; stopGrants(); try { stopBanWatch(); } catch (e) {} Az.ownerOK = false; Az.modOK = false;
+  fbUser = null; cloudUid = null; loadSeq++; clearTimeout(pushT); pushT = null; stopGrants(); try { stopBanWatch(); } catch (e) {} Az.ownerOK = false; Az.modOK = false; Az.adminOK = false;
   // NOTE: the guest id is NOT rotated any more: after logout you are back on the SAME guest you had before,
   // and every other guest stays saved on this device (see Az.guests / Az.switchGuest / Az.newGuest).
   LS.del('az_login'); LS.del('az_active_key');
@@ -1461,7 +1547,7 @@ function afterLogin(u) {
   if (fbUser && fbUser.uid !== u.uid) flushPush();           // save the previous account first, to ITS own node
   const lg = linkG; linkG = null;                              // guest the player asked to link into this login (or null)
   const key = 'az2:user:' + u.uid, hadLocal = !!LS.get(key);
-  stopGrants(); Az.ownerOK = false; Az.modOK = false;
+  stopGrants(); Az.ownerOK = false; Az.modOK = false; Az.adminOK = false;
   fbUser = u; cloudUid = null; clearTimeout(pushT); pushT = null;
   startBanWatch(u);
   ACTIVE_KEY = key; D = null;
