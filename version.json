@@ -1,12 +1,9 @@
 {
-  "version": "1.14.00",
+  "version": "1.15.00",
   "notes": [
-    "NEW Admin role (max 10): added by the developer or a moderator; gets 100,000 coins on the 1st of every month",
-    "Moderator monthly reward is now 200,000 coins; moderator can send max 50,000 coins to one Player ID and 500,000 in total per month",
-    "Admin can send max 25,000 coins to one Player ID and 250,000 in total per month, can only temp-ban / unban temporary bans, and can do nothing with developer, moderator or admin IDs",
-    "Moderator and admin can send a message (no coins) to all existing players",
-    "Moderator can ban admins and add / remove admins (admins selected by the developer cannot be removed by a moderator)",
-    "Owner-only IDs, Staff data and Ban messages now have their own pages",
+    "Moderators and admins can no longer exchange (send) coins to each other - enforced in the app and in the Firebase rules",
+    "Fixed: the update popup kept appearing because the app version number was out of date",
+    "Fixed: the update mail no longer says your progress was reset",
     "Publish the new database.rules.json in Firebase Console"
   ]
 }

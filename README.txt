@@ -157,3 +157,11 @@ v47 -> 1.14.00
 - Admin role (10 slots), new moderator/admin limits (monthly reward, per-ID and monthly coin limits), message-to-all for moderator/admin, moderator can ban/add/remove admins (developer-selected admins are locked), admin can never permanent-ban and can do nothing with developer/moderator/admin IDs.
 - New pages: owner-ids.html, staff.html, support.html. owner-admin.html now holds only coins/level (developer), mail, ban/unban and limits.
 - database.rules.json rewritten (generated and desk-checked; test in Firebase Rules Playground before relying on it).
+
+
+v1.15.00
+- Moderators and admins can no longer exchange coins with each other. Admin -> any staff ID was already blocked; now Moderator -> Admin / Moderator coins are blocked too (app check + Firebase rule). Messages (0 coins) are still allowed for moderators.
+- BUG FIX: az.js VERSION was still 1.05.00 while version.json said 1.14.00, so the 'New Update Available' popup appeared on every page load. VERSION is now 1.15.00.
+- BUG FIX: stale ?v= cache numbers (1.04.00 / 1.05.00) on az.css / v17.css in several pages are now 1.15.00.
+- BUG FIX: the per-version update mail wrongly said progress was reset; text corrected.
+- IMPORTANT: publish the new database.rules.json in Firebase Console.

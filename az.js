@@ -846,7 +846,7 @@ const Az = window.Az = {
     return '<div class="fig" style="background:radial-gradient(circle at 50% 60%,#ffcf3a55,transparent 70%)"><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjEiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNGE4Ii8+PHN0b3Agb2Zmc2V0PSIuMjUiIHN0b3AtY29sb3I9IiNmZmQ4NGQiLz48c3RvcCBvZmZzZXQ9Ii41OCIgc3RvcC1jb2xvcj0iI2Q4OGEwMCIvPjxzdG9wIG9mZnNldD0iLjgyIiBzdG9wLWNvbG9yPSIjZmZmMDdhIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjYTg1YjAwIi8+PC9saW5lYXJHcmFkaWVudD48bGluZWFyR3JhZGllbnQgaWQ9ImYiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBzdG9wLWNvbG9yPSIjZmZmNmIwIi8+PHN0b3Agb2Zmc2V0PSIuNDgiIHN0b3AtY29sb3I9IiNmZmNmMzIiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNiODZhMDAiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NyIgZmlsbD0iIzliNTcwMCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNDciIHI9IjQ1IiBmaWxsPSJ1cmwoI2cpIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMi41Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI0NyIgcj0iMzcuNSIgZmlsbD0idXJsKCNmKSIgc3Ryb2tlPSIjYjk2YjAwIiBzdHJva2Utd2lkdGg9IjIiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ3IiByPSIzMy41IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmYwYTAiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTUwIDE2bDIuMyA1LjUgNS45LjQtNC41IDMuOCAxLjUgNS43LTUuMi0zLjEtNS4yIDMuMSAxLjUtNS43LTQuNS0zLjggNS45LS40eiIgZmlsbD0iI2ZmZjNhMCIvPjx0ZXh0IHg9IjUwIiB5PSI2OCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNDkiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjZmZmMmEwIiBzdHJva2U9IiM5YTU3MDAiIHN0cm9rZS13aWR0aD0iMS4xIiBwYWludC1vcmRlcj0ic3Ryb2tlIj5BPC90ZXh0Pjwvc3ZnPg==" alt="Gold" style="width:78px;height:78px;filter:drop-shadow(0 4px 10px rgba(255,190,30,.55))"><b style="font-size:20px;color:#ffd54a">+' + n + '</b></div></div>';
   },
   /* app version: bump here AND in version.json for every update */
-  VERSION: '1.05.00',
+  VERSION: '1.15.00',
   /* spin with animation + popup showing the figure of what was won */
   spinPlay(onDone) {
     const cost = Az.spinCost();
@@ -1276,6 +1276,10 @@ function staffGive(gid, coins, title, message, items) {
   const L = myLim(), body = grantBody(coins, title || 'Message from Ari Game Zone', message, []); body.by = fbUser.uid;
   return lookupUid(gid).then(t => {
     if (t.uid === fbUser.uid || t.gid === String(db().uid)) throw new Error('You cannot send coins / mail to yourself.');
+    const staffChk = coins > 0 && Az.modOK ? fbDb.ref('admins/' + t.uid).once('value').then(x => { if (x.exists()) throw new Error('⛔ Moderators and admins cannot exchange coins with each other.'); }, () => {}) : Promise.resolve();
+    return staffChk.then(() => staffGive2(t));
+  }).catch(e => { if (isDenied(e)) throw new Error(Az.adminOK && !Az.modOK ? 'Not allowed: an admin cannot do anything with the ID of the developer, a moderator or another admin; or a monthly limit is reached; or the new Firebase rules are not published yet.' : 'Not allowed: moderators and admins cannot exchange coins with each other (moderator / admin IDs), or the monthly / per-ID limit is reached, or the new Firebase rules are not published yet.'); throw e; });
+  function staffGive2(t) {
     const key = fbDb.ref('adminGrants/' + t.uid).push().key, upd = {}; upd['adminGrants/' + t.uid + '/' + key] = body;
     if (!coins) return fbDb.ref().update(upd).then(() => t.gid);
     if (coins > L.perId) throw new Error('One Player ID can get at most ' + L.perId.toLocaleString() + ' coins per month from you.');
@@ -1288,7 +1292,7 @@ function staffGive(gid, coins, title, message, items) {
       upd[L.node + '/' + fbUser.uid] = { start: act ? +r.start : w.start, end: act ? +r.end : w.end, total: used + coins, to };
       return fbDb.ref().update(upd).then(() => t.gid);
     });
-  }).catch(e => { if (isDenied(e)) throw new Error(Az.adminOK && !Az.modOK ? 'Not allowed: an admin cannot do anything with the ID of the developer, a moderator or another admin; or a monthly limit is reached; or the new Firebase rules are not published yet.' : 'Not allowed: the monthly / per-ID limit may be reached, or the new Firebase rules are not published yet.'); throw e; });
+  }
 }
 Az.devGiveMail = function (gid, coins, title, message, items) {
   if (!Az.isOwner()) return Promise.resolve().then(() => { needStaff(); return staffGive(gid, coins, title, message, items); });
@@ -1891,7 +1895,7 @@ function deliverUpdateMail() {
     const gid = 'upd-' + Az.VERSION;
     if (d.verMail === Az.VERSION || d.mail.some(m => m.gid === gid)) { d.verMail = Az.VERSION; return; }
     d.verMail = Az.VERSION;
-    d.mail.push({ gid, title: ('🚀 Update ' + Az.VERSION).slice(0, 60), message: ('Ari Game Zone updated to version ' + Az.VERSION + '. Your Player ID is kept; player level, game levels, coins and inventory have been reset. Arena Strike restarts when health reaches zero and difficulty scales with level.').slice(0, 240), coins: 0, items: [], mode: 'add', ts: Date.now(), claimed: false });
+    d.mail.push({ gid, title: ('🚀 Update ' + Az.VERSION).slice(0, 60), message: ('Ari Game Zone updated to version ' + Az.VERSION + '. Your Player ID, coins and progress are kept. Open the Refresh popup if it appears so you get the newest files.').slice(0, 240), coins: 0, items: [], mode: 'add', ts: Date.now(), claimed: false });
     save(); Az.refresh(); Az.toast && Az.toast('✉️ New mail: Update ' + Az.VERSION + ' is here!', 4500);
     document.dispatchEvent(new Event('az-mail'));
   } catch (e) {}

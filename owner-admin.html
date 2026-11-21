@@ -123,7 +123,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     <div id="log"></div>
   </div>
 </main>
-<script src="az.js?v=1.14.00"></script>
+<script src="az.js?v=1.15.00"></script>
 <script>
 (function(){
   const $=id=>document.getElementById(id);
@@ -140,7 +140,7 @@ main{max-width:640px;margin:0 auto;padding:18px 14px 60px;position:relative;z-in
     $('permBanBtn').hidden=admin;
     $('banRoleNote').textContent=admin?'As an admin you can create only temporary bans and unban temporary bans. You can do nothing with the ID of the developer, a moderator or another admin.':'As a moderator you can create both kinds of ban (also on admins), but you can unban only temporary bans.';
     if(mod){$('quotaH').textContent=admin?'⭐ Admin limits':'🛡️ Moderator limits';
-      $('quotaSub').innerHTML=admin?'Monthly reward: <b>'+fmt(Az.ADM_MONTHLY)+'</b> coins are added automatically once every month (1st, IST) when you open the game. You can send coins to other players only (not to the developer, moderators or other admins).':'Monthly reward: <b>'+fmt(Az.MOD_MONTHLY)+'</b> coins are added automatically once every month (1st, IST) when you open the game. You can send coins to other players only; you cannot give yourself coins or levels.';}
+      $('quotaSub').innerHTML=admin?'Monthly reward: <b>'+fmt(Az.ADM_MONTHLY)+'</b> coins are added automatically once every month (1st, IST) when you open the game. You can send coins to normal players only (not to the developer, moderators or other admins).':'Monthly reward: <b>'+fmt(Az.MOD_MONTHLY)+'</b> coins are added automatically once every month (1st, IST) when you open the game. You can send coins to normal players only (not to admins or other moderators); you cannot give yourself coins or levels.';}
     $('ttl').textContent=Az.roleLabel();
     $('mailH').textContent=owner?'✉️ Send Mail (message + coins + items)':'✉️ Send coins / message to players';
     $('pid').textContent=Az.uid();
